@@ -27,6 +27,14 @@ $(function() {
         });
     });
 
+     $("#div_modes").delegate(".listEquipementInfo", 'click', function() {
+        var el = $(this);
+        cmd.getSelectModal({type: 'info'}, function(result) {
+            var calcul = el.closest('.mode').find('.eqLogicAttr[data-l1key=configuration][data-l3key=trigger]');
+            calcul.value(calcul.value() + ' ' + result.human);
+        });
+    });
+
 
 });
 
@@ -43,7 +51,6 @@ function addEqLogic(_eqLogic){
 }
 
 function addMode(_mode) {
-    console.log(_mode);
     var div = '<div class="mode">';
     div += '<form class="form-horizontal" role="form">';
 
@@ -56,8 +63,11 @@ function addMode(_mode) {
 
     div += '<div class="form-group">';
     div += '<label class="col-lg-2 control-label">Déclencheur</label>';
-    div += '<div class="col-lg-4">';
+    div += '<div class="col-lg-7">';
     div += '<input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mode::' + _mode.name + '" data-l3key="trigger" />';
+    div += '</div>';
+    div += '<div class="col-lg-2">';
+    div += '<a class="btn btn-default form-control listEquipementInfo"><i class="fa fa-list-alt "></i> Rechercher équipement<a>';
     div += '</div>';
     div += '</div>';
 
