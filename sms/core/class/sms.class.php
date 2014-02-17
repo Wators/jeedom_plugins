@@ -59,7 +59,9 @@ class sms extends eqLogic {
                 }
                 if ($autorized) {
                     $reply = interactQuery::tryToReply(trim($message['message']), array());
-                    $eqLogic->sendSMS($message['phonenumber'], self::cleanSMS($reply));
+                    if (trim($reply) != '') {
+                        $eqLogic->sendSMS($message['phonenumber'], self::cleanSMS($reply));
+                    }
                 }
             }
         }
