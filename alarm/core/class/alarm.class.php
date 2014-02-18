@@ -22,6 +22,54 @@ require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 class alarm extends eqLogic {
     /*     * *************************Attributs****************************** */
 
+    public function preAjax() {
+        foreach ($this->getConfiguration() as $key => $value) {
+            if (strpos($key, 'mode::') !== false) {
+                $this->setConfiguration($key, null);
+            }
+        }
+    }
+
+    public function postSave() {
+        $existing_mode = array('Armer', 'Libérer');
+        foreach ($this->getConfiguration() as $key => $value) {
+            if (strpos($key, 'mode::') !== false) {
+                $value = json_decode($value, true);
+                $existing_mode[] = $value['name'];
+                $find = false;
+                foreach ($this->getCmd() as $cmd) {
+                    if ($cmd->getName() == $value['name']) {
+                        $find = true;
+                        break;
+                    }
+                }
+                if (!$find) {
+                    $cmd = new alarmCmd();
+                    $cmd->setName($value['name']);
+                    $cmd->setEqLogic_id($this->id);
+                    $cmd->setType('action');
+                    $cmd->setSubType('other');
+                    $cmd->setConfiguration('mode', '1');
+                    $cmd->setConfiguration('state', $value['name']);
+                    $cmd->save();
+                }
+            }
+        }
+
+        if ($this->getConfiguration('cmd_mode_id') != '') {
+            $cmd_mode = cmd::byId($this->getConfiguration('cmd_mode_id'));
+            if ($cmd_mode->execCmd() == '') {
+                $cmd_mode->event($value['name']);
+            }
+        }
+
+        foreach ($this->getCmd() as $cmd) {
+            if ($cmd->getType() == 'action' && !in_array($cmd->getName(), $existing_mode)) {
+                $cmd->remove();
+            }
+        }
+    }
+
     public function postInsert() {
         $cmd = new alarmCmd();
         $cmd->setName('Armer');
@@ -39,7 +87,7 @@ class alarm extends eqLogic {
         $cmd->setName('Status');
         $cmd->setEqLogic_id($this->id);
         $cmd->setType('info');
-        $cmd->setorder(1);
+        $cmd->setorder(2);
         $cmd->setSubType('binary');
         $cmd->setEventOnly(1);
         $cmd->save();
@@ -47,23 +95,34 @@ class alarm extends eqLogic {
         $this->save();
 
         $cmd = new alarmCmd();
+        $cmd->setName('Mode');
+        $cmd->setEqLogic_id($this->id);
+        $cmd->setType('info');
+        $cmd->setorder(3);
+        $cmd->setSubType('string');
+        $cmd->setEventOnly(1);
+        $cmd->save();
+        $this->setConfiguration('cmd_mode_id', $cmd->getId());
+        $this->save();
+
+        $cmd = new alarmCmd();
         $cmd->setName('Armer');
         $cmd->setEqLogic_id($this->id);
         $cmd->setType('action');
         $cmd->setSubType('other');
-        $cmd->setorder(2);
+        $cmd->setorder(4);
         $cmd->setConfiguration('state', '1');
-        $cmd->setConfiguration('cmd_armed_id', $cmd_armed_id);
+        $cmd->setConfiguration('armed', '1');
         $cmd->save();
 
         $cmd = new alarmCmd();
         $cmd->setName('Libérer');
         $cmd->setEqLogic_id($this->id);
         $cmd->setType('action');
-        $cmd->setorder(3);
+        $cmd->setorder(5);
         $cmd->setSubType('other');
         $cmd->setConfiguration('state', '0');
-        $cmd->setConfiguration('cmd_armed_id', $cmd_armed_id);
+        $cmd->setConfiguration('armed', '1');
         $cmd->save();
     }
 
@@ -95,9 +154,18 @@ class alarmCmd extends cmd {
     }
 
     public function execute($_options = array()) {
-        if ($this->getConfiguration('cmd_armed_id') != '') {
-            $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
-            $cmd_armed->event($this->getConfiguration('state'));
+        $eqLogic = $this->getEqLogic();
+        if ($this->getConfiguration('armed') == '1') {
+            if ($eqLogic->getConfiguration('cmd_armed_id') != '') {
+                $cmd_armed = cmd::byId($eqLogic->getConfiguration('cmd_armed_id'));
+                $cmd_armed->event($this->getConfiguration('state'));
+            }
+        }
+        if ($this->getConfiguration('mode') == '1') {
+            if ($eqLogic->getConfiguration('cmd_mode_id') != '') {
+                $cmd_mode = cmd::byId($eqLogic->getConfiguration('cmd_mode_id'));
+                $cmd_mode->event($this->getConfiguration('state'));
+            }
         }
     }
 

@@ -66,10 +66,8 @@ sendVarToJS('eqType', 'alarm');
             </div>
         </div>
         <a class="btn btn-success" id="bt_addMode"><i class="fa fa-plus-circle"></i> Ajouter mode</a>
-        <br/>
-        <div id="div_modes"></div>
-        
-        
+        <br/><br/>
+        <div id="div_modes"></div>   
         
         <form class="form-horizontal">
             <fieldset>

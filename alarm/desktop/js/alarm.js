@@ -20,14 +20,14 @@ $(function() {
         bootbox.prompt("Nom du mode ?", function(result) {
             if (result !== null) {
                 var mode = {name: result};
-                mode['mode::'+result] = [];
-                mode['mode::'+result]['name'] = result;
+                mode['mode::' + result] = [];
+                mode['mode::' + result]['name'] = result;
                 addMode(mode);
             }
         });
     });
 
-     $("#div_modes").delegate(".listEquipementInfo", 'click', function() {
+    $("#div_modes").delegate(".listEquipementInfo", 'click', function() {
         var el = $(this);
         cmd.getSelectModal({type: 'info'}, function(result) {
             var calcul = el.closest('.mode').find('.eqLogicAttr[data-l1key=configuration][data-l3key=trigger]');
@@ -35,15 +35,18 @@ $(function() {
         });
     });
 
+    $("#div_modes").delegate('.bt_removeMode', 'click', function() {
+        $(this).closest('.mode').remove();
+    })
 
 });
 
 
-function addEqLogic(_eqLogic){
-    for (var i in _eqLogic.configuration){
-        if(i.indexOf('mode::') === 0){
-            var mode = {name : _eqLogic.configuration[i].name};
-            mode[i] = json_decode(_eqLogic.configuration[i]); 
+function addEqLogic(_eqLogic) {
+    for (var i in _eqLogic.configuration) {
+        if (i.indexOf('mode::') === 0) {
+            var mode = {name: _eqLogic.configuration[i].name};
+            mode[i] = json_decode(_eqLogic.configuration[i]);
             mode.name = mode[i].name;
             addMode(mode);
         }
@@ -51,13 +54,22 @@ function addEqLogic(_eqLogic){
 }
 
 function addMode(_mode) {
-    var div = '<div class="mode">';
+    var div = '<div class="mode well">';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeMode"></i>';
+
     div += '<form class="form-horizontal" role="form">';
 
     div += '<div class="form-group">';
     div += '<label class="col-lg-2 control-label">Nom du mode</label>';
     div += '<div class="col-lg-4">';
     div += '<span class="eqLogicAttr label label-info" data-l1key="configuration" data-l2key="mode::' + _mode.name + '" data-l3key="name" ></span>';
+    div += '</div>';
+    div += '</div>';
+
+    div += '<div class="form-group">';
+    div += '<label class="col-lg-2 control-label">Délai avant déclenchement (en secondes)</label>';
+    div += '<div class="col-lg-1">';
+    div += '<input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mode::' + _mode.name + '" data-l3key="triggerDelay" />';
     div += '</div>';
     div += '</div>';
 
