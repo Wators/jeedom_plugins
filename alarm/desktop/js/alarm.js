@@ -35,11 +35,69 @@ $(function() {
         });
     });
 
+    $("#div_modes").delegate(".listEquipementAction", 'click', function() {
+        var el = $(this);
+        cmd.getSelectModal({type: 'action'}, function(result) {
+            var calcul = el.closest('.action').find('.eqLogicAttr[data-l1key=configuration][data-l3key=actions]');
+            calcul.value(calcul.value() + ' ' + result.human);
+        });
+    });
+
     $("#div_modes").delegate('.bt_removeMode', 'click', function() {
         $(this).closest('.mode').remove();
     })
 
+    $("#div_modes").delegate('.bt_addAction', 'click', function() {
+        addAction($(this).closest('.mode'), '');
+    });
+
+
+    $("#div_modes").delegate(".listEquipementAction", 'click', function() {
+        var el = $(this).closest('.action').find('.eqLogicAttr[data-l1key=configuration][data-l3key=actions]');
+        cmd.getSelectModal({type: 'action'}, function(result) {
+            el.value({name: result.human});
+            el.closest('.action').find('.actionOptions').html(displayActionOption(el.value(), ''));
+        });
+    });
+
+    $('body').delegate('.action .eqLogicAttr[data-l1key=configuration][data-l3key=actions]', 'focusout', function(event) {
+        var expression = $(this).closest('.action').getValues('.expressionAttr');
+        $(this).closest('.action').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
+    });
+
 });
+
+function displayActionOption(_expression, _options) {
+    var html = '';
+    $.ajax({// fonction permettant de faire de l'ajax
+        type: "POST", // methode de transmission des données au fichier php
+        url: "core/ajax/scenario.ajax.php", // url du fichier php
+        data: {
+            action: 'actionToHtml',
+            version: 'scenario',
+            expression: _expression,
+            option: json_encode(_options)
+        },
+        dataType: 'json',
+        async: false,
+        global: false,
+        error: function(request, status, error) {
+            handleAjaxError(request, status, error);
+        },
+        success: function(data) { // si l'appel a bien fonctionné
+            if (data.state != 'ok') {
+                $('#div_alert').showAlert({message: data.result, level: 'danger'});
+                return;
+            }
+            if (data.result.html != '') {
+                html += '<div class="alert alert-info" style="margin : 0px; padding : 3px;">';
+                html += data.result.html;
+                html += '</div>';
+            }
+        }
+    });
+    return html;
+}
 
 
 function addEqLogic(_eqLogic) {
@@ -51,6 +109,31 @@ function addEqLogic(_eqLogic) {
             addMode(mode);
         }
     }
+}
+
+function addAction(_el, _action) {
+    if (isset(_action)) {
+        _action = {};
+    }
+    if (isset(_action.options)) {
+        _action.options = {};
+    }
+    var name = _el.find('.eqLogicAttr[data-l1key=configuration][data-l3key=name]').value();
+    var div = '<div class="action">';
+    div += '<div class="form-group">';
+    div += '<label class="col-lg-2 control-label">Action</label>';
+    div += '<div class="col-lg-1">';
+    div += '<a class="btn btn-default form-control listEquipementAction"><i class="fa fa-list-alt "></i><a>';
+    div += '</div>';
+    div += '<div class="col-lg-5">';
+    div += '<input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mode::' + name + '" data-l3key="actions"  value="' + init(_action.expression, '') + '"/>';
+    div += '</div>';
+    div += '<div class="col-lg-4 actionOptions">';
+    div += '</div>';
+    div += '</div>';
+    div += '</div>';
+    _el.find('.div_actions').append(div);
+    displayActionOption(init(_action, ''), _action.options)
 }
 
 function addMode(_mode) {
@@ -75,12 +158,18 @@ function addMode(_mode) {
 
     div += '<div class="form-group">';
     div += '<label class="col-lg-2 control-label">Déclencheur</label>';
+    div += '<div class="col-lg-1">';
+    div += '<a class="btn btn-default form-control listEquipementInfo"><i class="fa fa-list-alt "></i><a>';
+    div += '</div>';
     div += '<div class="col-lg-7">';
     div += '<input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mode::' + _mode.name + '" data-l3key="trigger" />';
     div += '</div>';
-    div += '<div class="col-lg-2">';
-    div += '<a class="btn btn-default form-control listEquipementInfo"><i class="fa fa-list-alt "></i> Rechercher équipement<a>';
+    div += '<div class="col-lg-1">';
+    div += '<a class="btn btn-default form-control bt_addAction"><i class="fa fa-plus-circle "></i> Action<a>';
     div += '</div>';
+    div += '</div>';
+
+    div += '<div class="div_actions">';
     div += '</div>';
 
     div += '<hr/>';
@@ -90,4 +179,15 @@ function addMode(_mode) {
     div += '</div>';
     $('#div_modes').append(div);
     $('#div_modes .mode:last').setValues({configuration: _mode}, '.eqLogicAttr');
+    if (is_array(_mode['mode::' + _mode.name].actions)) {
+        for (var i in _mode['mode::' + _mode.name].actions) {
+            addAction($('#div_modes .mode:last'), _mode['mode::' + _mode.name].actions[i]);
+        }
+    } else {
+        if (_mode['mode::' + _mode.name].actions != '') {
+            addAction($('#div_modes .mode:last'), _mode['mode::' + _mode.name].actions);
+        }
+    }
+
+
 }

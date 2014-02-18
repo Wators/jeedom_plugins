@@ -37,7 +37,7 @@ class alarm extends eqLogic {
                             if ($cmd_armed->execCmd() == 1) {
                                 if ($eqLogic->getConfiguration('cmd_mode_id') != '') {
                                     $cmd_mode = cmd::byId($eqLogic->getConfiguration('cmd_mode_id'));
-                                    $mode = json_decode($eqLogic->getConfiguration('mode::' . $cmd_mode->execCmd()), true);
+                                    $mode = $eqLogic->getConfiguration('mode::' . $cmd_mode->execCmd());
                                     if ($mode != '' && is_array($mode)) {
                                         if (isset($mode['triggerDelay']) && is_numeric($mode['triggerDelay']) && $mode['triggerDelay'] > 0) {
                                             sleep($mode['triggerDelay']);
@@ -77,7 +77,6 @@ class alarm extends eqLogic {
         $existing_mode = array('Armer', 'Libérer');
         foreach ($this->getConfiguration() as $key => $value) {
             if (strpos($key, 'mode::') !== false) {
-                $value = json_decode($value, true);
                 $existing_mode[] = $value['name'];
                 $find = false;
                 foreach ($this->getCmd() as $cmd) {
