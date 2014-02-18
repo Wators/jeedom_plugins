@@ -37,8 +37,11 @@ class alarm extends eqLogic {
                             if ($cmd_armed->execCmd() == 1) {
                                 if ($eqLogic->getConfiguration('cmd_mode_id') != '') {
                                     $cmd_mode = cmd::byId($eqLogic->getConfiguration('cmd_mode_id'));
-                                    $mode = json_decode($eqLogic->getConfiguration('mode::' . $cmd_mode->execCmd()),true);
+                                    $mode = json_decode($eqLogic->getConfiguration('mode::' . $cmd_mode->execCmd()), true);
                                     if ($mode != '' && is_array($mode)) {
+                                        if (isset($mode['triggerDelay']) && is_numeric($mode['triggerDelay']) && $mode['triggerDelay'] > 0) {
+                                            sleep($mode['triggerDelay']);
+                                        }
                                         $trigger = cmd::cmdToValue($mode['trigger']);
                                         $test = new evaluate();
                                         $result = $test->Evaluer($trigger);
@@ -48,8 +51,6 @@ class alarm extends eqLogic {
                                         $cmd_state = cmd::byId($eqLogic->getConfiguration('cmd_state_id'));
                                         $cmd_state->event($result);
                                         if ($result) {
-                                            
-                                        } else {
                                             
                                         }
                                     }
@@ -170,10 +171,14 @@ class alarm extends eqLogic {
 
     public function postUpdate() {
         if ($this->getIsEnable() == 1) {
-            $cmd = cmd::byId($this->getConfiguration('cmd_state_id'));
-            $cmd->event(0);
-            $cmd = cmd::byId($this->getConfiguration('cmd_armed_id'));
-            $cmd->event(0);
+            $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
+            if ($cmd_state->execCmd() == '') {
+                $cmd_state->event(0);
+            }
+            $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
+            if ($cmd_armed->execCmd() == '') {
+                $cmd_armed->event(0);
+            }
         }
     }
 

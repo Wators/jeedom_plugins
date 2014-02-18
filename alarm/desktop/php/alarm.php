@@ -47,6 +47,19 @@ sendVarToJS('eqType', 'alarm');
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="col-lg-4 control-label">Catégorie</label>
+                            <div class="col-lg-8">
+                                <?php
+                                foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value) {
+                                    echo '<label class="checkbox-inline">';
+                                    echo '<input type="checkbox" class="eqLogicAttr" data-l1key="category" data-l2key="' . $key . '" />' . $value['name'];
+                                    echo '</label>';
+                                }
+                                ?>
+
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-lg-4 control-label">Activer</label>
                             <div class="col-lg-1">
                                 <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isEnable" checked/>
@@ -62,13 +75,13 @@ sendVarToJS('eqType', 'alarm');
                 </form>
             </div>
             <div class="col-lg-6">
-                
+
             </div>
         </div>
         <a class="btn btn-success" id="bt_addMode"><i class="fa fa-plus-circle"></i> Ajouter mode</a>
         <br/><br/>
         <div id="div_modes"></div>   
-        
+
         <form class="form-horizontal">
             <fieldset>
                 <div class="form-actions">
