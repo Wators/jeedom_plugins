@@ -26,22 +26,21 @@ function install() {
     if (!is_object($cron)) {
         $cron = new cron();
     }
-    $cron->setClass('sms');
+    $cron->setClass('alarm');
     $cron->setFunction('pull');
     $cron->setEnable(1);
     $cron->setDeamon(1);
-    $cron->setDeamonSleepTime(30);
     $cron->setSchedule('* * * * *');
     $cron->save();
-    config::save('smsDeamonCronId', $cron->getId(), 'sms');
+    config::save('alarmDeamonCronId', $cron->getId(), 'alarm');
 }
 
 function remove() {
-    $cron = cron::byId(config::byKey('smsDeamonCronId', 'sms'));
+    $cron = cron::byId(config::byKey('alarmDeamonCronId', 'alarm'));
     if (is_object($cron)) {
         $cron->remove();
     }
-    config::remove('smsDeamonCronId', 'sms');
+    config::remove('alarmDeamonCronId', 'alarm');
 }
 
 ?>

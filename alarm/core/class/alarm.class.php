@@ -22,6 +22,48 @@ require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 class alarm extends eqLogic {
     /*     * *************************Attributs****************************** */
 
+    /*     * ***********************Methode static*************************** */
+
+    public static function pull() {
+        $events = internalEvent::getNewInternalEvent('alarm');
+        foreach ($events as $event) {
+            if ($event->getEvent() == 'event::cmd') {
+                $cmd_id = $event->getOptions('id');
+                if (is_numeric($cmd_id)) {
+                    $eqLogics = eqLogic::byTypeAndSearhConfiguration('alarm', '#' . $cmd_id . '#');
+                    if (is_array($eqLogics) && count($eqLogics) != 0) {
+                        foreach ($eqLogics as $eqLogic) {
+                            $cmd_armed = cmd::byId($eqLogic->getConfiguration('cmd_armed_id'));
+                            if ($cmd_armed->execCmd() == 1) {
+                                if ($eqLogic->getConfiguration('cmd_mode_id') != '') {
+                                    $cmd_mode = cmd::byId($eqLogic->getConfiguration('cmd_mode_id'));
+                                    $mode = json_decode($eqLogic->getConfiguration('mode::' . $cmd_mode->execCmd()),true);
+                                    if ($mode != '' && is_array($mode)) {
+                                        $trigger = cmd::cmdToValue($mode['trigger']);
+                                        $test = new evaluate();
+                                        $result = $test->Evaluer($trigger);
+                                        if (!is_bool($result)) {
+                                            throw new Exception('[Alarme] Erreur evaluation de : ' . $trigger . ' => ' . $result);
+                                        }
+                                        $cmd_state = cmd::byId($eqLogic->getConfiguration('cmd_state_id'));
+                                        $cmd_state->event($result);
+                                        if ($result) {
+                                            
+                                        } else {
+                                            
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /*     * *********************Methode d'instance************************* */
+
     public function preAjax() {
         foreach ($this->getConfiguration() as $key => $value) {
             if (strpos($key, 'mode::') !== false) {
@@ -135,11 +177,6 @@ class alarm extends eqLogic {
         }
     }
 
-    /*     * ***********************Methode static*************************** */
-
-
-
-    /*     * *********************Methode d'instance************************* */
 }
 
 class alarmCmd extends cmd {
