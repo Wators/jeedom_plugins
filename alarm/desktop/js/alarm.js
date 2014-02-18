@@ -104,7 +104,7 @@ function addEqLogic(_eqLogic) {
     for (var i in _eqLogic.configuration) {
         if (i.indexOf('mode::') === 0) {
             var mode = {name: _eqLogic.configuration[i].name};
-            mode[i] = json_decode(_eqLogic.configuration[i]);
+            mode[i] = _eqLogic.configuration[i];
             mode.name = mode[i].name;
             addMode(mode);
         }
