@@ -131,10 +131,10 @@ function addAction(_el, _action) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-2 control-label">Action</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default form-control listEquipementAction"><i class="fa fa-list-alt "></i></a>';
+    div += '<a class="btn btn-default btn-sm listEquipementAction"><i class="fa fa-list-alt "></i></a>';
     div += '</div>';
     div += '<div class="col-lg-4">';
-    div += '<input class="expressionAttr form-control" data-l1key="cmd" />';
+    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
     div += '</div>';
     div += '<div class="col-lg-4 actionOptions">';
     div += displayActionOption(init(_action.cmd, ''), _action.options);
@@ -156,14 +156,14 @@ function addTrigger(_el, _trigger) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-2 control-label">Déclencheur</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default form-control listEquipementInfo"><i class="fa fa-list-alt"></i></a>';
+    div += '<a class="btn btn-default btn-sm listEquipementInfo"><i class="fa fa-list-alt"></i></a>';
     div += '</div>';
     div += '<div class="col-lg-4">';
-    div += '<input class="triggerAttr form-control" data-l1key="cmd" />';
+    div += '<input class="triggerAttr form-control input-sm" data-l1key="cmd" />';
     div += '</div>';
-    div += '<div class="col-lg-1 actionOptions col-md-offset-4">';
+    div += '<div class="col-lg-1 actionOptions col-lg-offset-4">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeTrigger"></i>';
-     div += '</div>';
+    div += '</div>';
     div += '</div>';
     _el.find('.div_triggers').append(div);
     $('#div_modes .mode:last').setValues(_trigger, '.triggerAttr');
@@ -171,7 +171,7 @@ function addTrigger(_el, _trigger) {
 
 function addMode(_mode) {
     var div = '<div class="mode well">';
-    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeMode"></i>';
+
 
     div += '<form class="form-horizontal" role="form">';
 
@@ -180,11 +180,11 @@ function addMode(_mode) {
     div += '<div class="col-lg-4">';
     div += '<span class="modeAttr label label-info" data-l1key="name" ></span>';
     div += '</div>';
-    div += '<div class="col-lg-2">';
-    div += '<a class="btn btn-default form-control bt_addTrigger"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
-    div += '</div>';
-    div += '<div class="col-lg-2">';
-    div += '<a class="btn btn-default form-control bt_addAction"><i class="fa fa-plus-circle"></i> Action</a>';
+    div += '<div class="col-lg-2 col-lg-offset-4">';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeMode"></i>';
+    div += '<a class="btn btn-default btn-sm bt_addTrigger pull-right"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
+    div += '<a class="btn btn-default btn-sm bt_addAction  pull-right" style="margin-left : 5px;"><i class="fa fa-plus-circle"></i> Action</a>';
+
     div += '</div>';
     div += '</div>';
 
@@ -216,6 +216,4 @@ function addMode(_mode) {
             addTrigger($('#div_modes .mode:last'), _mode.triggers);
         }
     }
-
-
 }
