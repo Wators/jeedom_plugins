@@ -369,6 +369,9 @@ class zwave extends eqLogic {
 
     public function getInfo() {
         $return = array();
+        if (!is_numeric($this->getLogicalId())) {
+            return $return;
+        }
         $http = new com_http(self::makeBaseUrl() . '/ZWaveAPI/Run/devices[' . $this->getLogicalId() . ']');
         $results = json_decode(self::handleError($http->exec()), true);
         if (isset($results['instances'])) {
