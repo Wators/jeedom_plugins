@@ -131,19 +131,21 @@ function addAction(_el, _action) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-2 control-label">Action</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default form-control listEquipementAction"><i class="fa fa-list-alt "></i><a>';
+    div += '<a class="btn btn-default form-control listEquipementAction"><i class="fa fa-list-alt "></i></a>';
     div += '</div>';
-    div += '<div class="col-lg-5">';
-    div += '<input class="expressionAttr form-control" data-l1key="cmd" value="' + init(_action.cmd, '') + '"/>';
+    div += '<div class="col-lg-4">';
+    div += '<input class="expressionAttr form-control" data-l1key="cmd" />';
     div += '</div>';
-
     div += '<div class="col-lg-4 actionOptions">';
+    div += displayActionOption(init(_action.cmd, ''), _action.options);
     div += '</div>';
+    div += '<div class="col-lg-1 actionOptions">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeAction"></i>';
     div += '</div>';
     div += '</div>';
     _el.find('.div_actions').append(div);
-    displayActionOption(init(_action, ''), _action.options)
+    $('#div_modes .mode:last').setValues(_action, '.expressionAttr');
+
 }
 
 function addTrigger(_el, _trigger) {
@@ -154,14 +156,17 @@ function addTrigger(_el, _trigger) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-2 control-label">Déclencheur</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default form-control listEquipementInfo"><i class="fa fa-list-alt"></i><a>';
+    div += '<a class="btn btn-default form-control listEquipementInfo"><i class="fa fa-list-alt"></i></a>';
     div += '</div>';
-    div += '<div class="col-lg-5">';
-    div += '<input class="triggerAttr form-control" data-l1key="cmd" value="' + init(_trigger.cmd, '') + '"/>';
+    div += '<div class="col-lg-4">';
+    div += '<input class="triggerAttr form-control" data-l1key="cmd" />';
     div += '</div>';
+    div += '<div class="col-lg-1 actionOptions col-md-offset-4">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeTrigger"></i>';
+     div += '</div>';
     div += '</div>';
     _el.find('.div_triggers').append(div);
+    $('#div_modes .mode:last').setValues(_trigger, '.triggerAttr');
 }
 
 function addMode(_mode) {
@@ -186,7 +191,6 @@ function addMode(_mode) {
     div += '<div class="div_actions">';
     div += '<hr />';
     div += '<div class="div_triggers">';
-
 
     div += '</form>';
 
