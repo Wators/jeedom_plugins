@@ -19,27 +19,8 @@ $(function() {
     $('#bt_addMode').on('click', function() {
         bootbox.prompt("Nom du mode ?", function(result) {
             if (result !== null) {
-                var mode = {name: result};
-                mode['mode::' + result] = [];
-                mode['mode::' + result]['name'] = result;
-                addMode(mode);
+                addMode({name: result});
             }
-        });
-    });
-
-    $("#div_modes").delegate(".listEquipementInfo", 'click', function() {
-        var el = $(this);
-        cmd.getSelectModal({type: 'info'}, function(result) {
-            var calcul = el.closest('.mode').find('.eqLogicAttr[data-l1key=configuration][data-l3key=trigger]');
-            calcul.value(calcul.value() + ' ' + result.human);
-        });
-    });
-
-    $("#div_modes").delegate(".listEquipementAction", 'click', function() {
-        var el = $(this);
-        cmd.getSelectModal({type: 'action'}, function(result) {
-            var calcul = el.closest('.action').find('.eqLogicAttr[data-l1key=configuration][data-l3key=actions]');
-            calcul.value(calcul.value() + ' ' + result.human);
         });
     });
 
@@ -51,16 +32,35 @@ $(function() {
         addAction($(this).closest('.mode'), '');
     });
 
+    $("#div_modes").delegate('.bt_removeAction', 'click', function() {
+        $(this).closest('.action').remove();
+    })
+
+    $("#div_modes").delegate('.bt_addTrigger', 'click', function() {
+        addTrigger($(this).closest('.mode'), '');
+    });
+
+    $("#div_modes").delegate('.bt_removeTrigger', 'click', function() {
+        $(this).closest('.trigger').remove();
+    })
+
+    $("#div_modes").delegate(".listEquipementInfo", 'click', function() {
+        var el = $(this).closest('.trigger').find('.triggerAttr[data-l1key=cmd]');
+        cmd.getSelectModal({type: 'info', subtype: 'binary'}, function(result) {
+            el.value(result.human);
+        });
+    });
+
 
     $("#div_modes").delegate(".listEquipementAction", 'click', function() {
-        var el = $(this).closest('.action').find('.eqLogicAttr[data-l1key=configuration][data-l3key=actions]');
+        var el = $(this).closest('.action').find('.expressionAttr[data-l1key=cmd]');
         cmd.getSelectModal({type: 'action'}, function(result) {
-            el.value({name: result.human});
+            el.value(result.human);
             el.closest('.action').find('.actionOptions').html(displayActionOption(el.value(), ''));
         });
     });
 
-    $('body').delegate('.action .eqLogicAttr[data-l1key=configuration][data-l3key=actions]', 'focusout', function(event) {
+    $('body').delegate('.action .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
         var expression = $(this).closest('.action').getValues('.expressionAttr');
         $(this).closest('.action').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
     });
@@ -99,26 +99,34 @@ function displayActionOption(_expression, _options) {
     return html;
 }
 
+function saveEqLogic(_eqLogic) {
+    if (!isset(_eqLogic.configuration)) {
+        _eqLogic.configuration = {};
+    }
+    _eqLogic.configuration.modes = [];
+    $('#div_modes .mode').each(function() {
+        var mode = $(this).getValues('.modeAttr');
+        mode = mode[0];
+        mode.actions = $(this).find('.action').getValues('.expressionAttr');
+        mode.triggers = $(this).find('.trigger').getValues('.triggerAttr');
+        _eqLogic.configuration.modes.push(mode);
+    });
+    return _eqLogic;
+}
 
-function addEqLogic(_eqLogic) {
-    for (var i in _eqLogic.configuration) {
-        if (i.indexOf('mode::') === 0) {
-            var mode = {name: _eqLogic.configuration[i].name};
-            mode[i] = _eqLogic.configuration[i];
-            mode.name = mode[i].name;
-            addMode(mode);
-        }
+function printEqLogic(_eqLogic) {
+    for (var i in _eqLogic.configuration.modes) {
+        addMode(_eqLogic.configuration.modes[i]);
     }
 }
 
 function addAction(_el, _action) {
-    if (isset(_action)) {
+    if (!isset(_action)) {
         _action = {};
     }
-    if (isset(_action.options)) {
+    if (!isset(_action.options)) {
         _action.options = {};
     }
-    var name = _el.find('.eqLogicAttr[data-l1key=configuration][data-l3key=name]').value();
     var div = '<div class="action">';
     div += '<div class="form-group">';
     div += '<label class="col-lg-2 control-label">Action</label>';
@@ -126,14 +134,34 @@ function addAction(_el, _action) {
     div += '<a class="btn btn-default form-control listEquipementAction"><i class="fa fa-list-alt "></i><a>';
     div += '</div>';
     div += '<div class="col-lg-5">';
-    div += '<input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mode::' + name + '" data-l3key="actions"  value="' + init(_action.expression, '') + '"/>';
+    div += '<input class="expressionAttr form-control" data-l1key="cmd" value="' + init(_action.cmd, '') + '"/>';
     div += '</div>';
+
     div += '<div class="col-lg-4 actionOptions">';
     div += '</div>';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeAction"></i>';
     div += '</div>';
     div += '</div>';
     _el.find('.div_actions').append(div);
     displayActionOption(init(_action, ''), _action.options)
+}
+
+function addTrigger(_el, _trigger) {
+    if (!isset(_trigger)) {
+        _trigger = {};
+    }
+    var div = '<div class="trigger">';
+    div += '<div class="form-group">';
+    div += '<label class="col-lg-2 control-label">Déclencheur</label>';
+    div += '<div class="col-lg-1">';
+    div += '<a class="btn btn-default form-control listEquipementInfo"><i class="fa fa-list-alt"></i><a>';
+    div += '</div>';
+    div += '<div class="col-lg-5">';
+    div += '<input class="triggerAttr form-control" data-l1key="cmd" value="' + init(_trigger.cmd, '') + '"/>';
+    div += '</div>';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeTrigger"></i>';
+    div += '</div>';
+    _el.find('.div_triggers').append(div);
 }
 
 function addMode(_mode) {
@@ -145,47 +173,43 @@ function addMode(_mode) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-2 control-label">Nom du mode</label>';
     div += '<div class="col-lg-4">';
-    div += '<span class="eqLogicAttr label label-info" data-l1key="configuration" data-l2key="mode::' + _mode.name + '" data-l3key="name" ></span>';
+    div += '<span class="modeAttr label label-info" data-l1key="name" ></span>';
     div += '</div>';
+    div += '<div class="col-lg-2">';
+    div += '<a class="btn btn-default form-control bt_addTrigger"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
     div += '</div>';
-
-    div += '<div class="form-group">';
-    div += '<label class="col-lg-2 control-label">Délai avant déclenchement (en secondes)</label>';
-    div += '<div class="col-lg-1">';
-    div += '<input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mode::' + _mode.name + '" data-l3key="triggerDelay" />';
-    div += '</div>';
-    div += '</div>';
-
-    div += '<div class="form-group">';
-    div += '<label class="col-lg-2 control-label">Déclencheur</label>';
-    div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default form-control listEquipementInfo"><i class="fa fa-list-alt "></i><a>';
-    div += '</div>';
-    div += '<div class="col-lg-7">';
-    div += '<input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="mode::' + _mode.name + '" data-l3key="trigger" />';
-    div += '</div>';
-    div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default form-control bt_addAction"><i class="fa fa-plus-circle "></i> Action<a>';
+    div += '<div class="col-lg-2">';
+    div += '<a class="btn btn-default form-control bt_addAction"><i class="fa fa-plus-circle"></i> Action</a>';
     div += '</div>';
     div += '</div>';
 
     div += '<div class="div_actions">';
-    div += '</div>';
-
-    div += '<hr/>';
+    div += '<hr />';
+    div += '<div class="div_triggers">';
 
 
     div += '</form>';
+
     div += '</div>';
     $('#div_modes').append(div);
-    $('#div_modes .mode:last').setValues({configuration: _mode}, '.eqLogicAttr');
-    if (is_array(_mode['mode::' + _mode.name].actions)) {
-        for (var i in _mode['mode::' + _mode.name].actions) {
-            addAction($('#div_modes .mode:last'), _mode['mode::' + _mode.name].actions[i]);
+    $('#div_modes .mode:last').setValues(_mode, '.modeAttr');
+    if (is_array(_mode.actions)) {
+        for (var i in _mode.actions) {
+            addAction($('#div_modes .mode:last'), _mode.actions[i]);
         }
     } else {
-        if (_mode['mode::' + _mode.name].actions != '') {
-            addAction($('#div_modes .mode:last'), _mode['mode::' + _mode.name].actions);
+        if (_mode.actions != '') {
+            addAction($('#div_modes .mode:last'), _mode.actions);
+        }
+    }
+
+    if (is_array(_mode.triggers)) {
+        for (var i in _mode.triggers) {
+            addTrigger($('#div_modes .mode:last'), _mode.triggers[i]);
+        }
+    } else {
+        if (_mode.triggers != '') {
+            addTrigger($('#div_modes .mode:last'), _mode.triggers);
         }
     }
 

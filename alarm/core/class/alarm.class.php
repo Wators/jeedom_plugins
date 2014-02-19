@@ -98,7 +98,7 @@ class alarm extends eqLogic {
             }
         }
 
-        if ($this->getConfiguration('cmd_mode_id') != '') {
+        if ($this->getIsEnable() == 1 && $this->getConfiguration('cmd_mode_id') != '') {
             $cmd_mode = cmd::byId($this->getConfiguration('cmd_mode_id'));
             if ($cmd_mode->execCmd() == '') {
                 $cmd_mode->event($value['name']);
