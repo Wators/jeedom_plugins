@@ -226,7 +226,7 @@ class zwave extends eqLogic {
                     
                 }
                 $info = $eqLogic->getInfo();
-                if (isset($return['state']) && $return['state'] == 'Réveillé') {
+                if (isset($info['state']) && $info['state'] == 'Réveillé') {
                     continue;
                 }
                 if (isset($info['battery'])) {
