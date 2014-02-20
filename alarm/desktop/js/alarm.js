@@ -129,7 +129,7 @@ function addAction(_el, _action) {
     }
     var div = '<div class="action">';
     div += '<div class="form-group">';
-    div += '<label class="col-lg-2 control-label">Action</label>';
+    div += '<label class="col-lg-1 control-label">Action</label>';
     div += '<div class="col-lg-1">';
     div += '<a class="btn btn-default btn-sm listEquipementAction"><i class="fa fa-list-alt "></i></a>';
     div += '</div>';
@@ -139,7 +139,7 @@ function addAction(_el, _action) {
     div += '<div class="col-lg-4 actionOptions col-lg-offset-1">';
     div += displayActionOption(init(_action.cmd, ''), _action.options);
     div += '</div>';
-    div += '<div class="col-lg-1 actionOptions">';
+    div += '<div class="col-lg-1 actionOptions col-lg-offset-1">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeAction"></i>';
     div += '</div>';
     div += '</div>';
@@ -154,22 +154,22 @@ function addTrigger(_el, _trigger) {
     }
     var div = '<div class="trigger">';
     div += '<div class="form-group">';
-    div += '<label class="col-lg-2 control-label">Déclencheur</label>';
+    div += '<label class="col-lg-1 control-label">Déclencheur</label>';
     div += '<div class="col-lg-1">';
     div += '<a class="btn btn-default btn-sm listEquipementInfo"><i class="fa fa-list-alt"></i></a>';
     div += '</div>';
     div += '<div class="col-lg-3">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="cmd" />';
     div += '</div>';
-    div += '<label class="col-lg-1 control-label">Délai activation</label>';
+    div += '<label class="col-lg-2 control-label">Délai activation</label>';
     div += '<div class="col-lg-1">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="armedDelay" />';
     div += '</div>';
-    div += '<label class="col-lg-1 control-label">Délai déclenchement</label>';
+    div += '<label class="col-lg-2 control-label">Délai déclenchement</label>';
     div += '<div class="col-lg-1">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="waitDelay" />';
     div += '</div>';
-    div += '<div class="col-lg-1 actionOptions col-lg-offset-1">';
+    div += '<div class="col-lg-1 actionOptions">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeTrigger"></i>';
     div += '</div>';
     div += '</div>';
@@ -181,7 +181,7 @@ function addMode(_mode) {
     var div = '<div class="mode well">';
     div += '<form class="form-horizontal" role="form">';
     div += '<div class="form-group">';
-    div += '<label class="col-lg-2 control-label">Nom du mode</label>';
+    div += '<label class="col-lg-1 control-label">Nom du mode</label>';
     div += '<div class="col-lg-4">';
     div += '<span class="modeAttr label label-info" data-l1key="name" ></span>';
     div += '</div>';
