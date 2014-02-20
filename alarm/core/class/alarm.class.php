@@ -170,20 +170,27 @@ class alarm extends eqLogic {
         if ($cmd_armed->execCmd() == 1) {
             if ($this->getConfiguration('cmd_mode_id') != '') {
                 $cmd_mode = cmd::byId($this->getConfiguration('cmd_mode_id'));
+                $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
                 $select_mode = $cmd_mode->execCmd();
                 $modes = $this->getConfiguration('modes');
                 foreach ($modes as $mode) {
                     if ($mode['name'] == $select_mode) {
                         foreach ($mode['triggers'] as $trigger) {
                             if (cmd::cmdToValue($trigger['cmd']) == 1 || cmd::cmdToValue($trigger['cmd']) == '1' || cmd::cmdToValue($trigger['cmd'])) {
+                                if (is_object($cmd_state)) {
+                                    $cmd_state->event(1);
+                                }
                                 foreach ($mode['actions'] as $action) {
                                     $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
                                     if (is_object($cmd)) {
                                         $cmd->execCmd($action['options']);
                                     }
                                 }
-                                break;
+                                return;
                             }
+                        }
+                        if (is_object($cmd_state)) {
+                            $cmd_state->event(0);
                         }
                     }
                 }
