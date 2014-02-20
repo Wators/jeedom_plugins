@@ -46,7 +46,7 @@ $(function() {
 
     $("#div_modes").delegate(".listEquipementInfo", 'click', function() {
         var el = $(this).closest('.trigger').find('.triggerAttr[data-l1key=cmd]');
-        cmd.getSelectModal({type: 'info', subtype: 'binary'}, function(result) {
+        cmd.getSelectModal({cmd: {type: 'info', subtype: 'binary'}}, function(result) {
             el.value(result.human);
         });
     });
@@ -54,7 +54,7 @@ $(function() {
 
     $("#div_modes").delegate(".listEquipementAction", 'click', function() {
         var el = $(this).closest('.action').find('.expressionAttr[data-l1key=cmd]');
-        cmd.getSelectModal({type: 'action'}, function(result) {
+        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
             el.value(result.human);
             el.closest('.action').find('.actionOptions').html(displayActionOption(el.value(), ''));
         });

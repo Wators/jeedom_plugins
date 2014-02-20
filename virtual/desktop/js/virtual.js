@@ -36,7 +36,7 @@ $(function() {
 
     $("#table_cmd").delegate(".listEquipementInfo", 'click', function() {
         var el = $(this);
-        cmd.getSelectModal({type: 'info'}, function(result) {
+        cmd.getSelectModal({cmd: {type: 'info'}}, function(result) {
             var calcul = el.closest('tr').find('.cmdAttr[data-l1key=configuration][data-l2key=calcul]');
             calcul.value(calcul.value() + ' ' + result.human);
         });
