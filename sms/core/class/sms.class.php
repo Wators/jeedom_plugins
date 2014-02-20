@@ -112,7 +112,12 @@ class sms extends eqLogic {
     }
 
     private function deviceOpen() {
-        $this->getSerial()->deviceOpen();
+        try {
+            $this->getSerial()->deviceOpen();
+        } catch (Exception $exc) {
+            slepp(1);
+            $this->getSerial()->deviceOpen();
+        }
     }
 
     private function deviceClose() {
@@ -248,7 +253,8 @@ class sms extends eqLogic {
         if ($out == "+CPIN: SIM PIN") {
             $pin = $this->getConfiguration('pin');
             if (is_null($pin) || $pin == '' || !is_numeric($pin)) {
-                $this->setIsEnable(false);
+                log::add('sms', 'error', "PIN erreur : vide ou non numérique");
+                $this->setIsEnable(0);
                 $this->save();
                 throw new Exception("PIN erreur : vide ou non numérique");
             }
@@ -259,14 +265,22 @@ class sms extends eqLogic {
             sleep(45);
         }
 
+        $this->deviceOpen();
+        $this->sendMessage("AT+CPIN?\r");
+        $out = $this->readPort();
+        $this->deviceClose();
+
         switch ($out) {
             case "+CPIN: READY":
+                $this->setPinOk(true);
+                return true;
             case "OK":
                 $this->setPinOk(true);
                 return true;
                 break;
         }
-        $this->setIsEnable(false);
+        log::add('sms', 'error', "PIN ERROR ({$out})");
+        $this->setIsEnable(0);
         $this->save();
         throw new Exception("PIN ERROR ({$out})");
     }

@@ -83,15 +83,15 @@ class phpSerial {
      */
     function deviceOpen($mode = "r+b") {
         if ($this->_dState === self::SERIAL_DEVICE_OPENED) {
-            throw new Exception("The device is already opened");
+            throw new Exception("The device is already opened : " . $this->_device);
         }
 
         if ($this->_dState === self::SERIAL_DEVICE_NOTSET) {
-            throw new Exception("The device must be set before to be open");
+            throw new Exception("The device must be set before to be open : " . $this->_device);
         }
 
         if (!preg_match("@^[raw]\+?b?$@", $mode)) {
-            throw new Exception("Invalid opening mode : " . $mode . ". Use fopen() modes.");
+            throw new Exception("Invalid opening mode : " . $mode . ". Use fopen() modes for device : " . $this->_device);
         }
 
         $this->_dHandle = @fopen($this->_device, $mode);
@@ -378,7 +378,8 @@ class phpSerial {
                         $_buffer .= $bit;
                     }
                     if (round(getmicrotime() - $startTime, 3) > 10) {
-                        $continue = false;;
+                        $continue = false;
+                        ;
                     }
                 }
                 return array($last, $buffer);

@@ -179,7 +179,8 @@ class alarm extends eqLogic {
                             if ($trigger['cmd'] == '#' . $_trigger_id . '#') {
                                 if ($_value == 1 || $_value) {
                                     if (isset($trigger['armedDelay']) && is_numeric($trigger['armedDelay']) && $trigger['armedDelay'] > 0) {
-                                        if ($cmd_state->getCollectDate() < date('Y-m-d H:i:s', strtotime('-' . $trigger['armedDelay'] . ' second' . date('Y-m-d H:i:s')))) {
+                                        if (strtotime(date('Y-m-d H:i:s')) < strtotime('+' . $trigger['armedDelay'] . ' second' . $cmd_armed->getCollectDate())) {
+                                            echo "not armed (wait time)";
                                             return;
                                         }
                                     }
@@ -194,7 +195,11 @@ class alarm extends eqLogic {
                                         foreach ($mode['actions'] as $action) {
                                             $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
                                             if (is_object($cmd)) {
-                                                $cmd->execCmd($action['options']);
+                                                try {
+                                                    $cmd->execCmd($action['options']);
+                                                } catch (Exception $e) {
+                                                    
+                                                }
                                             }
                                         }
                                     }
@@ -230,6 +235,10 @@ class alarmCmd extends cmd {
             if ($eqLogic->getConfiguration('cmd_armed_id') != '') {
                 $cmd_armed = cmd::byId($eqLogic->getConfiguration('cmd_armed_id'));
                 $cmd_armed->event($this->getConfiguration('state'));
+                $cmd_state = cmd::byId($eqLogic->getConfiguration('cmd_state_id'));
+                if ($this->getConfiguration('state') == 0) {
+                    $cmd_state->event(0);
+                }
             }
         }
         if ($this->getConfiguration('mode') == '1') {
