@@ -171,10 +171,7 @@ function addTrigger(_el, _trigger) {
 
 function addMode(_mode) {
     var div = '<div class="mode well">';
-
-
     div += '<form class="form-horizontal" role="form">';
-
     div += '<div class="form-group">';
     div += '<label class="col-lg-2 control-label">Nom du mode</label>';
     div += '<div class="col-lg-4">';

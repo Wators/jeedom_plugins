@@ -33,29 +33,7 @@ class alarm extends eqLogic {
                     $eqLogics = eqLogic::byTypeAndSearhConfiguration('alarm', '#' . $cmd_id . '#');
                     if (is_array($eqLogics) && count($eqLogics) != 0) {
                         foreach ($eqLogics as $eqLogic) {
-                            $cmd_armed = cmd::byId($eqLogic->getConfiguration('cmd_armed_id'));
-                            if ($cmd_armed->execCmd() == 1) {
-                                if ($eqLogic->getConfiguration('cmd_mode_id') != '') {
-                                    $cmd_mode = cmd::byId($eqLogic->getConfiguration('cmd_mode_id'));
-                                    $mode = $eqLogic->getConfiguration('mode::' . $cmd_mode->execCmd());
-                                    if ($mode != '' && is_array($mode)) {
-                                        if (isset($mode['triggerDelay']) && is_numeric($mode['triggerDelay']) && $mode['triggerDelay'] > 0) {
-                                            sleep($mode['triggerDelay']);
-                                        }
-                                        $trigger = cmd::cmdToValue($mode['trigger']);
-                                        $test = new evaluate();
-                                        $result = $test->Evaluer($trigger);
-                                        if (!is_bool($result)) {
-                                            throw new Exception('[Alarme] Erreur evaluation de : ' . $trigger . ' => ' . $result);
-                                        }
-                                        $cmd_state = cmd::byId($eqLogic->getConfiguration('cmd_state_id'));
-                                        $cmd_state->event($result);
-                                        if ($result) {
-                                            
-                                        }
-                                    }
-                                }
-                            }
+                            $eqLogic->launch();
                         }
                     }
                 }
@@ -75,26 +53,24 @@ class alarm extends eqLogic {
 
     public function postSave() {
         $existing_mode = array('Armer', 'Libérer');
-        foreach ($this->getConfiguration() as $key => $value) {
-            if (strpos($key, 'mode::') !== false) {
-                $existing_mode[] = $value['name'];
-                $find = false;
-                foreach ($this->getCmd() as $cmd) {
-                    if ($cmd->getName() == $value['name']) {
-                        $find = true;
-                        break;
-                    }
+        foreach ($this->getConfiguration('modes') as $key => $value) {
+            $existing_mode[] = $value['name'];
+            $find = false;
+            foreach ($this->getCmd() as $cmd) {
+                if ($cmd->getName() == $value['name']) {
+                    $find = true;
+                    break;
                 }
-                if (!$find) {
-                    $cmd = new alarmCmd();
-                    $cmd->setName($value['name']);
-                    $cmd->setEqLogic_id($this->id);
-                    $cmd->setType('action');
-                    $cmd->setSubType('other');
-                    $cmd->setConfiguration('mode', '1');
-                    $cmd->setConfiguration('state', $value['name']);
-                    $cmd->save();
-                }
+            }
+            if (!$find) {
+                $cmd = new alarmCmd();
+                $cmd->setName($value['name']);
+                $cmd->setEqLogic_id($this->id);
+                $cmd->setType('action');
+                $cmd->setSubType('other');
+                $cmd->setConfiguration('mode', '1');
+                $cmd->setConfiguration('state', $value['name']);
+                $cmd->save();
             }
         }
 
@@ -177,6 +153,40 @@ class alarm extends eqLogic {
             $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
             if ($cmd_armed->execCmd() == '') {
                 $cmd_armed->event(0);
+            }
+        }
+    }
+
+    public function launch() {
+        $cmd = 'nohup php ' . dirname(__FILE__) . '/../../core/php/jeeAlarm.php ';
+        $cmd.= ' eqLogic_id=' . $this->getId();
+        $cmd.= ' >> ' . log::getPathToLog('alarm') . ' 2>&1 &';
+        shell_exec($cmd);
+        return true;
+    }
+
+    public function execute() {
+        $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
+        if ($cmd_armed->execCmd() == 1) {
+            if ($this->getConfiguration('cmd_mode_id') != '') {
+                $cmd_mode = cmd::byId($this->getConfiguration('cmd_mode_id'));
+                $select_mode = $cmd_mode->execCmd();
+                $modes = $this->getConfiguration('modes');
+                foreach ($modes as $mode) {
+                    if ($mode['name'] == $select_mode) {
+                        foreach ($mode['triggers'] as $trigger) {
+                            if (cmd::cmdToValue($trigger['cmd']) == 1 || cmd::cmdToValue($trigger['cmd']) == '1' || cmd::cmdToValue($trigger['cmd'])) {
+                                foreach ($mode['actions'] as $action) {
+                                    $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
+                                    if (is_object($cmd)) {
+                                        $cmd->execCmd($action['options']);
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
