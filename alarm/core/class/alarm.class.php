@@ -178,6 +178,12 @@ class alarm extends eqLogic {
                         foreach ($mode['triggers'] as $trigger) {
                             if (cmd::cmdToValue($trigger['cmd']) == 1 || cmd::cmdToValue($trigger['cmd']) == '1' || cmd::cmdToValue($trigger['cmd'])) {
                                 if ($cmd_state->execCmd() != 1) {
+                                    if (isset($trigger['armedDelay']) && is_numeric($trigger['armedDelay']) && $trigger['armedDelay'] > 0) {
+                                        if ($cmd_state->getCollectDate() < date('Y-m-d H:i:s', strtotime('-' . $trigger['armedDelay'] . ' second' . date('Y-m-d H:i:s')))) {
+                                            continue;
+                                        }
+                                    }
+
                                     if (is_object($cmd_state)) {
                                         $cmd_state->event(1);
                                     }
