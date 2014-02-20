@@ -144,7 +144,7 @@ function addAction(_el, _action) {
     div += '</div>';
     div += '</div>';
     _el.find('.div_actions').append(div);
-    $('#div_modes .mode:last').setValues(_action, '.expressionAttr');
+    $('#div_modes .action:last').setValues(_action, '.expressionAttr');
 
 }
 
@@ -174,7 +174,7 @@ function addTrigger(_el, _trigger) {
     div += '</div>';
     div += '</div>';
     _el.find('.div_triggers').append(div);
-    $('#div_modes .mode:last').setValues(_trigger, '.triggerAttr');
+    $('#div_modes .trigger:last').setValues(_trigger, '.triggerAttr');
 }
 
 function addMode(_mode) {

@@ -180,7 +180,6 @@ class alarm extends eqLogic {
                                 if ($_value == 1 || $_value) {
                                     if (isset($trigger['armedDelay']) && is_numeric($trigger['armedDelay']) && $trigger['armedDelay'] > 0) {
                                         if (strtotime(date('Y-m-d H:i:s')) < strtotime('+' . $trigger['armedDelay'] . ' second' . $cmd_armed->getCollectDate())) {
-                                            echo "not armed (wait time)";
                                             return;
                                         }
                                     }
