@@ -197,7 +197,7 @@ class alarm extends eqLogic {
                                                 try {
                                                     $cmd->execCmd($action['options']);
                                                 } catch (Exception $e) {
-                                                    
+                                                    log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
                                                 }
                                             }
                                         }

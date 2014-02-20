@@ -185,7 +185,7 @@ function addMode(_mode) {
     div += '<div class="col-lg-4">';
     div += '<span class="modeAttr label label-info" data-l1key="name" ></span>';
     div += '</div>';
-    div += '<div class="col-lg-2 col-lg-offset-4">';
+    div += '<div class="col-lg-2 col-lg-offset-5">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeMode"></i>';
     div += '<a class="btn btn-default btn-sm bt_addTrigger pull-right"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
     div += '<a class="btn btn-default btn-sm bt_addAction  pull-right" style="margin-left : 5px;"><i class="fa fa-plus-circle"></i> Action</a>';
