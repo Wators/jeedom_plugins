@@ -42,5 +42,5 @@ if (!is_object($eqLogic)) {
     die('Alarme non trouvé verifier id : ' . init('eqLogic_id'));
 }
 set_time_limit(120);
-$eqLogic->execute();
+$eqLogic->execute(init('trigger_id'), init('value'));
 ?>

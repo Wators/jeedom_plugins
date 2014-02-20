@@ -28,12 +28,12 @@ class alarm extends eqLogic {
         $events = internalEvent::getNewInternalEvent('alarm');
         foreach ($events as $event) {
             if ($event->getEvent() == 'event::cmd') {
-                $cmd_id = $event->getOptions('id');
-                if (is_numeric($cmd_id)) {
-                    $eqLogics = eqLogic::byTypeAndSearhConfiguration('alarm', '#' . $cmd_id . '#');
+                $trigger_id = $event->getOptions('id');
+                if (is_numeric($trigger_id)) {
+                    $eqLogics = eqLogic::byTypeAndSearhConfiguration('alarm', '#' . $trigger_id . '#');
                     if (is_array($eqLogics) && count($eqLogics) != 0) {
                         foreach ($eqLogics as $eqLogic) {
-                            $eqLogic->launch();
+                            $eqLogic->launch($trigger_id, $event->getOptions('value'));
                         }
                     }
                 }
@@ -157,15 +157,15 @@ class alarm extends eqLogic {
         }
     }
 
-    public function launch() {
+    public function launch($_trigger_id, $_value) {
         $cmd = 'nohup php ' . dirname(__FILE__) . '/../../core/php/jeeAlarm.php ';
-        $cmd.= ' eqLogic_id=' . $this->getId();
+        $cmd.= ' eqLogic_id=' . $this->getId() . ' trigger_id=' . $_trigger_id . ' value=' . $_value;
         $cmd.= ' >> ' . log::getPathToLog('alarm') . ' 2>&1 &';
         shell_exec($cmd);
         return true;
     }
 
-    public function execute() {
+    public function execute($_trigger_id, $_value) {
         $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
         if ($cmd_armed->execCmd() == 1) {
             if ($this->getConfiguration('cmd_mode_id') != '') {
@@ -176,29 +176,34 @@ class alarm extends eqLogic {
                 foreach ($modes as $mode) {
                     if ($mode['name'] == $select_mode) {
                         foreach ($mode['triggers'] as $trigger) {
-                            if (cmd::cmdToValue($trigger['cmd']) == 1 || cmd::cmdToValue($trigger['cmd']) == '1' || cmd::cmdToValue($trigger['cmd'])) {
-                                if ($cmd_state->execCmd() != 1) {
+                            if ($trigger['cmd'] == '#' . $_trigger_id . '#') {
+                                if ($_value == 1 || $_value) {
                                     if (isset($trigger['armedDelay']) && is_numeric($trigger['armedDelay']) && $trigger['armedDelay'] > 0) {
                                         if ($cmd_state->getCollectDate() < date('Y-m-d H:i:s', strtotime('-' . $trigger['armedDelay'] . ' second' . date('Y-m-d H:i:s')))) {
-                                            continue;
+                                            return;
                                         }
                                     }
-
-                                    if (is_object($cmd_state)) {
+                                    if (isset($trigger['waitDelay']) && is_numeric($trigger['waitDelay']) && $trigger['waitDelay'] > 0) {
+                                        sleep($trigger['waitDelay']);
+                                        if ($cmd_armed->execCmd() == 0) {
+                                            return;
+                                        }
+                                    }
+                                    if ($cmd_state->execCmd() != 1) {
                                         $cmd_state->event(1);
-                                    }
-                                    foreach ($mode['actions'] as $action) {
-                                        $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
-                                        if (is_object($cmd)) {
-                                            $cmd->execCmd($action['options']);
+                                        foreach ($mode['actions'] as $action) {
+                                            $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
+                                            if (is_object($cmd)) {
+                                                $cmd->execCmd($action['options']);
+                                            }
                                         }
+                                    }
+                                } else {
+                                    if ($cmd_state->execCmd() == 1) {
+                                        $cmd_state->event(0);
                                     }
                                 }
-                                return;
                             }
-                        }
-                        if (is_object($cmd_state)) {
-                            $cmd_state->event(0);
                         }
                     }
                 }
