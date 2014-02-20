@@ -177,13 +177,15 @@ class alarm extends eqLogic {
                     if ($mode['name'] == $select_mode) {
                         foreach ($mode['triggers'] as $trigger) {
                             if (cmd::cmdToValue($trigger['cmd']) == 1 || cmd::cmdToValue($trigger['cmd']) == '1' || cmd::cmdToValue($trigger['cmd'])) {
-                                if (is_object($cmd_state)) {
-                                    $cmd_state->event(1);
-                                }
-                                foreach ($mode['actions'] as $action) {
-                                    $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
-                                    if (is_object($cmd)) {
-                                        $cmd->execCmd($action['options']);
+                                if ($cmd_state->execCmd() != 1) {
+                                    if (is_object($cmd_state)) {
+                                        $cmd_state->event(1);
+                                    }
+                                    foreach ($mode['actions'] as $action) {
+                                        $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
+                                        if (is_object($cmd)) {
+                                            $cmd->execCmd($action['options']);
+                                        }
                                     }
                                 }
                                 return;
