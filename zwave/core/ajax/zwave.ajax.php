@@ -51,7 +51,7 @@ try {
         if (!is_object($eqLogic)) {
             throw new Exception('Razberry plugin non trouvé : ' . init('id'));
         }
-        ajax::success($eqLogic->getDeviceConfiguration(init('forceRefresh', false)));
+        ajax::success($eqLogic->getDeviceConfiguration(init('forceRefresh', false), init('parameter_id', null)));
     }
 
     if (init('action') == 'setDeviceConfiguration') {

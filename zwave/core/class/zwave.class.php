@@ -410,10 +410,18 @@ class zwave extends eqLogic {
         return $return;
     }
 
-    public function getDeviceConfiguration($_forcedRefresh = false) {
-        $device = zwave::devicesParameters($this->getConfiguration('device'));
-        if (!is_array($device) || count($device) == 0) {
-            throw new Exception('Equipement inconnu : ' . $this->getConfiguration('device'));
+    public function getDeviceConfiguration($_forcedRefresh = false, $_parameters_id = null) {
+        if ($_parameters_id == null) {
+            $device = zwave::devicesParameters($this->getConfiguration('device'));
+            if (!is_array($device) || count($device) == 0) {
+                throw new Exception('Equipement inconnu : ' . $this->getConfiguration('device'));
+            }
+        } else {
+            $device = array(
+                'parameters' => array(
+                    $_parameters_id => array()
+                ),
+            );
         }
         $needRefresh = false;
         if ($_forcedRefresh) {

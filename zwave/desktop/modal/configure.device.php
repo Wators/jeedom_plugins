@@ -27,7 +27,7 @@ if (!is_object($eqLogic)) {
 }
 $device = zwave::devicesParameters($eqLogic->getConfiguration('device'));
 sendVarToJS('configureDeviceId', init('id'));
-if (is_array($device) && count($device) != 0) {
+if (is_array($device) && count($device) != 0 && $eqLogic->getConfiguration('device') != '') {
     ?>
     <div id='div_configureDeviceAlert' style="display: none;"></div>
     <form class="form-horizontal">
@@ -99,44 +99,50 @@ if (is_array($device) && count($device) != 0) {
 <?php } else { ?>
     <legend>Informations </legend>
     <div id='div_configureDeviceAlert' style="display: none;"></div>
-
-    <div id="div_configureDeviceParameters">
-        <div class="form-group">
-            <label class="col-lg-1 control-label tooltips">Ecrire paramètre</label>
-            <div class="col-lg-1">
-                <input class="form-control" id="in_parametersId"/>
+    <form class="form-horizontal">
+        <fieldset>
+            <div id="div_configureDeviceParameters">
+                <div class="form-group alert alert-warning">
+                    <label class="col-lg-2 control-label tooltips">Ecrire paramètre</label>
+                    <div class="col-lg-1">
+                        <input class="form-control" id="in_parametersId"/>
+                    </div>
+                    <label class="col-lg-1 control-label tooltips">Taille</label>
+                    <div class="col-lg-1">
+                        <input class="zwaveParameters form-control" data-l2key="size" />
+                    </div>
+                    <label class="col-lg-1 control-label tooltips">Valeur</label>
+                    <div class="col-lg-1">
+                        <input class="zwaveParameters form-control" data-l2key="value" />
+                    </div>
+                    <div class="col-lg-3">
+                        <a class="btn btn-success pull-right" style="color : white;" id="bt_configureDeviceSendGeneric"><i class="fa fa-check"></i> Appliquer</a>
+                    </div>
+                </div>
+                <div class="form-group alert alert-success">
+                    <label class="col-lg-2 control-label tooltips">Lire paramètre</label>
+                    <div class="col-lg-1">
+                        <input class="form-control" id="in_parametersReadId" />
+                    </div>
+                    <label class="col-lg-1 control-label tooltips">Taille</label>
+                    <div class="col-lg-1">
+                        <span class="zwaveParameters label label-primary" data-l2key="size" ></span>
+                    </div>
+                    <label class="col-lg-1 control-label tooltips">Valeur</label>
+                    <div class="col-lg-1">
+                        <span class="zwaveParameters label label-primary" data-l2key="value" ></span>
+                    </div>
+                    <div class="col-lg-3">
+                        <a class="btn btn-success pull-right bt_configureReadParameter" style="color : white;" force="0"><i class="fa fa-check"></i> Rafraichir</a>
+                        <a class="btn btn-success pull-right bt_configureReadParameter" style="color : white;" forece="1"><i class="fa fa-check"></i> Demander</a>
+                    </div>
+                </div>
             </div>
-            <label class="col-lg-1 control-label tooltips">Taille</label>
-            <div class="col-lg-1">
-                <input class="zwaveParameters form-control" data-l2key="size" />
-            </div>
-            <label class="col-lg-1 control-label tooltips">Valeur</label>
-            <div class="col-lg-1">
-                <input class="zwaveParameters form-control" data-l2key="value" />
-            </div>
-            <div class="col-lg-2">
-                <a class="btn btn-success pull-right" style="color : white;" id="bt_configureDeviceSendGeneric"><i class="fa fa-check"></i> Appliquer</a>
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="col-lg-1 control-label tooltips">Lire paramètre</label>
-            <div class="col-lg-1">
-                <input class=" zwaveReadParameters form-control" data-l1key="id" />
-            </div>
-            <label class="col-lg-1 control-label tooltips">Taille</label>
-            <div class="col-lg-1">
-                <span class="zwaveReadParameters form-control" data-l1key="size" ></span>
-            </div>
-            <label class="col-lg-1 control-label tooltips">Valeur</label>
-            <div class="col-lg-1">
-                <span class="zwaveReadParameters form-control" data-l1key="value" ></span>
-            </div>
-        </div>
-    </div>
+        </fieldset>
+    </form>
 <?php } ?>
 <script>
     activateTooltips();
-    configureDeviceLoad();
 
     $('select.zwaveParameters').on('change', function() {
         $(this).closest('.form-group').find('.description').html($(this).find('option:selected').attr('data-description'));
@@ -144,8 +150,8 @@ if (is_array($device) && count($device) != 0) {
 
     $('#bt_configureDeviceSendGeneric').on('click', function() {
         var param_id = $('#in_parametersId').value();
-        $('.zwaveParameters[data-l2key=size]').attr('data-l1key', param_id);
-        $('.zwaveParameters[data-l2key=value]').attr('data-l1key', param_id);
+        $(this).closest('.form-group').find('.zwaveParameters[data-l2key=size]').attr('data-l1key', param_id);
+        $(this).closest('.form-group').find('.zwaveParameters[data-l2key=value]').attr('data-l1key', param_id);
         var configurations = $('#div_configureDeviceParameters').getValues('.zwaveParameters');
         configureDeviceSave(configurations[0]);
     });
@@ -159,14 +165,22 @@ if (is_array($device) && count($device) != 0) {
         configureDeviceSave(configurations[0]);
     });
 
-    function configureDeviceLoad(_forceRefresh) {
+    $('.bt_configureReadParameter').on('click', function() {
+        var param_id = $('#in_parametersReadId').value();
+        $(this).closest('.form-group').find('.zwaveParameters[data-l2key=size]').attr('data-l1key', param_id);
+        $(this).closest('.form-group').find('.zwaveParameters[data-l2key=value]').attr('data-l1key', param_id);
+        configureDeviceLoad($(this).attr('force'), $('#in_parametersReadId').value());
+    });
+
+    function configureDeviceLoad(_forceRefresh, _parameter_id) {
         $.ajax({// fonction permettant de faire de l'ajax
             type: "POST", // methode de transmission des données au fichier php
             url: "plugins/zwave/core/ajax/zwave.ajax.php", // url du fichier php
             data: {
                 action: "getDeviceConfiguration",
                 id: configureDeviceId,
-                forceRefresh: init(_forceRefresh, false)
+                forceRefresh: init(_forceRefresh, false),
+                parameter_id: init(_parameter_id, null)
             },
             dataType: 'json',
             error: function(request, status, error) {
@@ -205,3 +219,11 @@ if (is_array($device) && count($device) != 0) {
         });
     }
 </script>
+
+
+<?php if (is_array($device) && count($device) != 0 && $eqLogic->getConfiguration('device') != '') { ?>
+    <script>
+        configureDeviceLoad();
+    </script>
+
+<?php } ?>
