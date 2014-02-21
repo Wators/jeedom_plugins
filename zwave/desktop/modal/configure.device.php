@@ -27,7 +27,7 @@ if (!is_object($eqLogic)) {
 }
 $device = zwave::devicesParameters($eqLogic->getConfiguration('device'));
 sendVarToJS('configureDeviceId', init('id'));
-if (is_array($device) && count($device) == 0) {
+if (is_array($device) && count($device) != 0) {
     ?>
     <div id='div_configureDeviceAlert' style="display: none;"></div>
     <form class="form-horizontal">
