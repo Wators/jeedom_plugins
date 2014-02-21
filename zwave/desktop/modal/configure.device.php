@@ -133,8 +133,8 @@ if (is_array($device) && count($device) != 0 && $eqLogic->getConfiguration('devi
                         <span class="zwaveParameters label label-primary" data-l2key="value" ></span>
                     </div>
                     <div class="col-lg-3">
-                        <a class="btn btn-success pull-right bt_configureReadParameter" style="color : white;" force="0"><i class="fa fa-check"></i> Rafraichir</a>
-                        <a class="btn btn-success pull-right bt_configureReadParameter" style="color : white;" forece="1"><i class="fa fa-check"></i> Demander</a>
+                        <a class="btn btn-success pull-right bt_configureReadParameter" style="color : white;" force="0"><i class="fa fa-refresh"></i> Rafraichir</a>
+                        <a class="btn btn-warning pull-right bt_configureReadParameter" style="color : white;" force="1"><i class="fa fa-refresh"></i> Demander</a>
                     </div>
                 </div>
             </div>
