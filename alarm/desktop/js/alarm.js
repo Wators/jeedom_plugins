@@ -65,7 +65,55 @@ $(function() {
         $(this).closest('.action').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
     });
 
+    $('#btn_addRazAlarm').on('click', function() {
+        addRazAlarm({});
+    });
+
+    $("#div_razAlarm").delegate(".listEquipementRaz", 'click', function() {
+        var el = $(this).closest('.raz').find('.expressionAttr[data-l1key=cmd]');
+        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
+            el.value(result.human);
+            el.closest('.raz').find('.actionOptions').html(displayActionOption(el.value(), ''));
+        });
+    });
+    
+    $('#div_razAlarm').delegate('.raz .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
+        var expression = $(this).closest('.raz').getValues('.expressionAttr');
+        $(this).closest('.raz').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
+    });
+    
+    $("#div_razAlarm").delegate('.bt_removeRaz', 'click', function() {
+        $(this).closest('.raz').remove();
+    })
+
 });
+
+function addRazAlarm(_raz) {
+    if (!isset(_raz)) {
+        _raz = {};
+    }
+    if (!isset(_raz.options)) {
+        _raz.options = {};
+    }
+    var div = '<div class="raz">';
+    div += '<div class="form-group">';
+    div += '<label class="col-lg-1 control-label">Action</label>';
+    div += '<div class="col-lg-1">';
+    div += '<a class="btn btn-default btn-sm listEquipementRaz"><i class="fa fa-list-alt"></i></a>';
+    div += '</div>';
+    div += '<div class="col-lg-3">';
+    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
+    div += '</div>';
+    div += '<div class="col-lg-6 actionOptions">';
+    div += displayActionOption(init(_raz.cmd, ''), _raz.options);
+    div += '</div>';
+    div += '<div class="col-lg-1">';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeRaz"></i>';
+    div += '</div>';
+    div += '</div>';
+    $('#div_razAlarm').append(div);
+    $('#div_razAlarm .raz:last').setValues(_raz, '.expressionAttr');
+}
 
 function displayActionOption(_expression, _options) {
     var html = '';
@@ -111,12 +159,18 @@ function saveEqLogic(_eqLogic) {
         mode.triggers = $(this).find('.trigger').getValues('.triggerAttr');
         _eqLogic.configuration.modes.push(mode);
     });
+    _eqLogic.configuration.raz = $('#div_razAlarm .raz').getValues('.expressionAttr');
+    
+    
     return _eqLogic;
 }
 
 function printEqLogic(_eqLogic) {
     for (var i in _eqLogic.configuration.modes) {
         addMode(_eqLogic.configuration.modes[i]);
+    }
+    for (var i in _eqLogic.configuration.raz) {
+        addRazAlarm(_eqLogic.configuration.raz[i]);
     }
 }
 
@@ -136,10 +190,10 @@ function addAction(_el, _action) {
     div += '<div class="col-lg-3">';
     div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
     div += '</div>';
-    div += '<div class="col-lg-4 actionOptions col-lg-offset-1">';
+    div += '<div class="col-lg-4 actionOptions">';
     div += displayActionOption(init(_action.cmd, ''), _action.options);
     div += '</div>';
-    div += '<div class="col-lg-1 actionOptions col-lg-offset-1">';
+    div += '<div class="col-lg-1 col-lg-offset-1">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeAction"></i>';
     div += '</div>';
     div += '</div>';

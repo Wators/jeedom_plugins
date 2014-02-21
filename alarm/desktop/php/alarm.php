@@ -75,7 +75,8 @@ sendVarToJS('eqType', 'alarm');
                 </form>
             </div>
             <div class="col-lg-6">
-
+                <legend>RaZ de l'alarme <a class='btn btn-default btn-xs pull-right' id="btn_addRazAlarm"><i class="fa fa-plus-circle"></i> Ajouter</a></legend>
+                <div id="div_razAlarm"></div>
             </div>
         </div>
         <a class="btn btn-success" id="bt_addMode"><i class="fa fa-plus-circle"></i> Ajouter mode</a>

@@ -233,8 +233,20 @@ class alarmCmd extends cmd {
         if ($this->getConfiguration('armed') == '1') {
             if ($eqLogic->getConfiguration('cmd_armed_id') != '') {
                 $cmd_armed = cmd::byId($eqLogic->getConfiguration('cmd_armed_id'));
-                $cmd_armed->event($this->getConfiguration('state'));
                 $cmd_state = cmd::byId($eqLogic->getConfiguration('cmd_state_id'));
+                if ($cmd_state->execCmd() == 1 && $this->getConfiguration('state') == 0) {
+                    foreach ($eqLogic->getConfiguration('raz') as $raz) {
+                        $cmd = cmd::byId(str_replace('#', '', $raz['cmd']));
+                        if (is_object($cmd)) {
+                            try {
+                                $cmd->execCmd($raz['options']);
+                            } catch (Exception $e) {
+                                log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
+                            }
+                        }
+                    }
+                }
+                $cmd_armed->event($this->getConfiguration('state'));
                 if ($this->getConfiguration('state') == 0) {
                     $cmd_state->event(0);
                 }
