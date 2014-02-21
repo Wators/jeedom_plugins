@@ -153,7 +153,7 @@ function addCmdToTable(_cmd) {
     tr += '<td>';
     tr += '<input class="cmdAttr form-control input-sm" data-l1key="name" >';
     tr += '<select class="cmdAttr form-control tooltips input-sm" data-l1key="value" style="display : none;margin-top : 5px;" title="La valeur de la commande vaut par defaut la commande">';
-    tr += eqLogic.builSelectCmd($(".li_eqLogic.active").attr('data-eqLogic_id'), 'info');
+    tr += eqLogic.builSelectCmd($(".li_eqLogic.active").attr('data-eqLogic_id'), {type: 'info'});
     tr += '</select>';
     tr += '</td>';
     tr += '<td class="expertModeHidden">';

@@ -97,12 +97,12 @@ if (is_array($device) && count($device) != 0) {
     </form>
 
 <?php } else { ?>
-    <legend>Informations <a class="btn btn-success btn-xs pull-right" style="color : white;" id="bt_configureDeviceSendGeneric"><i class="fa fa-check"></i> Appliquer</a></legend>
+    <legend>Informations </legend>
     <div id='div_configureDeviceAlert' style="display: none;"></div>
 
     <div id="div_configureDeviceParameters">
         <div class="form-group">
-            <label class="col-lg-1 control-label tooltips">Paramètre</label>
+            <label class="col-lg-1 control-label tooltips">Ecrire paramètre</label>
             <div class="col-lg-1">
                 <input class="form-control" id="in_parametersId"/>
             </div>
@@ -113,6 +113,23 @@ if (is_array($device) && count($device) != 0) {
             <label class="col-lg-1 control-label tooltips">Valeur</label>
             <div class="col-lg-1">
                 <input class="zwaveParameters form-control" data-l2key="value" />
+            </div>
+            <div class="col-lg-2">
+                <a class="btn btn-success pull-right" style="color : white;" id="bt_configureDeviceSendGeneric"><i class="fa fa-check"></i> Appliquer</a>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-lg-1 control-label tooltips">Lire paramètre</label>
+            <div class="col-lg-1">
+                <input class=" zwaveReadParameters form-control" data-l1key="id" />
+            </div>
+            <label class="col-lg-1 control-label tooltips">Taille</label>
+            <div class="col-lg-1">
+                <span class="zwaveReadParameters form-control" data-l1key="size" ></span>
+            </div>
+            <label class="col-lg-1 control-label tooltips">Valeur</label>
+            <div class="col-lg-1">
+                <span class="zwaveReadParameters form-control" data-l1key="value" ></span>
             </div>
         </div>
     </div>
@@ -132,7 +149,7 @@ if (is_array($device) && count($device) != 0) {
         var configurations = $('#div_configureDeviceParameters').getValues('.zwaveParameters');
         configureDeviceSave(configurations[0]);
     });
-    
+
     $('.bt_forceRefresh').on('click', function() {
         configureDeviceLoad(true);
     });

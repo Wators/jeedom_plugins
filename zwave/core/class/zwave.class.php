@@ -573,22 +573,20 @@ class zwaveCmd extends cmd {
 
     public function execute($_options = null) {
         $value = $this->getConfiguration('value');
-        if ($_options != null) {
-            switch ($this->getType()) {
-                case 'action' :
-                    switch ($this->getSubType()) {
-                        case 'slider':
-                            $value = str_replace('#slider#', $_options['slider'], $value);
-                            break;
-                        case 'color':
-
-                            $value = str_replace('#color#', $_options['color'], $value);
-                            return $this->setRGBColor($value);
-                            break;
-                    }
-                    break;
-            }
+        switch ($this->getType()) {
+            case 'action' :
+                switch ($this->getSubType()) {
+                    case 'slider':
+                        $value = str_replace('#slider#', $_options['slider'], $value);
+                        break;
+                    case 'color':
+                        $value = str_replace('#color#', $_options['color'], $value);
+                        return $this->setRGBColor($value);
+                        break;
+                }
+                break;
         }
+
         $request = zwave::makeBaseUrl() . '/ZWaveAPI/Run/';
         $request .= 'devices[' . $this->getEqLogic()->getLogicalId() . ']';
         if ($this->getConfiguration('instanceId') != '') {
