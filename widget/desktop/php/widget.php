@@ -127,7 +127,8 @@ include_file('3rdparty', 'codemirror/mode/javascript/javascript', 'js');
             <div class="col-lg-6" >
                 <legend>Apercu 
                     <a class="btn btn-xs btn-default pull-right" id="bt_applyWidget"><i class="fa fa-fire"></i> Appliquer sur des commandes</a>
-                    <a class="btn btn-xs btn-warning pull-right" id="bt_shareOnMArket"><i class="fa fa-cloud-upload"></i> Partager sur le market</a>
+                    <a class="btn btn-xs btn-warning pull-right" id="bt_shareOnMarket"><i class="fa fa-cloud-upload"></i> Partager</a>
+                    <a class="btn btn-xs btn-success pull-right" id="bt_wiewOnMarket"><i class="fa fa-cloud-download"></i> Voir du market</a>
                 </legend>
                 <div class="col-lg-6" id='div_widgetResult'></div>
             </div>

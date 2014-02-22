@@ -62,14 +62,19 @@ $(function() {
         addWidget($('#md_addWidget .widgetAttr[data-l1key=name]').value());
     });
 
-    $('body').delegate('#bt_shareOnMArket', 'click', function() {
+    $('body').delegate('#bt_shareOnMarket', 'click', function() {
         $('#md_modal').dialog({title: "Partager sur le market"});
         $('#md_modal').load('index.php?v=d&modal=market.send&type=widget&logicalId=' + $(this).attr('data-logicalId') + '&name=' + $(this).attr('data-logicalId')).dialog('open');
     });
-    
+
     $('body').delegate('#bt_getFromMarket', 'click', function() {
         $('#md_modal').dialog({title: "Partager sur le market"});
         $('#md_modal').load('index.php?v=d&modal=market.list&type=widget').dialog('open');
+    });
+
+    $('body').delegate('#bt_wiewOnMarket', 'click', function() {
+        $('#md_modal').dialog({title: "Market"});
+        $('#md_modal').load('index.php?v=d&modal=market.display&type=widget&logicalId=' + $(this).attr('data-logicalId')).dialog('open');
     });
 
 
@@ -103,12 +108,17 @@ function printWidget(_path) {
             }
             $('.widget').setValues(data.result, '.widgetAttr');
             if (data.result.status.market_owner == 1) {
-                $('#bt_shareOnMArket').show();
-                $('#bt_shareOnMArket').attr('data-logicalId', data.result.logicalId);
+                $('#bt_shareOnMarket').show();
+                $('#bt_shareOnMarket').attr('data-logicalId', data.result.logicalId);
+                $('#bt_wiewOnMarket').show();
+                $('#bt_wiewOnMarket').attr('data-logicalId', data.result.logicalId);
             } else {
-                $('#bt_shareOnMArket').hide();
-                $('#bt_shareOnMArket').attr('data-logicalId', '');
+                $('#bt_shareOnMarket').hide();
+                $('#bt_shareOnMarket').attr('data-logicalId', '');
+                $('#bt_wiewOnMarket').hide();
+                $('#bt_wiewOnMarket').attr('data-logicalId', '');
             }
+
             if (editor == null) {
                 if (isset(data.result.content)) {
                     $('#ta_script').val(data.result.content);
