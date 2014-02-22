@@ -54,7 +54,7 @@ $(function() {
 
     $('#bt_applyWidget').on('click', function() {
         $('#md_modal').dialog({title: "Appliquer widget"});
-        $('#md_modal').load('index.php?v=d&plugin=widget&modal=widget.apply&path=' + $('.widgetAttr[data-l1key=path]').value()).dialog('open');
+        $('#md_modal').load('index.php?v=d&plugin=widget&modal=widget.apply&path=' + encodeURI($('.widgetAttr[data-l1key=path]').value())).dialog('open');
     });
 
     $("#md_addWidget .widgetAction[data-action=newAdd]").on('click', function() {
@@ -64,7 +64,7 @@ $(function() {
 
     $('body').delegate('#bt_shareOnMarket', 'click', function() {
         $('#md_modal').dialog({title: "Partager sur le market"});
-        $('#md_modal').load('index.php?v=d&modal=market.send&type=widget&logicalId=' + $(this).attr('data-logicalId') + '&name=' + $(this).attr('data-logicalId')).dialog('open');
+        $('#md_modal').load('index.php?v=d&modal=market.send&type=widget&logicalId=' + encodeURI($(this).attr('data-logicalId')) + '&name=' + encodeURI($(this).attr('data-logicalId'))).dialog('open');
     });
 
     $('body').delegate('#bt_getFromMarket', 'click', function() {
@@ -74,7 +74,7 @@ $(function() {
 
     $('body').delegate('#bt_wiewOnMarket', 'click', function() {
         $('#md_modal').dialog({title: "Market"});
-        $('#md_modal').load('index.php?v=d&modal=market.display&type=widget&logicalId=' + $(this).attr('data-logicalId')).dialog('open');
+        $('#md_modal').load('index.php?v=d&modal=market.display&type=widget&logicalId=' + encodeURI($(this).attr('data-logicalId'))).dialog('open');
     });
 
 
@@ -110,11 +110,15 @@ function printWidget(_path) {
             if (data.result.status.market_owner == 1) {
                 $('#bt_shareOnMarket').show();
                 $('#bt_shareOnMarket').attr('data-logicalId', data.result.logicalId);
-                $('#bt_wiewOnMarket').show();
-                $('#bt_wiewOnMarket').attr('data-logicalId', data.result.logicalId);
             } else {
                 $('#bt_shareOnMarket').hide();
                 $('#bt_shareOnMarket').attr('data-logicalId', '');
+            }
+
+            if (data.result.status.market == 1) {
+                $('#bt_wiewOnMarket').show();
+                $('#bt_wiewOnMarket').attr('data-logicalId', data.result.logicalId);
+            } else {
                 $('#bt_wiewOnMarket').hide();
                 $('#bt_wiewOnMarket').attr('data-logicalId', '');
             }

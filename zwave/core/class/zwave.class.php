@@ -355,6 +355,44 @@ class zwave extends eqLogic {
         return $return;
     }
 
+    public static function shareOnMarket(&$market) {
+        $moduleFile = dirname(__FILE__) . '/../config/devices/' . $market->getLogicalId() . '.php';
+        if (!file_exists($moduleFile)) {
+            throw new Exception('Impossible de trouver le widget ' . $moduleFile);
+        }
+        $tmp = dirname(__FILE__) . '/../../../../tmp/' . $market->getLogicalId() . '.zip';
+        if (!create_zip($moduleFile, $tmp)) {
+            throw new Exception('Echec de création du zip. Répertoire source : ' . $moduleFile . ' / Répertoire cible : ' . $tmp);
+        }
+        return $tmp;
+    }
+
+    public static function getFromMarket(&$market, $_path) {
+        $cibDir = dirname(__FILE__) . '/../config/devices/';
+        if (!file_exists($cibDir)) {
+            throw new Exception('Impossible d\'installer la configuration du module le repertoire n\éxiste pas : ' . $cibDir);
+        }
+        $zip = new ZipArchive;
+        if ($zip->open($_path) === TRUE) {
+            $zip->extractTo($cibDir . '/');
+            $zip->close();
+        } else {
+            throw new Exception('Impossible de décompresser le zip : ' . $_path);
+        }
+        $moduleFile = dirname(__FILE__) . '/../config/devices/' . $market->getLogicalId() . '.php';
+        if (!file_exists($moduleFile)) {
+            throw new Exception('Echec de l\'installation. Impossible de trouver le module ' . $moduleFile);
+        }
+    }
+
+    public static function removeFromMarket(&$market) {
+        $moduleFile = dirname(__FILE__) . '/../config/devices/' . $market->getLogicalId() . '.php';
+        if (!file_exists($moduleFile)) {
+            throw new Exception('Echec lors de la suppression. Impossible de trouver le module ' . $moduleFile);
+        }
+        unlink($moduleFile);
+    }
+
     /*     * *********************Methode d'instance************************* */
 
     public function getAvailableCommandClass() {

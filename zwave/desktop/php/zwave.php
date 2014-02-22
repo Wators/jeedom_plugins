@@ -15,6 +15,8 @@ sendVarToJS('eqType', 'zwave');
                 <a class="btn btn-default btn-sm tooltips changeIncludeState" title="Exclure périphérique Z-wave" data-state="0" style="display: inline-block;"><i class="fa fa-sign-out fa-rotate-90"></i></a>
                 <a class="btn btn-default btn-sm tooltips expertModeHidden" id="bt_inspectQueue" title="Inspecter la queue Z-wave" style="display: inline-block;"><i class="fa fa-exchange fa-rotate-90"></i></a>
                 <a class="btn btn-default btn-sm tooltips expertModeHidden" id="bt_routingTable" title="Afficher la table de routage" style="display: inline-block;"><i class="fa fa-sitemap"></i></a>
+                <a class="btn btn-default btn-sm tooltips" id="bt_getFromMarket" title="Récuperer du market" style="display: inline-block;"><i class="fa fa-shopping-cart"></i></a>
+
 
                 <li class="nav-header">Liste des équipements Z-wave
                     <i class="fa fa-plus-circle pull-right cursor eqLogicAction" data-action="add" style="font-size: 1.5em;margin-bottom: 5px;"></i>
@@ -110,7 +112,7 @@ sendVarToJS('eqType', 'zwave');
 
                         <div class="form-group">
                             <label class="col-lg-2 control-label">Equipement</label>
-                            <div class="col-lg-5">
+                            <div class="col-lg-4">
                                 <select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="device">
                                     <option value="">Aucun</option>
                                     <?php
@@ -120,8 +122,10 @@ sendVarToJS('eqType', 'zwave');
                                     ?>
                                 </select>
                             </div>
-                            <div class="col-lg-2">
+                            <div class="col-lg-6">
                                 <a class="btn btn-default" id="bt_configureDevice"><i class="fa fa-wrench"></i></a>
+                                <a class="btn btn-warning" id="bt_shareOnMarket"><i class="fa fa-cloud-upload"></i> Partager</a>
+                                <a class="btn btn-success" id="bt_wiewOnMarket"><i class="fa fa-cloud-download"></i> Voir du market</a>
                             </div>
                         </div>
 

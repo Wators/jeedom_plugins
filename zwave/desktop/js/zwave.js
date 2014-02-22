@@ -55,6 +55,31 @@ $(function() {
         showHelpModal("cronSyntaxe");
     });
 
+    $('body').delegate('#bt_getFromMarket', 'click', function() {
+        $('#md_modal').dialog({title: "Partager sur le market"});
+        $('#md_modal').load('index.php?v=d&modal=market.list&type=zwave').dialog('open');
+    });
+
+    $('body').delegate('#bt_wiewOnMarket', 'click', function() {
+        var logicalId = $('.eqLogicAttr[data-l1key=configuration][data-l2key=device]').value();
+        if (logicalId == '') {
+            $('#div_alert').showAlert({message: 'Vous devez d\'abord séléctioner un équipement', level: 'danger'});
+            return;
+        }
+        $('#md_modal').dialog({title: "Market"});
+        $('#md_modal').load('index.php?v=d&modal=market.display&type=zwave&logicalId=' + encodeURI(logicalId)).dialog('open');
+    });
+
+    $('body').delegate('#bt_shareOnMarket', 'click', function() {
+        var logicalId = $('.eqLogicAttr[data-l1key=configuration][data-l2key=device]').value();
+        if (logicalId == '') {
+            $('#div_alert').showAlert({message: 'Vous devez d\'abord séléctioner un équipement', level: 'danger'});
+            return;
+        }
+        $('#md_modal').dialog({title: "Partager sur le market"});
+        $('#md_modal').load('index.php?v=d&modal=market.send&type=zwave&logicalId=' + encodeURI(logicalId) + '&name='+encodeURI($('.eqLogicAttr[data-l1key=configuration][data-l2key=device] option:selected').text())).dialog('open');
+    });
+
     /**********************Node js requests *****************************/
     $('body').one('nodeJsConnect', function() {
         socket.on('zwave::controller.data.controllerState', function(_options) {
