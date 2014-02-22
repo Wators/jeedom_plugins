@@ -26,8 +26,8 @@ include_file('3rdparty', 'codemirror/mode/javascript/javascript', 'js');
         <div class="bs-sidebar affix">
             <ul id="ul_widget" class="nav nav-list bs-sidenav fixnav">
                 <a class="btn btn-default btn-sm tooltips" id="bt_getFromMarket" title="Récuperer du market" style="display: inline-block;"><i class="fa fa-shopping-cart"></i></a>
-                
-                
+
+
                 <li class="nav-header">Liste des widgets
                     <i class="fa fa-plus-circle pull-right cursor widgetAction" data-action="add" style="font-size: 1.5em;margin-bottom: 5px;"></i>
                 </li>
@@ -35,13 +35,36 @@ include_file('3rdparty', 'codemirror/mode/javascript/javascript', 'js');
                 <li class="nav-header">Dashboard</li>
                 <?php
                 foreach (widget::listWidget('dashboard') as $widget) {
-                    echo '<li class="cursor li_widget" data-path="' . $widget->getPath() . '"><a>' . $widget->getHumanName() . '</a></li>';
+                    echo '<li class="cursor li_widget" data-path="' . $widget->getPath() . '"><a>' . $widget->getHumanName();
+
+                    $status = market::getInfo($widget->getLogicalId());
+                    if ($status['status'] == 'depreciated') {
+                        echo '<i class="fa fa-times pull-right" title="Widget non maintenu ou supprimé"></i>';
+                    }
+                    if ($status['status'] == 'ok') {
+                        echo '<i class="fa fa-check pull-right" title="Widget à jour"></i>';
+                    }
+                    if ($status['status'] == 'update') {
+                        echo '<i class="fa fa-refresh pull-right" title="Mise à jour nécessaire"></i>';
+                    }
+                    echo '</a></li>';
                 }
                 ?>
                 <li class="nav-header">Mobile</li>
                 <?php
                 foreach (widget::listWidget('mobile') as $widget) {
-                    echo '<li class="cursor li_widget" data-path="' . $widget->getPath() . '"><a>' . $widget->getHumanName() . '</a></li>';
+                    echo '<li class="cursor li_widget" data-path="' . $widget->getPath() . '"><a>' . $widget->getHumanName();
+                    $status = market::getInfo($widget->getLogicalId());
+                    if ($status['status'] == 'depreciated') {
+                        echo '<i class="fa fa-times pull-right" title="Widget non maintenu ou supprimé"></i>';
+                    }
+                    if ($status['status'] == 'ok') {
+                        echo '<i class="fa fa-check pull-right" title="Widget à jour"></i>';
+                    }
+                    if ($status['status'] == 'update') {
+                        echo '<i class="fa fa-refresh pull-right" title="Mise à jour nécessaire"></i>';
+                    }
+                    echo '</a></li>';
                 }
                 ?>
             </ul>
