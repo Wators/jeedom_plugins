@@ -61,6 +61,11 @@ $(function() {
         $('#md_addWidget').modal('hide');
         addWidget($('#md_addWidget .widgetAttr[data-l1key=name]').value());
     });
+    
+    $('body').delegate('#bt_shareOnMArket', 'click', function() {
+        $('#md_modal').dialog({title: "Partager sur le market"});
+        $('#md_modal').load('index.php?v=d&modal=market.send&type=widget&logicalId=' + $(this).attr('data-market_logicalId')).dialog('open');
+    });
 
 
     if (getUrlVars('id') != '') {
@@ -92,6 +97,11 @@ function printWidget(_path) {
                 return;
             }
             $('.widget').setValues(data.result, '.widgetAttr');
+            if (data.result.status.market_owner == 1) {
+                $('#bt_shareOnMArket').show();
+            } else {
+                $('#bt_shareOnMArket').hide();
+            }
             if (editor == null) {
                 if (isset(data.result.content)) {
                     $('#ta_script').val(data.result.content);

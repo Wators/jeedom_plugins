@@ -124,6 +124,10 @@ class widget {
             }
         }
     }
+    
+    public function getLogicalId(){
+        return $this->getVersion().'.'.$this->getHumanName();
+    }
 
     /*     * **********************Getteur Setteur*************************** */
 

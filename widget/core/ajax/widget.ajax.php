@@ -28,7 +28,9 @@ try {
         if (!is_object($widget)) {
             throw new Exception('Widget non trouvé');
         }
-        ajax::success(utils::o2a($widget));
+        $return = utils::o2a($widget);
+        $return['status'] = market::getInfo($widget->getLogicalId());
+        ajax::success($return);
     }
 
     if (init('action') == 'save') {
