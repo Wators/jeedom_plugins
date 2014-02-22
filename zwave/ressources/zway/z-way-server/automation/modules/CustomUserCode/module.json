@@ -1,0 +1,7 @@
+{
+    "autoload": false,
+    "singleton": true,
+    "defaults": {
+	"customCodeFiles": [ ]
+    }
+}

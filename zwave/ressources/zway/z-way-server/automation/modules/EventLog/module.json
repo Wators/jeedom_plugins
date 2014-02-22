@@ -1,0 +1,8 @@
+{
+    "autoload": true,
+    "autoloadPriority": 10,
+    "singleton": true,
+    "defaults": {
+    	"debug": true
+	}
+}

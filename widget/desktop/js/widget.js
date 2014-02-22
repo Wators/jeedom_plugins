@@ -61,10 +61,15 @@ $(function() {
         $('#md_addWidget').modal('hide');
         addWidget($('#md_addWidget .widgetAttr[data-l1key=name]').value());
     });
-    
+
     $('body').delegate('#bt_shareOnMArket', 'click', function() {
         $('#md_modal').dialog({title: "Partager sur le market"});
-        $('#md_modal').load('index.php?v=d&modal=market.send&type=widget&logicalId=' + $(this).attr('data-market_logicalId')).dialog('open');
+        $('#md_modal').load('index.php?v=d&modal=market.send&type=widget&logicalId=' + $(this).attr('data-logicalId') + '&name=' + $(this).attr('data-logicalId')).dialog('open');
+    });
+    
+    $('body').delegate('#bt_getFromMarket', 'click', function() {
+        $('#md_modal').dialog({title: "Partager sur le market"});
+        $('#md_modal').load('index.php?v=d&modal=market.list&type=widget').dialog('open');
     });
 
 
@@ -99,8 +104,10 @@ function printWidget(_path) {
             $('.widget').setValues(data.result, '.widgetAttr');
             if (data.result.status.market_owner == 1) {
                 $('#bt_shareOnMArket').show();
+                $('#bt_shareOnMArket').attr('data-logicalId', data.result.logicalId);
             } else {
                 $('#bt_shareOnMArket').hide();
+                $('#bt_shareOnMArket').attr('data-logicalId', '');
             }
             if (editor == null) {
                 if (isset(data.result.content)) {

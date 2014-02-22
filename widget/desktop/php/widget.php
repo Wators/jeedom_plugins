@@ -25,6 +25,9 @@ include_file('3rdparty', 'codemirror/mode/javascript/javascript', 'js');
     <div class="col-lg-2">
         <div class="bs-sidebar affix">
             <ul id="ul_widget" class="nav nav-list bs-sidenav fixnav">
+                <a class="btn btn-default btn-sm tooltips" id="bt_getFromMarket" title="Récuperer du market" style="display: inline-block;"><i class="fa fa-shopping-cart"></i></a>
+                
+                
                 <li class="nav-header">Liste des widgets
                     <i class="fa fa-plus-circle pull-right cursor widgetAction" data-action="add" style="font-size: 1.5em;margin-bottom: 5px;"></i>
                 </li>

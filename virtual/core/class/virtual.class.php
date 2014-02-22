@@ -68,7 +68,7 @@ class virtualCmd extends cmd {
             if ($this->getConfiguration('infoName') == '') {
                 throw new Exception('Le nom de la commande info ne peut etre vide');
             }
-            $actionInfo = virtualCmd::byTypeEqLogicNameCmdName('virtual', $this->getEqLogic()->getName(), $this->getConfiguration('infoName'));
+            $actionInfo = virtualCmd::byTypeEqLogicIdCmdName('virtual', $this->getEqLogic_id(), $this->getConfiguration('infoName'));
             if (!is_object($actionInfo)) {
                 $actionInfo = new virtualCmd();
                 $actionInfo->setType('info');

@@ -1,0 +1,25 @@
+<div portNumber="#portNumber#">
+    <div class="control-group" >
+        <label class="control-label" >Nom du capteur de lumière</label>
+        <div class="controls cmd i2cColor" enable="1">
+            <input type="text" class="in_id" value="" style="display: none;"/>
+            <input type="text" class="in_mode"value="!" style="display: none;"/>
+            <input type="text" class="in_type" value="c" style="display: none;"/>
+            <input type="text" class="in_value" value="" style="display: none;"/>
+            <input type="text" class="in_eventOnly" value="0" style="display: none;"/>
+            <input type="text" class="in_calcul" value="#V#" style="display: none;"/>
+            <input type="text" class="in_unite" value="" style="display: none;"/>
+            <input type="text" class="in_name" value="Luminosité" style="text-align: center;"/>
+        </div>
+    </div>
+</div>
+
+<script>
+    cmdData = jQuery.parseJSON('#cmdData#');
+    if(cmdData != null){
+        cmd = $('div[portNumber=#portNumber#] .i2cColor');
+        cmd.find('.in_id').val(cmdData[0].id);
+        cmd.find('.in_name').val(cmdData[0].name);
+    
+    }
+</script>

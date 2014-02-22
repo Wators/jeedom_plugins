@@ -1,20 +1,20 @@
 <?php
 
 /* This file is part of Jeedom.
-*
-* Jeedom is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* Jeedom is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
-*/
+ *
+ * Jeedom is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Jeedom is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 /* * ***************************Includes********************************* */
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
@@ -65,6 +65,48 @@ class widget {
         $widget->setContent(file_get_contents($_pathfile));
         $widget->setPath($_pathfile);
         return $widget;
+    }
+
+    public static function shareOnMarket(&$market) {
+        $informations = explode('.', $market->getLogicalId());
+        $cibDir = realpath(dirname(__FILE__) . '/../template/' . $informations[0] . '/cmd.' . $informations[1] . '.' . $informations[2] . '.' . $informations[3] . '.html');
+        if (!file_exists($cibDir)) {
+            throw new Exception('Impossible de trouver le widget ' . $cibDir);
+        }
+        $tmp = dirname(__FILE__) . '/../../../../tmp/' . $market->getLogicalId() . '.zip';
+        if (!create_zip($cibDir, $tmp)) {
+            throw new Exception('Echec de création du zip. Répertoire source : ' . $cibDir . ' / Répertoire cible : ' . $tmp);
+        }
+        return $tmp;
+    }
+
+    public static function getFromMarket(&$market, $_path) {
+        $informations = explode('.', $market->getLogicalId());
+        $cibDir = dirname(__FILE__) . '/../template/' . $informations[0];
+        if (!file_exists($cibDir)) {
+            throw new Exception('Impossible d\'installer le widget le repertoire n\éxiste pas : ' . $cibDir);
+        }
+        $zip = new ZipArchive;
+        if ($zip->open($_path) === TRUE) {
+            $zip->extractTo($cibDir . '/');
+            $zip->close();
+        } else {
+            throw new Exception('Impossible de décompresser le zip : ' . $_path);
+        }
+        $widgetDir = realpath(dirname(__FILE__) . '/../template/' . $informations[0] . '/cmd.' . $informations[1] . '.' . $informations[2] . '.' . $informations[3] . '.html');
+        if (!file_exists($widgetDir)) {
+            throw new Exception('Echec de l\'installation. Impossible de trouver le widget ' . $widgetDir);
+        }
+    }
+
+    public static function removeFromMarket(&$market) {
+        $informations = explode('.', $market->getLogicalId());
+        $widgetDir = realpath(dirname(__FILE__) . '/../template/' . $informations[0] . '/cmd.' . $informations[1] . '.' . $informations[2] . '.' . $informations[3] . '.html');
+        $widget = self::byPath($widgetDir);
+        if (!is_object($widget)) {
+            throw new Exception('Le widget est introuvable ' . $widgetDir);
+        }
+        $widget->remove();
     }
 
     /*     * *********************Methode d'instance************************* */
@@ -124,9 +166,9 @@ class widget {
             }
         }
     }
-    
-    public function getLogicalId(){
-        return $this->getVersion().'.'.$this->getHumanName();
+
+    public function getLogicalId() {
+        return $this->getVersion() . '.' . $this->getHumanName();
     }
 
     /*     * **********************Getteur Setteur*************************** */

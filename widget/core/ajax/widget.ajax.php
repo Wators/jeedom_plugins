@@ -29,6 +29,7 @@ try {
             throw new Exception('Widget non trouvé');
         }
         $return = utils::o2a($widget);
+        $return['logicalId'] = $widget->getLogicalId();
         $return['status'] = market::getInfo($widget->getLogicalId());
         ajax::success($return);
     }

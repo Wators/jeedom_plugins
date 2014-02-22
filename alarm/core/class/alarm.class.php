@@ -90,7 +90,7 @@ class alarm extends eqLogic {
 
     public function postInsert() {
         $cmd = new alarmCmd();
-        $cmd->setName('Armer');
+        $cmd->setName('Actif');
         $cmd->setEqLogic_id($this->id);
         $cmd->setType('info');
         $cmd->setorder(1);
