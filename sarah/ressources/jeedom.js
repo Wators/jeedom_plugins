@@ -18,7 +18,7 @@
 
 exports.action = function(data, callback, config, SARAH) {
     var debug = true;
-    config = config.plugins.jeedom;
+    config = config.modules.jeedom;
     if (data.method == 'execute') {
         log('--------Execute--------');
         var jsonrpc = generateJsonRpc();
