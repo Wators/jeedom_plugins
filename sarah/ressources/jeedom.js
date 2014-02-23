@@ -83,6 +83,9 @@ exports.action = function(data, callback, config, SARAH) {
                 processReturn(false, intCallback);
                 return 0;
             }
+            log('-------REQUEST RESULT-------');
+            log(json);
+            log('----------------------------');
             processReturn(JSON.parse(json), intCallback);
             return 0;
         });

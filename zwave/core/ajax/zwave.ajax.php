@@ -38,7 +38,7 @@ try {
         ajax::success(zwave::getCommandClassInfo(init('class')));
     }
 
-    if (init('action') == 'getPluginInfo') {
+    if (init('action') == 'getModuleInfo') {
         $eqLogic = zwave::byId(init('id'));
         if (!is_object($eqLogic)) {
             throw new Exception('Razberry plugin non trouvé : ' . init('id'));

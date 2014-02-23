@@ -17,7 +17,7 @@
 
 $(function() {
     $(".li_eqLogic").on('click', function() {
-        printPluginInfo($(this).attr('data-eqLogic_id'));
+        printModuleInfo($(this).attr('data-eqLogic_id'));
         return false;
     });
 
@@ -77,8 +77,14 @@ $(function() {
             return;
         }
         $('#md_modal').dialog({title: "Partager sur le market"});
-        $('#md_modal').load('index.php?v=d&modal=market.send&type=zwave&logicalId=' + encodeURI(logicalId) + '&name='+encodeURI($('.eqLogicAttr[data-l1key=configuration][data-l2key=device] option:selected').text())).dialog('open');
+        $('#md_modal').load('index.php?v=d&modal=market.send&type=zwave&logicalId=' + encodeURI(logicalId) + '&name=' + encodeURI($('.eqLogicAttr[data-l1key=configuration][data-l2key=device] option:selected').text())).dialog('open');
     });
+
+    $('.eqLogicAttr[data-l1key=configuration][data-l2key=device]').on('change', function() {
+        getMarketInfo();
+    });
+
+    getMarketInfo();
 
     /**********************Node js requests *****************************/
     $('body').one('nodeJsConnect', function() {
@@ -96,12 +102,45 @@ $(function() {
     });
 });
 
-function printPluginInfo(_id) {
+function getMarketInfo() {
+    $.ajax({// fonction permettant de faire de l'ajax
+        type: "POST", // methode de transmission des données au fichier php
+        url: "core/ajax/market.ajax.php", // url du fichier php
+        data: {
+            action: "getInfo",
+            logicalId: $('.eqLogicAttr[data-l1key=configuration][data-l2key=device]').value(),
+        },
+        dataType: 'json',
+        error: function(request, status, error) {
+            handleAjaxError(request, status, error);
+        },
+        success: function(data) { // si l'appel a bien fonctionné
+            if (data.state != 'ok') {
+                $('#div_alert').showAlert({message: data.result, level: 'danger'});
+                return;
+            }
+            if (data.result.market_owner == 1) {
+                $('#bt_shareOnMarket').show();
+            } else {
+                $('#bt_shareOnMarket').hide();
+            }
+
+            if (data.result.market == 1) {
+                $('#bt_wiewOnMarket').show();
+            } else {
+                $('#bt_wiewOnMarket').hide();
+            }
+        }
+    });
+}
+
+
+function printModuleInfo(_id) {
     $.ajax({// fonction permettant de faire de l'ajax
         type: "POST", // methode de transmission des données au fichier php
         url: "plugins/zwave/core/ajax/zwave.ajax.php", // url du fichier php
         data: {
-            action: "getPluginInfo",
+            action: "getModuleInfo",
             id: _id,
         },
         dataType: 'json',
