@@ -123,6 +123,7 @@ sendVarToJS('eqType', 'zwave');
                                 </select>
                             </div>
                             <div class="col-lg-6">
+                                <span id="span_marketStatus"></span>
                                 <a class="btn btn-default" id="bt_configureDevice"><i class="fa fa-wrench"></i></a>
                                 <a class="btn btn-warning" id="bt_shareOnMarket"><i class="fa fa-cloud-upload"></i> Partager</a>
                                 <a class="btn btn-success" id="bt_wiewOnMarket"><i class="fa fa-cloud-download"></i> Voir du market</a>

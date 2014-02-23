@@ -39,13 +39,13 @@ include_file('3rdparty', 'codemirror/mode/javascript/javascript', 'js');
 
                     $status = market::getInfo($widget->getLogicalId());
                     if ($status['status'] == 'depreciated') {
-                        echo '<i class="fa fa-times pull-right" title="Widget non maintenu ou supprimé"></i>';
+                        echo '<i class="fa fa-times pull-right tooltips" title="Widget non maintenu ou supprimé"></i>';
                     }
                     if ($status['status'] == 'ok') {
-                        echo '<i class="fa fa-check pull-right" title="Widget à jour"></i>';
+                        echo '<i class="fa fa-check pull-right tooltips" title="Widget à jour"></i>';
                     }
                     if ($status['status'] == 'update') {
-                        echo '<i class="fa fa-refresh pull-right" title="Mise à jour nécessaire"></i>';
+                        echo '<i class="fa fa-refresh pull-right tooltips" title="Mise à jour nécessaire"></i>';
                     }
                     echo '</a></li>';
                 }

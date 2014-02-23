@@ -119,6 +119,7 @@ function getMarketInfo() {
                 $('#div_alert').showAlert({message: data.result, level: 'danger'});
                 return;
             }
+            $('#span_marketStatus').empty();
             if (data.result.market_owner == 1) {
                 $('#bt_shareOnMarket').show();
             } else {
@@ -127,9 +128,20 @@ function getMarketInfo() {
 
             if (data.result.market == 1) {
                 $('#bt_wiewOnMarket').show();
+                if (data.result.status == 'depreciated') {
+                    $('#span_marketStatus').append('<i class="fa fa-times tooltips" title="Module non maintenu ou supprimé"></i>');
+                }
+                if (data.result.status == 'ok') {
+                    $('#span_marketStatus').append('<i class="fa fa-check tooltips" title="Widget à jour"></i>');
+                }
+                if (data.result.status == 'update') {
+                    $('#span_marketStatus').append('<i class="fa fa-refresh tooltips" title="Mise à jour nécessaire"></i>');
+                }
             } else {
                 $('#bt_wiewOnMarket').hide();
             }
+
+            activateTooltips();
         }
     });
 }
