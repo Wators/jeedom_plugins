@@ -118,45 +118,9 @@ class zwave extends eqLogic {
                     /* Reconnaissance du module */
                     foreach (self::devicesParameters() as $device_id => $device) {
                         if ($device['manufacturerId'] == $data['manufacturerId']['value'] && $device['manufacturerProductType'] == $data['manufacturerProductType']['value'] && $device['manufacturerProductId'] == $data['manufacturerProductId']['value']) {
-                            foreach ($device['configuration'] as $key => $value) {
-                                $eqLogic->setConfiguration($key, $value);
-                            }
                             $eqLogic->setConfiguration('device', $device_id);
                             $eqLogic->save();
-                            $cmd_order = 0;
-                            $link_cmds = array();
-                            foreach ($device['commands'] as $command) {
-                                try {
-                                    $cmd = new cmd();
-                                    utils::a2o($cmd, $command);
-                                    if (isset($command['value'])) {
-                                        $cmd->setValue(null);
-                                    }
-                                    $cmd->setEqLogic_id($eqLogic->getId());
-                                    $cmd->setOrder($cmd_order);
-                                    $cmd->save();
-                                    if (isset($command['value'])) {
-                                        $link_cmds[$cmd->getId()] = $command['value'];
-                                    }
-                                    $cmd_order++;
-                                } catch (Exception $exc) {
-                                    
-                                }
-                            }
-                            if (count($link_cmds) > 0) {
-                                foreach ($eqLogic->getCmd() as $eqLogic_cmd) {
-                                    foreach ($link_cmds as $cmd_id => $link_cmd) {
-                                        if ($link_cmd == $eqLogic_cmd->getName()) {
-                                            $cmd = null;
-                                            $cmd = cmd::byId($cmd_id);
-                                            if (is_object($cmd)) {
-                                                $cmd->setValue($eqLogic_cmd->getId());
-                                                $cmd->save();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            $eqLogic->applyModuleConfiguration();
                             break;
                         }
                     }
@@ -383,6 +347,10 @@ class zwave extends eqLogic {
         if (!file_exists($moduleFile)) {
             throw new Exception('Echec de l\'installation. Impossible de trouver le module ' . $moduleFile);
         }
+
+        foreach (eqLogic::byTypeAndSearhConfiguration('zwave', $market->getLogicalId()) as $eqLogic) {
+            $eqLogic->applyModuleConfiguration();
+        }
     }
 
     public static function removeFromMarket(&$market) {
@@ -394,6 +362,12 @@ class zwave extends eqLogic {
     }
 
     /*     * *********************Methode d'instance************************* */
+
+    public function postSave() {
+        if ($this->getConfiguration('applyDevice') != $this->getConfiguration('device')) {
+            $this->applyModuleConfiguration();
+        }
+    }
 
     public function getAvailableCommandClass() {
         $http = new com_http(self::makeBaseUrl() . '/ZWaveAPI/Run/devices[' . $this->getLogicalId() . '].commandClasses');
@@ -518,6 +492,73 @@ class zwave extends eqLogic {
             }
         }
         return true;
+    }
+
+    public function applyModuleConfiguration() {
+        if ($this->getConfiguration('device') == '') {
+            return true;
+        }
+        $device = zwave::devicesParameters($this->getConfiguration('device'));
+        if (!is_array($device) || !isset($device['commands'])) {
+            return true;
+        }
+        if (isset($device['configuration'])) {
+            foreach ($device['configuration'] as $key => $value) {
+                $this->setConfiguration($key, $value);
+            }
+        }
+        $this->setConfiguration('applyDevice', $this->getConfiguration('device'));
+
+        $cmd_order = 0;
+        $link_cmds = array();
+        foreach ($device['commands'] as $command) {
+            if (!isset($command['configuration']['instanceId'])) {
+                $command['configuration']['instanceId'] = 0;
+            }
+            $find = false;
+            foreach ($this->getCmd() as $cmd) {
+                if ($cmd->getConfiguration('instanceId', 0) == $command['configuration']['instanceId'] &&
+                        $cmd->getConfiguration('class') == $command['configuration']['class'] &&
+                        $cmd->getConfiguration('value') == $command['configuration']['value']) {
+                    $find = true;
+                }
+            }
+            if (!$find) {
+                try {
+                    $cmd = new cmd();
+                    utils::a2o($cmd, $command);
+                    if (isset($command['value'])) {
+                        $cmd->setValue(null);
+                    }
+                    $cmd->setEqLogic_id($this->getId());
+                    $cmd->setOrder($cmd_order);
+
+                    $cmd->save();
+                    if (isset($command['value'])) {
+                        $link_cmds[$cmd->getId()] = $command['value'];
+                    }
+                    $cmd_order++;
+                } catch (Exception $exc) {
+                    error_log($exc->getMessage());
+                }
+            }
+        }
+        if (count($link_cmds) > 0) {
+            foreach ($this->getCmd() as $eqLogic_cmd) {
+                foreach ($link_cmds as $cmd_id => $link_cmd) {
+                    if ($link_cmd == $eqLogic_cmd->getName()) {
+                        $cmd = null;
+                        $cmd = cmd::byId($cmd_id);
+                        if (is_object($cmd)) {
+                            $cmd->setValue($eqLogic_cmd->getId());
+                            $cmd->save();
+                        }
+                    }
+                }
+            }
+        }
+
+        $this->save();
     }
 
     /*     * **********************Getteur Setteur*************************** */
