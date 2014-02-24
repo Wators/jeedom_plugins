@@ -57,12 +57,14 @@ class sms extends eqLogic {
                         break;
                     }
                 }
+                $reply = '';
                 if ($autorized) {
                     $reply = interactQuery::tryToReply(trim($message['message']), array());
                     if (trim($reply) != '') {
                         $eqLogic->sendSMS($message['phonenumber'], self::cleanSMS($reply));
                     }
                 }
+                log::add('sms', 'info', 'Message venant de ' . $formatedPhoneNumber . ' : ' . trim($message['message']) . '\nRéponse : ' . $reply);
             }
         }
     }
