@@ -1,26 +1,67 @@
 <?php
 
 /* This file is part of Jeedom.
-*
-* Jeedom is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* Jeedom is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
-*/
+ *
+ * Jeedom is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Jeedom is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 /* * ***************************Includes********************************* */
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 
 class script extends eqLogic {
-    
+
+    public static function shareOnMarket(&$market) {
+        $cibDir = dirname(__FILE__) . '/../../../../' . config::byKey('userScriptDir', 'script') . '/' . $market->getLogicalId();
+        if (!file_exists($cibDir)) {
+            throw new Exception('Impossible de trouver le script  :' . $cibDir);
+        }
+        $tmp = dirname(__FILE__) . '/../../../../tmp/' . $market->getLogicalId() . '.zip';
+        if (!create_zip($cibDir, $tmp)) {
+            throw new Exception('Echec de création du zip. Répertoire source : ' . $cibDir . ' / Répertoire cible : ' . $tmp);
+        }
+        return $tmp;
+    }
+
+    public static function getFromMarket(&$market, $_path) {
+        $cibDir = realpath(dirname(__FILE__) . '/../../../../' . config::byKey('userScriptDir', 'script'));
+        if (!file_exists($cibDir)) {
+            throw new Exception('Impossible d\'installer le script le repertoire n\éxiste pas : ' . $cibDir);
+        }
+        $zip = new ZipArchive;
+        if ($zip->open($_path) === TRUE) {
+            $zip->extractTo($cibDir . '/');
+            $zip->close();
+        } else {
+            throw new Exception('Impossible de décompresser le zip : ' . $_path);
+        }
+        $scriptPath = realpath(dirname(__FILE__) . '/../../../../' . config::byKey('userScriptDir', 'script') . '/' . $market->getLogicalId());
+        if (!file_exists($scriptPath)) {
+            throw new Exception('Echec de l\'installation. Impossible de trouver le script ' . $scriptPath);
+        }
+    }
+
+    public static function removeFromMarket(&$market) {
+        $scriptPath = realpath(dirname(__FILE__) . '/../../../../' . config::byKey('userScriptDir', 'script') . '/' . $market->getLogicalId());
+        if (!file_exists($scriptPath)) {
+            throw new Exception('Echec de la désinstallation. Impossible de trouver le script ' . $scriptPath);
+        }
+        unlink($scriptPath);
+        if (!file_exists($scriptPath)) {
+            throw new Exception('Echec de la désinstallation. Impossible de supprimer le script ' . $scriptPath);
+        }
+    }
+
 }
 
 class scriptCmd extends cmd {

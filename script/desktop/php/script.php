@@ -25,6 +25,8 @@ sendVarToJS('userScriptDir', getRootPath() . '/' . config::byKey('userScriptDir'
     <div class="col-lg-2">
         <div class="bs-sidebar affix">
             <ul id="ul_eqLogic" class="nav nav-list bs-sidenav fixnav">
+                <a class="btn btn-default btn-sm tooltips" id="bt_getFromMarket" title="Récuperer du market" style="display: inline-block;"><i class="fa fa-shopping-cart"></i></a>
+                
                 <li class="nav-header">Liste des scripts
                     <i class="fa fa-plus-circle pull-right cursor eqLogicAction" data-action="add" style="font-size: 1.5em;margin-bottom: 5px;"></i>
                 </li>
@@ -122,103 +124,6 @@ sendVarToJS('userScriptDir', getRootPath() . '/' . config::byKey('userScriptDir'
                 </div>
             </fieldset>
         </form>
-    </div>
-</div>
-
-
-<div class="modal fade" id="md_addPreConfigScript">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="close" data-dismiss="modal">×</button>
-                <h3>Ajouter un script shell prédefinie</h3>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-danger" style="display: none;" id="div_addPreConfigError"></div>
-                <form class="form-horizontal">
-                    <fieldset>
-                        <div class="form-group">
-                            <label class="col-lg-4 control-label" for="in_addPreConfigName">Script</label>
-                            <div class="col-lg-8">
-                                <select class="form-control" id="sel_addPreConfigScript">
-                                    <?php
-                                    foreach ($listScript as $key => $script) {
-                                        echo '<option value="' . $key . '" data-path="' . $script['path'] . '" data-argv="' . $script['argv'] . '" data-type="' . $script['type'] . '" data-subType="' . $script['subType'] . '" data-requestType="' . $script['requestType'] . '">' . $script['name'] . '</option>';
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-                        </div>
-                    </fieldset>
-                </form>
-                <div class="alert alert-success">
-                    <center><h4>Version 
-                            <?php
-                            foreach ($listScript as $key => $script) {
-                                echo '<span class="version ' . $key . '" style="display : none;">' . $script['version'] . ' - ' . $script['requestType'] . '</span>';
-                            }
-                            ?>
-                        </h4></center>
-                </div>
-                <div class="alert alert-info">
-                    <center><h4>Description</h4></center>
-                    <?php
-                    foreach ($listScript as $key => $script) {
-                        echo '<span class="description ' . $key . '" style="display : none;">' . $script['description'] . '</span>';
-                    }
-                    ?>
-                </div>
-                <div class="alert">
-                    <center><h4>Utilisation</h4></center>
-                    <?php
-                    foreach ($listScript as $key => $script) {
-                        echo '<span class="use ' . $key . '" style="display : none;">' . $script['use'] . '</span>';
-                    }
-                    ?>
-                </div>
-                <div class="alert alert-danger">
-                    <center><h4>Pré-requis</h4></center>
-                    <?php
-                    foreach ($listScript as $key => $script) {
-                        echo '<span class="required ' . $key . '" style="display : none;">' . $script['required'] . '</span>';
-                    }
-                    ?>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <a class="btn btn-danger" data-dismiss="modal"><i class="fa fa-minus-circle"></i> Annuler</a>
-                <a class="btn btn-success" id="bt_addPreConfigSave"><i class="fa fa-check-circle"></i> Ajouter</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-<div class="modal fade" id="md_addEqLogic">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="close" data-dismiss="modal">×</button>
-                <h3>Ajouter un équipement script</h3>
-            </div>
-            <div class="modal-body">
-                <div style="display: none;" id="div_addEqLogicAlert"></div>
-                <form class="form-horizontal">
-                    <fieldset>
-                        <div class="form-group">
-                            <label class="col-lg-4 control-label">Nom de l'équipement script</label>
-                            <div class="col-lg-8">
-                                <input class="form-control eqLogicAttr" data-l1key="name" type="text" placeholder="Nom de l'équipement script"/>
-                            </div>
-                        </div>
-                    </fieldset>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <a class="btn btn-danger" data-dismiss="modal"><i class="fa fa-minus-circle"></i> Annuler</a>
-                <a class="btn btn-success eqLogicAction" data-action="newAdd"><i class="fa fa-check-circle icon-white"></i> Enregistrer</a>
-            </div>
-        </div>
     </div>
 </div>
 

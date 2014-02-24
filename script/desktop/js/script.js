@@ -1,19 +1,19 @@
 
 /* This file is part of Jeedom.
-*
-* Jeedom is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* Jeedom is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
-*/
+ *
+ * Jeedom is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Jeedom is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Jeedom. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 $(function() {
     editor = null;
@@ -34,7 +34,7 @@ $(function() {
             folderEvent: 'click'
         }, function(file) {
             $("#md_browseScriptFile").dialog('close');
-            tr.find('.cmdAttr[data-l1key=configuration][data-l2key=request]').text(file);
+            tr.find('.cmdAttr[data-l1key=configuration][data-l2key=request]').value(file);
         });
     });
 
@@ -85,14 +85,14 @@ $(function() {
 
     $("#table_cmd tbody").delegate(".newScriptFile", 'click', function(event) {
         var tr = $(this).closest('tr');
-        $('#md_newUserScript').modal('show');
-        $('#bt_addUserNewScript').undelegate().unbind();
-        $("#bt_addUserNewScript").on('click', function(event) {
-            var path = addUserScript($('#in_newUserScriptName').value());
-            if (path !== false) {
-                tr.find('.cmdAttr[data-l1key=configuration][data-l2key=request]').val(path);
-                $('#md_newUserScript').modal('hide');
-                tr.find('.editScriptFile').click();
+        bootbox.prompt("Nom du script ?", function(result) {
+            if (result !== null) {
+                var path = addUserScript(result);
+                if (path !== false) {
+                    tr.find('.cmdAttr[data-l1key=configuration][data-l2key=request]').val(path);
+                    $('#md_newUserScript').modal('hide');
+                    tr.find('.editScriptFile').click();
+                }
             }
         });
     });
@@ -103,7 +103,6 @@ $(function() {
         if (path.indexOf(' ') > 0) {
             path = path.substr(0, path.indexOf(' '));
         }
-
         $.hideAlert();
         bootbox.confirm('Etes-vous sûr de vouloir supprimer le script : <span style="font-weight: bold ;">' + path + '</span> ?', function(result) {
             if (result) {
@@ -112,41 +111,49 @@ $(function() {
         });
     });
 
-
-    $("#table_cmd tbody").delegate(".listScript", 'click', function(event) {
-        $('.description').hide();
-        $('.use').hide();
-        $('.version').hide();
-        $('.required').hide();
-        $('.description.' + $('#sel_addPreConfigScript').value()).show();
-        $('.use.' + $('#sel_addPreConfigScript').value()).show();
-        $('.version.' + $('#sel_addPreConfigScript').value()).show();
-        $('.required.' + $('#sel_addPreConfigScript').value()).show();
-        $('#md_addPreConfigScript').modal('show');
-        $('#bt_addPreConfigSave').undelegate().unbind();
+    $("#table_cmd tbody").delegate('.bt_wiewOnMarket', 'click', function() {
         var tr = $(this).closest('tr');
-        $("#bt_addPreConfigSave").on('click', function(event) {
-            tr.find('.cmdAttr[data-l1key=configuration][data-l2key=request]').value($('#sel_addPreConfigScript option:selected').attr('data-path') + $('#sel_addPreConfigScript option:selected').attr('data-argv'));
-            tr.find('.cmdAttr[data-l1key=type]').value($('#sel_addPreConfigScript option:selected').attr('data-type'));
-            tr.find('.cmdAttr[data-l1key=configuration][data-l2key=requestType]').value($('#sel_addPreConfigScript option:selected').attr('data-requestType'));
-            cmd.changeType(tr.find('.type select'), $('#sel_addPreConfigScript option:selected').attr('data-subType'));
-            $('#md_addPreConfigScript').modal('hide');
-        });
+        var path = tr.find('.cmdAttr[data-l1key=configuration][data-l2key=request]').val();
+        var logicalId = getLogicalIdFromPath(path);
+        if (logicalId == '') {
+            $('#div_alert').showAlert({message: 'Vous devez d\'abord séléctioner un script', level: 'danger'});
+            return;
+        }
+        $('#md_modal').dialog({title: "Market"});
+        $('#md_modal').load('index.php?v=d&modal=market.display&type=script&logicalId=' + encodeURI(logicalId) + "&hidden=" + encodeURI(path)).dialog('open');
     });
 
-    $("#sel_addPreConfigScript").on('change', function(event) {
-        $('.description').hide();
-        $('.use').hide();
-        $('.version').hide();
-        $('.required').hide();
-        $('.description.' + $(this).value()).show();
-        $('.use.' + $(this).value()).show();
-        $('.version.' + $(this).value()).show();
-        $('.required.' + $(this).value()).show();
+    $("#table_cmd tbody").delegate('.bt_shareOnMarket', 'click', function() {
+        var tr = $(this).closest('tr');
+        var path = tr.find('.cmdAttr[data-l1key=configuration][data-l2key=request]').val();
+        var logicalId = getLogicalIdFromPath(path);
+        if (logicalId == '') {
+            $('#div_alert').showAlert({message: 'Vous devez d\'abord séléctioner un script', level: 'danger'});
+            return;
+        }
+        $('#md_modal').dialog({title: "Partager sur le market"});
+        $('#md_modal').load('index.php?v=d&modal=market.send&type=script&logicalId=' + encodeURI(logicalId) + '&name=' + encodeURI(logicalId) + "&hidden=" + encodeURI(path)).dialog('open');
     });
-    
+
+    $('#bt_getFromMarket').on('click', function() {
+        $('#md_modal').dialog({title: "Partager sur le market"});
+        $('#md_modal').load('index.php?v=d&modal=market.list&type=script').dialog('open');
+    });
+
     $("#table_cmd").sortable({axis: "y", cursor: "move", items: ".cmd", placeholder: "ui-state-highlight", tolerance: "intersect", forcePlaceholderSize: true});
 });
+
+function getLogicalIdFromPath(_path) {
+    if (_path.indexOf(' ') > 0) {
+        _path = _path.substr(0, _path.indexOf(' '));
+    }
+    var res = _path.split("/");
+    if (res.length > 0) {
+        return res[res.length - 1];
+    } else {
+        return _path;
+    }
+}
 
 
 function loadScriptFile(_path) {
@@ -300,9 +307,6 @@ function addCmdToTable(_cmd) {
     tr += '<td><textarea style="height : 95px;" class="cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="request"></textarea>';
 
     tr += '<div class="form-group">';
-    tr += '<div class="col-lg-3">';
-    tr += '<a class="btn btn-default listScript cursor form-control input-sm" style="margin-top : 5px;"><i class="fa fa-list-alt"></i> Script prédefini</a>';
-    tr += '</div>';
     tr += '<div class="col-lg-2">';
     tr += '<a class="btn btn-default browseScriptFile cursor form-control input-sm" style="margin-top : 5px;"><i class="fa fa-folder-open"></i> Parcourir</a>';
     tr += '</div>';
@@ -310,11 +314,18 @@ function addCmdToTable(_cmd) {
     tr += '<a class="btn btn-default editScriptFile cursor form-control input-sm" style="margin-top : 5px;"><i class="fa fa-edit"></i> Editer</a>';
     tr += '</div>';
     tr += '<div class="col-lg-2">';
-    tr += '<a class="btn btn-default newScriptFile cursor form-control input-sm" style="margin-top : 5px;"><i class="fa fa-file-o"></i> Nouveau</a>';
+    tr += '<a class="btn btn-success newScriptFile cursor form-control input-sm" style="margin-top : 5px;"><i class="fa fa-file-o"></i> Nouveau</a>';
     tr += '</div>';
     tr += '<div class="col-lg-2">';
-    tr += '<a class="btn btn-default removeScriptFile cursor form-control input-sm" style="margin-top : 5px;"><i class="fa fa-trash-o"></i> Supprimer</a>';
+    tr += '<a class="btn btn-danger removeScriptFile cursor form-control input-sm" style="margin-top : 5px;"><i class="fa fa-trash-o"></i> Supprimer</a>';
     tr += '</div>';
+    tr += '<div class="col-lg-2">';
+    tr += '<a class="btn btn-warning bt_shareOnMarket cursor form-control input-sm" style="margin-top : 5px;"><i class="fa fa-cloud-upload"></i> Partager</a>';
+    tr += '</div>';
+    tr += '<div class="col-lg-2">';
+    tr += '<a class="btn btn-default bt_wiewOnMarket cursor form-control input-sm" style="margin-top : 5px;"><i class="fa fa-cloud-upload"></i> Voir</a>';
+    tr += '</div>';
+
     tr += '</div>';
     tr += '</td>';
     tr += '<td>';
