@@ -37,6 +37,8 @@ class weather extends eqLogic {
                 return 'F';
             case 'Ensoleillé':
                 return 'B';
+            case 'Dégagé':
+                return 'B';
             case 'Passable':
                 return 'A';
             case 'Averse':
@@ -68,6 +70,8 @@ class weather extends eqLogic {
                 return 'Ensoleillé';
             case 'Fair':
                 return 'Passable';
+            case 'Clear':
+                return 'Dégagé';
             case 'Showers':
                 return 'Averse';
             case 'Light Rain':
@@ -315,7 +319,7 @@ class weather extends eqLogic {
         foreach ($yw_forecast['forecast'] as $forecast) {
             $return['forecast'][$day]['day'] = (string) $forecast['day'][0];
             $return['forecast'][$day]['day'] = convertDayEnToFr($return['forecast'][$day]['day']);
-            
+
             $return['forecast'][$day]['condition'] = (string) $forecast['text'][0];
             $return['forecast'][$day]['condition'] = self::convertCondition($return['forecast'][$day]['condition']);
             $return['forecast'][$day]['low_temperature'] = (string) $forecast['low'][0];
