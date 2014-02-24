@@ -64,7 +64,7 @@ class sms extends eqLogic {
                         $eqLogic->sendSMS($message['phonenumber'], self::cleanSMS($reply));
                     }
                 }
-                log::add('sms', 'info', 'Message venant de ' . $formatedPhoneNumber . ' : ' . trim($message['message']) . '\nRéponse : ' . $reply);
+                log::add('sms', 'info', 'Message venant de ' . $formatedPhoneNumber . ' : ' . trim($message['message']) . "\nRéponse : " . $reply);
             }
         }
     }
