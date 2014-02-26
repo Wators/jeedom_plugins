@@ -117,7 +117,7 @@ class sms extends eqLogic {
         try {
             $this->getSerial()->deviceOpen();
         } catch (Exception $exc) {
-            slepp(1);
+            slep(1);
             $this->getSerial()->deviceOpen();
         }
     }
