@@ -63,6 +63,8 @@ class weather extends eqLogic {
                 return 'N';
             case 'Soleil le matin/Nuageux l\'après-midi':
                 return 'B';
+            case 'Pluie et vent':
+                return 'T';
             default:
                 return '';
         }
@@ -82,6 +84,8 @@ class weather extends eqLogic {
                 return 'Nuageux le matin';
             case 'AM Clouds/PM Sun':
                 return 'Nuageux le matin/Soleil l\'après-midi';
+            case 'Rain/Wind':
+                return 'Pluie et vent';
             case 'AM Sun/PM Clouds':
                 return 'Soleil le matin/Nuageux l\'après-midi';
             case 'Partly Cloudy':
