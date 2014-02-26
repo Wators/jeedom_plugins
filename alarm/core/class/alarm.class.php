@@ -167,10 +167,10 @@ class alarm extends eqLogic {
 
     public function execute($_trigger_id, $_value) {
         $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
-        if ($cmd_armed->execCmd() == 1) {
+        $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
+        if ($cmd_armed->execCmd() == 1 && $cmd_state->execCmd() != 1) {
             if ($this->getConfiguration('cmd_mode_id') != '') {
                 $cmd_mode = cmd::byId($this->getConfiguration('cmd_mode_id'));
-                $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
                 $select_mode = $cmd_mode->execCmd();
                 $modes = $this->getConfiguration('modes');
                 foreach ($modes as $mode) {
@@ -189,22 +189,16 @@ class alarm extends eqLogic {
                                             return;
                                         }
                                     }
-                                    if ($cmd_state->execCmd() != 1) {
-                                        $cmd_state->event(1);
-                                        foreach ($mode['actions'] as $action) {
-                                            $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
-                                            if (is_object($cmd)) {
-                                                try {
-                                                    $cmd->execCmd($action['options']);
-                                                } catch (Exception $e) {
-                                                    log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
-                                                }
+                                    $cmd_state->event(1);
+                                    foreach ($mode['actions'] as $action) {
+                                        $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
+                                        if (is_object($cmd)) {
+                                            try {
+                                                $cmd->execCmd($action['options']);
+                                            } catch (Exception $e) {
+                                                log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
                                             }
                                         }
-                                    }
-                                } else {
-                                    if ($cmd_state->execCmd() == 1) {
-                                        $cmd_state->event(0);
                                     }
                                 }
                             }
