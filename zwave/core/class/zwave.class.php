@@ -642,7 +642,7 @@ class zwaveCmd extends cmd {
         if ($this->getType() == 'info') {
             try {
                 $value = $this->execute();
-                if ($value != null) {
+                if ($value !== null) {
                     $this->event($value);
                 }
                 $this->forceUpdate();
