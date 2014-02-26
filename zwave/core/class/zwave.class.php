@@ -129,11 +129,11 @@ class zwave extends eqLogic {
         }
     }
 
-    public static function changeIncludeState($_state) {
-        if ($_state == 1) {
-            $http = new com_http(self::makeBaseUrl() . '/ZWaveAPI/Run/controller.AddNodeToNetwork(1)');
+    public static function changeIncludeState($_mode, $_state) {
+        if ($_mode == 1) {
+            $http = new com_http(self::makeBaseUrl() . '/ZWaveAPI/Run/controller.AddNodeToNetwork(' . $_state . ')');
         } else {
-            $http = new com_http(self::makeBaseUrl() . '/ZWaveAPI/Run/controller.RemoveNodeFromNetwork(1)');
+            $http = new com_http(self::makeBaseUrl() . '/ZWaveAPI/Run/controller.RemoveNodeFromNetwork(' . $_state . ')');
         }
         self::handleError($http->exec());
     }

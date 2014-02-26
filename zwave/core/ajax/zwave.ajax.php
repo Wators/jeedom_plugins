@@ -30,7 +30,7 @@ try {
     }
 
     if (init('action') == 'changeIncludeState') {
-        zwave::changeIncludeState(init('state'));
+        zwave::changeIncludeState(init('mode'),init('state'));
         ajax::success();
     }
 

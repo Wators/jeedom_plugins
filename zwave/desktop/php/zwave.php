@@ -11,12 +11,11 @@ sendVarToJS('eqType', 'zwave');
             <ul id="ul_eqLogic" class="nav nav-list bs-sidenav fixnav">
 
                 <a class="btn btn-default btn-sm tooltips" id="bt_syncEqLogic" title="Synchroniser équipement avec le Razberry" style="display: inline-block;"><i class="fa fa-refresh"></i></a>
-                <a class="btn btn-default btn-sm tooltips changeIncludeState" title="Inclure prériphérique Z-wave" data-state="1" style="display: inline-block;"><i class="fa fa-sign-in fa-rotate-90"></i></a>
-                <a class="btn btn-default btn-sm tooltips changeIncludeState" title="Exclure périphérique Z-wave" data-state="0" style="display: inline-block;"><i class="fa fa-sign-out fa-rotate-90"></i></a>
+                <a class="btn btn-default btn-sm tooltips changeIncludeState" title="Inclure prériphérique Z-wave" data-mode="1" data-state="1" style="display: inline-block;"><i class="fa fa-sign-in fa-rotate-90"></i></a>
+                <a class="btn btn-default btn-sm tooltips changeIncludeState" title="Exclure périphérique Z-wave" data-mode="0" data-state="1" style="display: inline-block;"><i class="fa fa-sign-out fa-rotate-90"></i></a>
                 <a class="btn btn-default btn-sm tooltips expertModeHidden" id="bt_inspectQueue" title="Inspecter la queue Z-wave" style="display: inline-block;"><i class="fa fa-exchange fa-rotate-90"></i></a>
                 <a class="btn btn-default btn-sm tooltips expertModeHidden" id="bt_routingTable" title="Afficher la table de routage" style="display: inline-block;"><i class="fa fa-sitemap"></i></a>
                 <a class="btn btn-default btn-sm tooltips" id="bt_getFromMarket" title="Récuperer du market" style="display: inline-block;"><i class="fa fa-shopping-cart"></i></a>
-
 
                 <li class="nav-header">Liste des équipements Z-wave
                     <i class="fa fa-plus-circle pull-right cursor eqLogicAction" data-action="add" style="font-size: 1.5em;margin-bottom: 5px;"></i>

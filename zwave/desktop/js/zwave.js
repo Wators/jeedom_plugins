@@ -25,7 +25,7 @@ $(function() {
         syncEqLogicWithRazberry();
     });
     $('.changeIncludeState').on('click', function() {
-        changeIncludeState($(this).attr('data-state'));
+        changeIncludeState($(this).attr('data-mode'), $(this).attr('data-state'));
     });
 
     $('#bt_showClass').on('click', function() {
@@ -90,13 +90,17 @@ $(function() {
     $('body').one('nodeJsConnect', function() {
         socket.on('zwave::controller.data.controllerState', function(_options) {
             if (_options == 1) {
-                $('.changeIncludeState[data-state=1]').removeClass('btn-default').addClass('btn-success');
+                $('.changeIncludeState[data-mode=1]').removeClass('btn-default').addClass('btn-success');
+                $('.changeIncludeState[data-mode=1]').attr('data-state', 0);
             }
             if (_options == 5) {
-                $('.changeIncludeState[data-state=0]').removeClass('btn-default').addClass('btn-danger');
+                $('.changeIncludeState[data-mode=0]').removeClass('btn-default').addClass('btn-danger');
+                $('.changeIncludeState[data-mode=0]').attr('data-state', 0);
             }
             if (_options == 0) {
                 $('.changeIncludeState').addClass('btn-default').removeClass('btn-success btn-danger');
+                $('.changeIncludeState[data-mode=1]').attr('data-state', 1);
+                $('.changeIncludeState[data-mode=0]').attr('data-state', 1);
             }
         });
     });
@@ -199,12 +203,13 @@ function syncEqLogicWithRazberry() {
     });
 }
 
-function changeIncludeState(_state) {
+function changeIncludeState(_mode, _state) {
     $.ajax({// fonction permettant de faire de l'ajax
         type: "POST", // methode de transmission des données au fichier php
         url: "plugins/zwave/core/ajax/zwave.ajax.php", // url du fichier php
         data: {
             action: "changeIncludeState",
+            mode: _mode,
             state: _state,
         },
         dataType: 'json',
