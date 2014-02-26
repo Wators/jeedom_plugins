@@ -29,6 +29,8 @@ class weather extends eqLogic {
         switch ($_condition) {
             case 'Partiellement nuageux':
                 return 'H';
+            case 'Peu nuageux':
+                return 'N';
             case 'Nuageux':
                 return 'N';
             case 'Partiellement nuageux / vent':
@@ -49,6 +51,18 @@ class weather extends eqLogic {
                 return 'R';
             case 'Brouillard':
                 return 'M';
+            case 'Soleil l\'après-midi':
+                return 'B';
+            case 'Soleil le matin':
+                return 'B';
+            case 'Nuageux l\'après-midi':
+                return 'N';
+            case 'Nuageux le matin':
+                return 'N';
+            case 'Nuageux le matin/Soleil l\'après-midi':
+                return 'N';
+            case 'Soleil le matin/Nuageux l\'après-midi':
+                return 'B';
             default:
                 return '';
         }
@@ -56,6 +70,20 @@ class weather extends eqLogic {
 
     public static function convertCondition($_condition) {
         switch ($_condition) {
+            case 'Showers Early':
+                return 'Peu nuageux';
+            case 'PM Sun':
+                return 'Soleil l\'après-midi';
+            case 'PM Clouds':
+                return 'Nuageux l\'après-midi';
+            case 'AM Sun':
+                return 'Soleil le matin';
+            case 'AM Clouds':
+                return 'Nuageux le matin';
+            case 'AM Clouds/PM Sun':
+                return 'Nuageux le matin/Soleil l\'après-midi';
+            case 'AM Sun/PM Clouds':
+                return 'Soleil le matin/Nuageux l\'après-midi';
             case 'Partly Cloudy':
                 return 'Partiellement nuageux';
             case 'Mostly Cloudy':

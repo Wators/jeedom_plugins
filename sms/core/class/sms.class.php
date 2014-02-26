@@ -70,8 +70,14 @@ class sms extends eqLogic {
     }
 
     /*     * *********************Methode d'instance************************* */
+    
+    public function preSave(){
+        if($this->getConfiguration('port') == ''){
+            throw new Exception("Le port ne peut etre vide");
+        }
+    }
 
-    public function getSerial() {
+    public function getSerial() {        
         if (!isset(self::$_serial)) {
             $this->displayDebug('Création de l\'interface série sur le port : ' . $this->getConfiguration('port'));
             $serial = new phpSerial();
