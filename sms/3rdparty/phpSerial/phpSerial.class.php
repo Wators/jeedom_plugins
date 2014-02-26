@@ -67,6 +67,8 @@ class phpSerial {
                     $this->_device = $device;
                     $this->_dState = self::SERIAL_DEVICE_SET;
                     return true;
+                }else{
+                    throw new Exception("Erreur d'éxécution  : stty -F ". $device." Vérifier les droits.");
                 }
             }
             throw new Exception("Specified serial port is not valid");

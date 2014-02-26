@@ -42,7 +42,7 @@ sendVarToJS('dontRemoveCmd', '1');
                 <div class="form-group">
                     <label class="col-lg-2 control-label" >Port du périphérique</label>
                     <div class="col-lg-2">
-                        <input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" placeholder="/dev/ttyUSB0"/>
+                        <input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" placeholder=" ex : /dev/ttyUSB0"/>
                     </div>
                 </div><div class="form-group">
                     <label class="col-lg-2 control-label" >Code pin</label>
