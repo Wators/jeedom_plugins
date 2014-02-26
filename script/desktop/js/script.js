@@ -63,6 +63,8 @@ $(function() {
                     mode: data.mode,
                     matchBrackets: true
                 });
+                editor.getWrapperElement().style.height = ($('#md_editScriptFile').height()) + 'px';
+                editor.refresh();
             }, 1);
         } else {
             editor.setOption("mode", data.mode);

@@ -19,14 +19,16 @@ include_file('3rdparty', 'codemirror/mode/perl/perl', 'js');
 sendVarToJS('eqType', 'script');
 sendVarToJS('userScriptDir', getRootPath() . '/' . config::byKey('userScriptDir', 'script'));
 ?>
-
+<style>
+    .CodeMirror-scroll {height: 100%; overflow-y: auto; overflow-x: auto;}
+</style>
 
 <div class="row">
     <div class="col-lg-2">
         <div class="bs-sidebar affix">
             <ul id="ul_eqLogic" class="nav nav-list bs-sidenav fixnav">
                 <a class="btn btn-default btn-sm tooltips" id="bt_getFromMarket" title="Récuperer du market" style="display: inline-block;"><i class="fa fa-shopping-cart"></i></a>
-                
+
                 <li class="nav-header">Liste des scripts
                     <i class="fa fa-plus-circle pull-right cursor eqLogicAction" data-action="add" style="font-size: 1.5em;margin-bottom: 5px;"></i>
                 </li>

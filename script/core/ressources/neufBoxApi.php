@@ -18,14 +18,18 @@
 
 require_once dirname(__FILE__) . "/checkApiKey.php";
 
-foreach ($argv as $arg) {
-    $argList = explode('=', $arg);
-    if ($argList[0] == 'method' && !isset($_GET['method'])) {
-        $_GET['method'] = $argList[1];
+if (isset($argv)) {
+    foreach ($argv as $arg) {
+        $argList = explode('=', $arg);
+        if (isset($argList[0]) && isset($argList[1])) {
+            $_GET[$argList[0]] = $argList[1];
+        }
     }
 }
 
-$method = $_GET['method'];
+$method = $_GET['m'];
+$username = $_GET['u'];
+$password = $_GET['p'];
 
 
 $xml = new DomDocument();
@@ -42,12 +46,10 @@ $token = $xml->getElementsByTagName('auth')->item(0)->getAttribute('token');
 
 
 # gestion du username
-$username = "admin";
 $username_hash = hash("sha256", $username);
 $username_hmac = hash_hmac("sha256", $username_hash, $token);
 
 # gestion du mot de passe
-$password = "pr1sv9web8";
 $password_hash = hash("sha256", $password);
 $password_hmac = hash_hmac("sha256", $password_hash, $token);
 
