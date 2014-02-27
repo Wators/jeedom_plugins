@@ -22,7 +22,7 @@ if (!isConnect()) {
 }
 
 function install() {
-    $cron = cron::byId(config::byKey('alarmDeamonCronId', 'zwave'));
+    $cron = cron::byId(config::byKey('alarmDeamonCronId', 'alarm'));
     if (!is_object($cron)) {
         $cron = new cron();
     }
