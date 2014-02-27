@@ -532,32 +532,35 @@ class zwave extends eqLogic {
             if (!isset($command['configuration']['instanceId'])) {
                 $command['configuration']['instanceId'] = 0;
             }
-            $find = false;
-            foreach ($this->getCmd() as $cmd) {
-                if ($cmd->getConfiguration('instanceId', 0) == $command['configuration']['instanceId'] &&
-                        $cmd->getConfiguration('class') == $command['configuration']['class'] &&
-                        $cmd->getConfiguration('value') == $command['configuration']['value']) {
-                    $find = true;
+            $cmd = null;
+            foreach ($this->getCmd() as $liste_cmd) {
+                if ($liste_cmd->getConfiguration('instanceId', 0) == $command['configuration']['instanceId'] &&
+                        $liste_cmd->getConfiguration('class') == $command['configuration']['class'] &&
+                        $liste_cmd->getConfiguration('value') == $command['configuration']['value']) {
+                    $cmd = $liste_cmd;
+                    break;
                 }
             }
-            if (!$find) {
-                try {
-                    $cmd = new cmd();
-                    utils::a2o($cmd, $command);
-                    if (isset($command['value'])) {
-                        $cmd->setValue(null);
-                    }
-                    $cmd->setEqLogic_id($this->getId());
-                    $cmd->setOrder($cmd_order);
 
-                    $cmd->save();
-                    if (isset($command['value'])) {
-                        $link_cmds[$cmd->getId()] = $command['value'];
-                    }
-                    $cmd_order++;
-                } catch (Exception $exc) {
-                    error_log($exc->getMessage());
+            try {
+                if ($cmd == null || !is_object($cmd)) {
+                    $cmd = new cmd();
+                    $cmd->setOrder($cmd_order);
+                    $cmd->setEqLogic_id($this->getId());
+                } else {
+                    $command['name'] = $cmd->getName();
                 }
+                utils::a2o($cmd, $command);
+                if (isset($command['value'])) {
+                    $cmd->setValue(null);
+                }
+                $cmd->save();
+                if (isset($command['value'])) {
+                    $link_cmds[$cmd->getId()] = $command['value'];
+                }
+                $cmd_order++;
+            } catch (Exception $exc) {
+                error_log($exc->getMessage());
             }
         }
         if (count($link_cmds) > 0) {
