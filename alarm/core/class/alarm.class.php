@@ -108,6 +108,7 @@ class alarm extends eqLogic {
         $cmd->setorder(2);
         $cmd->setSubType('binary');
         $cmd->setEventOnly(1);
+        $this->setDisplay('invertBinary', 1);
         $cmd->save();
         $this->setConfiguration('cmd_state_id', $cmd->getId());
         $this->save();

@@ -249,7 +249,8 @@ function addCmdToTable(_cmd) {
     tr += '<span><input type="checkbox" class="cmdAttr" data-l1key="isHistorized" /> Historiser<br/></span>';
     tr += '<span><input type="checkbox" class="cmdAttr" data-l1key="isVisible" checked/> Afficher<br/></span>';
     tr += '<span><input type="checkbox" class="cmdAttr expertModeHidden" data-l1key="eventOnly" /> Evénement<br/></span>';
-    tr += '<input style="width : 150px;" class="tooltips cmdAttr form-control expertModeHidden input-sm" data-l1key="cache" data-l2key="lifetime" placeholder="Lifetime cache" title="Lifetime cache">';
+    tr += '<span><input type="checkbox" class="cmdAttr expertModeHidden" data-l1key="display" data-l2key="invertBinary" /> Inverser<br/></span>';
+    tr += '<input style="width : 150px;" class="tooltips cmdAttr form-control expertModeHidden input-sm" data-l1key="cache" data-l2key="lifetime" placeholder="Lifetime cache">';
     tr += '</td>';
     tr += '<td>';
     tr += '<input class="cmdAttr form-control tooltips input-sm" data-l1key="unite"  style="width : 100px;" placeholder="Unité" title="Unité">';

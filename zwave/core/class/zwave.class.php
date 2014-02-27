@@ -27,7 +27,14 @@ class zwave extends eqLogic {
 
     public static function pull() {
         $cache = cache::byKey('zwave::lastUpdate');
-        $http = new com_http(self::makeBaseUrl() . '/ZWaveAPI/Data/' . $cache->getValue(strtotime(date('Y-m-d H:i:s')) - 86400));
+        $lastUpdate = $cache->getValue();
+        if ($lastUpdate == '') {
+            $lastUpdate = strtotime(date('Y-m-d H:i:s')) - 86400;
+            foreach (self::byType('zwave') as $eqLogic) {
+                $eqLogic->forceUpdate();
+            }
+        }
+        $http = new com_http(self::makeBaseUrl() . '/ZWaveAPI/Data/' . $lastUpdate);
         $results = json_decode(self::handleError($http->exec()), true);
         if (is_array($results)) {
             foreach ($results as $key => $result) {
@@ -363,6 +370,16 @@ class zwave extends eqLogic {
 
     /*     * *********************Methode d'instance************************* */
 
+    public function forceUpdate() {
+        foreach ($this->getCmd() as $cmd) {
+            try {
+                $cmd->forceUpdate();
+            } catch (Exception $e) {
+                
+            }
+        }
+    }
+
     public function postSave() {
         if ($this->getConfiguration('applyDevice') != $this->getConfiguration('device')) {
             $this->applyModuleConfiguration();
@@ -638,17 +655,11 @@ class zwaveCmd extends cmd {
         return true;
     }
 
-    public function postUpdate() {
-        if ($this->getType() == 'info') {
-            try {
-                $value = $this->execute();
-                if ($value !== null) {
-                    $this->event($value);
-                }
-                $this->forceUpdate();
-            } catch (Exception $exc) {
-                
-            }
+    public function postSave() {
+        try {
+            $this->forceUpdate();
+        } catch (Exception $exc) {
+            
         }
     }
 

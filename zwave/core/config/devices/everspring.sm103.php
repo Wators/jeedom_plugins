@@ -27,7 +27,8 @@ $deviceConfiguration = array(
         'manufacturerProductId' => 1,
         'commands' => array(
             array('name' => 'Etat', 'type' => 'info', 'subtype' => 'binary', 'isVisible' => 1, 'isHistorized' => 1, 'eventOnly' => 1,
-                'configuration' => array('class' => '0x30', 'value' => 'data[1].level')
+                'configuration' => array('class' => '0x30', 'value' => 'data[1].level'),
+                'display' => array('invertBinary' => '1')
             ),
         ),
         'parameters' => array(

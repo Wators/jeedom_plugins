@@ -27,7 +27,8 @@ $deviceConfiguration = array(
         'manufacturerProductId' => 5,
         'commands' => array(
             array('name' => 'Présence', 'type' => 'info', 'subtype' => 'binary', 'isVisible' => 1, 'isHistorized' => 1, 'eventOnly' => 1,
-                'configuration' => array('class' => '0x30', 'value' => 'data[1].level')
+                'configuration' => array('class' => '0x30', 'value' => 'data[1].level'),
+                'display' => array('invertBinary' => '1')
             ),
             array('name' => 'Température', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
                 'configuration' => array('class' => '0x31', 'value' => 'data[1].val')
