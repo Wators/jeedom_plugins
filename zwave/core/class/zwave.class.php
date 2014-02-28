@@ -27,8 +27,8 @@ class zwave extends eqLogic {
 
     public static function pull() {
         $cache = cache::byKey('zwave::lastUpdate');
-        $lastUpdate = $cache->getValue();
-        if ($lastUpdate == '') {
+        $lastUpdate = $cache->getValue(0);
+        if ($lastUpdate == 0) {
             $lastUpdate = strtotime(date('Y-m-d H:i:s')) - 86400;
             foreach (self::byType('zwave') as $eqLogic) {
                 $eqLogic->forceUpdate();
@@ -69,8 +69,7 @@ class zwave extends eqLogic {
                                     if ($cmd->getConfiguration('instanceId') == $instanceId && $cmd->getConfiguration('class') == '0x' . dechex($class)) {
                                         $configurationValue = $cmd->getConfiguration('value');
                                         if (strpos($configurationValue, '[') !== false && strpos($configurationValue, ']') !== false) {
-                                            $configurationValue = str_replace('[', '.', $configurationValue);
-                                            $configurationValue = str_replace(']', '', $configurationValue);
+                                            $configurationValue = str_replace(']', '', str_replace('[', '.', $configurationValue));
                                         }
                                         if (strpos($configurationValue, $attribut) !== false) {
                                             if (isset($result['val'])) {
@@ -567,7 +566,6 @@ class zwave extends eqLogic {
             foreach ($this->getCmd() as $eqLogic_cmd) {
                 foreach ($link_cmds as $cmd_id => $link_cmd) {
                     if ($link_cmd == $eqLogic_cmd->getName()) {
-                        $cmd = null;
                         $cmd = cmd::byId($cmd_id);
                         if (is_object($cmd)) {
                             $cmd->setValue($eqLogic_cmd->getId());
