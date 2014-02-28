@@ -55,23 +55,24 @@ class alarm extends eqLogic {
         $existing_mode = array('Armer', 'Libérer');
         foreach ($this->getConfiguration('modes') as $key => $value) {
             $existing_mode[] = $value['name'];
-            $find = false;
-            foreach ($this->getCmd() as $cmd) {
-                if ($cmd->getName() == $value['name']) {
-                    $find = true;
+            $cmd = null;
+            foreach ($this->getCmd() as $cmd_list) {
+                if ($cmd_list->getName() == $value['name']) {
+                    $cmd = $cmd_list;
                     break;
                 }
             }
-            if (!$find) {
+            if ($cmd == null) {
                 $cmd = new alarmCmd();
-                $cmd->setName($value['name']);
-                $cmd->setEqLogic_id($this->id);
-                $cmd->setType('action');
-                $cmd->setSubType('other');
-                $cmd->setConfiguration('mode', '1');
-                $cmd->setConfiguration('state', $value['name']);
-                $cmd->save();
             }
+            $cmd->setName($value['name']);
+            $cmd->setEqLogic_id($this->id);
+            $cmd->setType('action');
+            $cmd->setSubType('other');
+            $cmd->setConfiguration('mode', '1');
+            $cmd->setConfiguration('state', $value['name']);
+            $cmd->setIsVisible($value['isVisible']);
+            $cmd->save();
         }
 
         if ($this->getIsEnable() == 1 && $this->getConfiguration('cmd_mode_id') != '') {
@@ -84,6 +85,14 @@ class alarm extends eqLogic {
         foreach ($this->getCmd() as $cmd) {
             if ($cmd->getType() == 'action' && !in_array($cmd->getName(), $existing_mode)) {
                 $cmd->remove();
+            }
+            if ($cmd->getName() == 'Armer') {
+                $cmd->setIsVisible($this->getConfiguration('armed_visible', 1));
+                $cmd->save();
+            }
+            if ($cmd->getName() == 'Libérer') {
+                $cmd->setIsVisible($this->getConfiguration('free_visible', 1));
+                $cmd->save();
             }
         }
     }

@@ -76,12 +76,12 @@ $(function() {
             el.closest('.raz').find('.actionOptions').html(displayActionOption(el.value(), ''));
         });
     });
-    
+
     $('#div_razAlarm').delegate('.raz .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
         var expression = $(this).closest('.raz').getValues('.expressionAttr');
         $(this).closest('.raz').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
     });
-    
+
     $("#div_razAlarm").delegate('.bt_removeRaz', 'click', function() {
         $(this).closest('.raz').remove();
     })
@@ -160,8 +160,8 @@ function saveEqLogic(_eqLogic) {
         _eqLogic.configuration.modes.push(mode);
     });
     _eqLogic.configuration.raz = $('#div_razAlarm .raz').getValues('.expressionAttr');
-    
-    
+
+
     return _eqLogic;
 }
 
@@ -236,8 +236,12 @@ function addMode(_mode) {
     div += '<form class="form-horizontal" role="form">';
     div += '<div class="form-group">';
     div += '<label class="col-lg-1 control-label">Nom du mode</label>';
-    div += '<div class="col-lg-4">';
+    div += '<div class="col-lg-2">';
     div += '<span class="modeAttr label label-info" data-l1key="name" ></span>';
+    div += '</div>';
+    div += '<label class="col-lg-1 control-label">Visible</label>';
+    div += '<div class="col-lg-1">';
+    div += '<input type="checkbox" class="modeAttr form-control" data-l1key="isVisible" checked>';
     div += '</div>';
     div += '<div class="col-lg-2 col-lg-offset-5">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeMode"></i>';
