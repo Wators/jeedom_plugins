@@ -71,7 +71,7 @@ sendVarToJS('eqType', 'alarm');
                                 <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isVisible" checked/>
                             </div>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group expertModeHidden">
                             <label class="col-lg-4 control-label">Armement visible</label>
                             <div class="col-lg-1">
                                 <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="armed_visible" checked/>
