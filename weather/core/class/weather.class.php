@@ -53,6 +53,8 @@ class weather extends eqLogic {
                 return 'R';
             case 'Brouillard':
                 return 'M';
+            case 'Brouillard le matin/Soleil l\'après-midi':
+                return 'M';
             case 'Soleil l\'après-midi':
                 return 'B';
             case 'Soleil le matin':
@@ -73,6 +75,8 @@ class weather extends eqLogic {
                 return 'E';
             case 'Quelques averses':
                 return 'Q';
+            case 'Legère puie l\'après-midi':
+                return 'Q';
             default:
                 return '';
         }
@@ -88,12 +92,16 @@ class weather extends eqLogic {
                 return 'Soleil l\'après-midi';
             case 'PM Clouds':
                 return 'Nuageux l\'après-midi';
+            case 'PM Light Rain':
+                return 'Legère puie l\'après-midi';
             case 'AM Sun':
                 return 'Soleil le matin';
             case 'AM Clouds':
                 return 'Nuageux le matin';
             case 'AM Clouds/PM Sun':
                 return 'Nuageux le matin/Soleil l\'après-midi';
+            case 'AM Fog/PM Sun':
+                return 'Brouillard le matin/Soleil l\'après-midi';
             case 'Rain/Wind':
                 return 'Pluie et vent';
             case 'AM Sun/PM Clouds':
@@ -115,6 +123,8 @@ class weather extends eqLogic {
             case 'Fair':
                 return 'Passable';
             case 'Clear':
+                return 'Dégagé';
+            case 'Mostly Clear':
                 return 'Dégagé';
             case 'Showers':
                 return 'Averses';
