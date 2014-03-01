@@ -110,7 +110,7 @@ class weather extends eqLogic {
                 return 'Venteux';
             case 'Sunny':
                 return 'Ensoleillé';
-            case 'Mostly sunny':
+            case 'Mostly Sunny':
                 return 'Plutôt ensoleillé';
             case 'Fair':
                 return 'Passable';
