@@ -44,7 +44,7 @@ if ($widget->getVersion() == 'mobile') {
     include_file('3rdparty', 'jquery.mobile/jquery.mobile.min', 'js');
 } else {
     include_file('desktop', 'commun', 'css');
-    include_file('3rdparty', 'bootstrap/bootstrap.min', 'css');
+    include_file('3rdparty', 'bootstrap/css/bootstrap.min', 'css');
     include_file('3rdparty', 'jquery.gritter/jquery.gritter', 'css');
     include_file('3rdparty', 'jquery.ui/jquery-ui-bootstrap/jquery-ui', 'css');
     include_file('3rdparty', 'jquery.loading/jquery.loading', 'css');

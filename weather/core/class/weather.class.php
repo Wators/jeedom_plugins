@@ -43,8 +43,10 @@ class weather extends eqLogic {
                 return 'B';
             case 'Passable':
                 return 'A';
-            case 'Averse':
+            case 'Averses':
                 return 'R';
+            case 'Averses/Vent':
+                return 'T';
             case 'Pluie faible':
                 return 'Q';
             case 'Pluie':
@@ -54,6 +56,8 @@ class weather extends eqLogic {
             case 'Soleil l\'après-midi':
                 return 'B';
             case 'Soleil le matin':
+                return 'B';
+            case 'Plutôt ensoleillé':
                 return 'B';
             case 'Nuageux l\'après-midi':
                 return 'N';
@@ -65,6 +69,10 @@ class weather extends eqLogic {
                 return 'B';
             case 'Pluie et vent':
                 return 'T';
+            case 'Bruine le matin':
+                return 'E';
+            case 'Quelques averses':
+                return 'Q';
             default:
                 return '';
         }
@@ -72,6 +80,8 @@ class weather extends eqLogic {
 
     public static function convertCondition($_condition) {
         switch ($_condition) {
+            case 'AM Drizzle':
+                return 'Bruine le matin';
             case 'Showers Early':
                 return 'Peu nuageux';
             case 'PM Sun':
@@ -100,12 +110,18 @@ class weather extends eqLogic {
                 return 'Venteux';
             case 'Sunny':
                 return 'Ensoleillé';
+            case 'Mostly sunny':
+                return 'Plutôt ensoleillé';
             case 'Fair':
                 return 'Passable';
             case 'Clear':
                 return 'Dégagé';
             case 'Showers':
-                return 'Averse';
+                return 'Averses';
+            case 'Few showers':
+                return 'Quelques averses';
+            case 'Showers/Wind':
+                return 'Averses/Vent';
             case 'Light Rain':
                 return 'Pluie faible';
             case 'Rain':
