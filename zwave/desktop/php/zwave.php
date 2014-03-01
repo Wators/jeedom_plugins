@@ -98,7 +98,7 @@ sendVarToJS('eqType', 'zwave');
                                 <input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="refreshDelay"/>
                             </div>
                             <div class="col-lg-1">
-                                <i class="fa fa-question-circle cursor getHelpSchedule floatright" ></i>
+                                <i class="fa fa-question-circle cursor bt_pageHelp floatright" data-name="cronSyntaxe"></i>
                             </div>
                         </div>
                     </fieldset> 
