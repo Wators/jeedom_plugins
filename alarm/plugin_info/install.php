@@ -22,7 +22,7 @@ if (!isConnect()) {
 }
 
 function install() {
-    $cron = cron::byId(config::byKey('alarmDeamonCronId', 'alarm'));
+    $cron = cron::byClassAndFunction('alarm','pull');
     if (!is_object($cron)) {
         $cron = new cron();
     }
@@ -32,15 +32,13 @@ function install() {
     $cron->setDeamon(1);
     $cron->setSchedule('* * * * *');
     $cron->save();
-    config::save('alarmDeamonCronId', $cron->getId(), 'alarm');
 }
 
 function remove() {
-    $cron = cron::byId(config::byKey('alarmDeamonCronId', 'alarm'));
+    $cron = cron::byClassAndFunction('alarm','pull');
     if (is_object($cron)) {
         $cron->remove();
     }
-    config::remove('alarmDeamonCronId', 'alarm');
 }
 
 ?>

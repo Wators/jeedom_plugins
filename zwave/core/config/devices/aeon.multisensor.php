@@ -39,9 +39,6 @@ $deviceConfiguration = array(
             array('name' => 'Humidité', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '%', 'eventOnly' => 1,
                 'configuration' => array('class' => '0x31', 'value' => 'data[5].val')
             ),
-            array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '%',
-                'configuration' => array('class' => '0x80', 'value' => 'data.last')
-            ),
         ),
         'parameters' => array(
             '2' => array(

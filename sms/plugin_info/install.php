@@ -22,7 +22,7 @@ if (!isConnect()) {
 }
 
 function install() {
-    $cron = cron::byId(config::byKey('alarmDeamonCronId', 'zwave'));
+    $cron = cron::byClassAndFunction('sms','pull');
     if (!is_object($cron)) {
         $cron = new cron();
     }
@@ -33,15 +33,13 @@ function install() {
     $cron->setDeamonSleepTime(30);
     $cron->setSchedule('* * * * *');
     $cron->save();
-    config::save('smsDeamonCronId', $cron->getId(), 'sms');
 }
 
 function remove() {
-    $cron = cron::byId(config::byKey('smsDeamonCronId', 'sms'));
+    $cron = cron::byClassAndFunction('sms','pull');
     if (is_object($cron)) {
         $cron->remove();
     }
-    config::remove('smsDeamonCronId', 'sms');
 }
 
 ?>
