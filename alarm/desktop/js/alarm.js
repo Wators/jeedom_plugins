@@ -17,7 +17,7 @@
 
 $(function() {
     $('#bt_addMode').on('click', function() {
-        bootbox.prompt("Nom du mode ?", function(result) {
+        bootbox.prompt("Nom de la zone ?", function(result) {
             if (result !== null) {
                 addMode({name: result});
             }
@@ -235,7 +235,7 @@ function addMode(_mode) {
     var div = '<div class="mode well">';
     div += '<form class="form-horizontal" role="form">';
     div += '<div class="form-group">';
-    div += '<label class="col-lg-1 control-label">Nom du mode</label>';
+    div += '<label class="col-lg-1 control-label">Nom de la zone</label>';
     div += '<div class="col-lg-2">';
     div += '<span class="modeAttr label label-info" data-l1key="name" ></span>';
     div += '</div>';

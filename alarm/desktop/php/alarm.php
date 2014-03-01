@@ -8,7 +8,7 @@ sendVarToJS('eqType', 'alarm');
     <div class="col-lg-2">
         <div class="bs-sidebar affix">
             <ul id="ul_eqLogic" class="nav nav-list bs-sidenav fixnav">
-                <li class="nav-header">Liste des zones
+                <li class="nav-header">Liste des alarmes
                     <i class="fa fa-plus-circle pull-right cursor eqLogicAction" data-action="add" style="font-size: 1.5em;margin-bottom: 5px;"></i>
                 </li>
                 <li class="filter" style="margin-bottom: 5px;"><input class="filter form-control input-sm" placeholder="Rechercher" style="width: 100%"/></li>
@@ -27,7 +27,7 @@ sendVarToJS('eqType', 'alarm');
                     <fieldset>
                         <legend>Général</legend>
                         <div class="form-group">
-                            <label class="col-lg-4 control-label">Nom de la zone</label>
+                            <label class="col-lg-4 control-label">Nom de l'alarme</label>
                             <div class="col-lg-8">
                                 <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
                                 <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="Nom de la zone"/>
@@ -89,7 +89,7 @@ sendVarToJS('eqType', 'alarm');
                 <div id="div_razAlarm"></div>
             </div>
         </div>
-        <a class="btn btn-success" id="bt_addMode"><i class="fa fa-plus-circle"></i> Ajouter mode</a>
+        <a class="btn btn-success" id="bt_addMode"><i class="fa fa-plus-circle"></i> Ajouter zone</a>
         <br/><br/>
         <div id="div_modes"></div>   
 
