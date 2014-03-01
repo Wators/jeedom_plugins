@@ -25,16 +25,15 @@ class zwave extends eqLogic {
 
     /*     * ***********************Methode static*************************** */
 
+    public static function start() {
+        foreach (self::byType('zwave') as $eqLogic) {
+            $eqLogic->forceUpdate();
+        }
+    }
+
     public static function pull() {
         $cache = cache::byKey('zwave::lastUpdate');
-        $lastUpdate = $cache->getValue(0);
-        if ($lastUpdate == 0) {
-            $lastUpdate = strtotime(date('Y-m-d H:i:s')) - 86400;
-            foreach (self::byType('zwave') as $eqLogic) {
-                $eqLogic->forceUpdate();
-            }
-        }
-        $http = new com_http(self::makeBaseUrl() . '/ZWaveAPI/Data/' . $lastUpdate);
+        $http = new com_http(self::makeBaseUrl() . '/ZWaveAPI/Data/' . $cache->getValue(strtotime(date('Y-m-d H:i:s')) - 86400));
         $results = json_decode(self::handleError($http->exec()), true);
         if (is_array($results)) {
             foreach ($results as $key => $result) {
