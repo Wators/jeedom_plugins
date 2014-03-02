@@ -43,14 +43,6 @@ class alarm extends eqLogic {
 
     /*     * *********************Methode d'instance************************* */
 
-    public function preAjax() {
-        foreach ($this->getConfiguration() as $key => $value) {
-            if (strpos($key, 'mode::') !== false) {
-                $this->setConfiguration($key, null);
-            }
-        }
-    }
-
     public function postSave() {
         $existing_mode = array('Armer', 'Libérer');
         foreach ($this->getConfiguration('modes') as $key => $value) {
@@ -76,9 +68,9 @@ class alarm extends eqLogic {
         }
 
         if ($this->getIsEnable() == 1 && $this->getConfiguration('cmd_mode_id') != '') {
-            $cmd_mode = cmd::byId($this->getConfiguration('cmd_mode_id'));
-            if ($cmd_mode->execCmd() == '') {
-                $cmd_mode->event($value['name']);
+            $cmd_zone = cmd::byId($this->getConfiguration('cmd_mode_id'));
+            if ($cmd_zone->execCmd() == '') {
+                $cmd_zone->event($value['name']);
             }
         }
 
@@ -127,9 +119,6 @@ class alarm extends eqLogic {
         $cmd->setEqLogic_id($this->id);
         $cmd->setType('info');
         $cmd->setorder(3);
-        $cmd->setSubType('string');
-        $cmd->setEventOnly(1);
-        $cmd->save();
         $this->setConfiguration('cmd_mode_id', $cmd->getId());
         $this->save();
 
@@ -179,34 +168,39 @@ class alarm extends eqLogic {
         $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
         $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
         if ($cmd_armed->execCmd() == 1 && $cmd_state->execCmd() != 1) {
-            if ($this->getConfiguration('cmd_mode_id') != '') {
+            if ($this->getConfiguration('cmd_zone_id') != '') {
                 $cmd_mode = cmd::byId($this->getConfiguration('cmd_mode_id'));
                 $select_mode = $cmd_mode->execCmd();
                 $modes = $this->getConfiguration('modes');
                 foreach ($modes as $mode) {
                     if ($mode['name'] == $select_mode) {
-                        foreach ($mode['triggers'] as $trigger) {
-                            if ($trigger['cmd'] == '#' . $_trigger_id . '#') {
-                                if ($_value == 1 || $_value) {
-                                    if (isset($trigger['armedDelay']) && is_numeric($trigger['armedDelay']) && $trigger['armedDelay'] > 0) {
-                                        if (strtotime(date('Y-m-d H:i:s')) < strtotime('+' . $trigger['armedDelay'] . ' second' . $cmd_armed->getCollectDate())) {
-                                            return;
-                                        }
-                                    }
-                                    if (isset($trigger['waitDelay']) && is_numeric($trigger['waitDelay']) && $trigger['waitDelay'] > 0) {
-                                        sleep($trigger['waitDelay']);
-                                        if ($cmd_armed->execCmd() == 0) {
-                                            return;
-                                        }
-                                    }
-                                    $cmd_state->event(1);
-                                    foreach ($mode['actions'] as $action) {
-                                        $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
-                                        if (is_object($cmd)) {
-                                            try {
-                                                $cmd->execCmd($action['options']);
-                                            } catch (Exception $e) {
-                                                log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
+                        $zones = $this->getConfiguration('zones');
+                        foreach ($zones as $zone) {
+                            if (in_array($zone['name'], $mode['zone']) || (!is_array($mode['zone']) && $zone['name'] == $mode['zone'])) {
+                                foreach ($zone['triggers'] as $trigger) {
+                                    if ($trigger['cmd'] == '#' . $_trigger_id . '#') {
+                                        if ($_value == 1 || $_value) {
+                                            if (isset($trigger['armedDelay']) && is_numeric($trigger['armedDelay']) && $trigger['armedDelay'] > 0) {
+                                                if (strtotime(date('Y-m-d H:i:s')) < strtotime('+' . $trigger['armedDelay'] . ' second' . $cmd_armed->getCollectDate())) {
+                                                    return;
+                                                }
+                                            }
+                                            if (isset($trigger['waitDelay']) && is_numeric($trigger['waitDelay']) && $trigger['waitDelay'] > 0) {
+                                                sleep($trigger['waitDelay']);
+                                                if ($cmd_armed->execCmd() == 0) {
+                                                    return;
+                                                }
+                                            }
+                                            $cmd_state->event(1);
+                                            foreach ($zone['actions'] as $action) {
+                                                $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
+                                                if (is_object($cmd)) {
+                                                    try {
+                                                        $cmd->execCmd($action['options']);
+                                                    } catch (Exception $e) {
+                                                        log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -218,7 +212,6 @@ class alarm extends eqLogic {
             }
         }
     }
-
 }
 
 class alarmCmd extends cmd {
@@ -262,10 +255,10 @@ class alarmCmd extends cmd {
                 $cmd_armed->event($this->getConfiguration('state'));
             }
         }
-        if ($this->getConfiguration('mode') == '1') {
-            if ($eqLogic->getConfiguration('cmd_mode_id') != '') {
-                $cmd_mode = cmd::byId($eqLogic->getConfiguration('cmd_mode_id'));
-                $cmd_mode->event($this->getConfiguration('state'));
+        if ($this->getConfiguration('zone') == '1') {
+            if ($eqLogic->getConfiguration('cmd_zone_id') != '') {
+                $cmd_zone = cmd::byId($eqLogic->getConfiguration('cmd_zone_id'));
+                $cmd_zone->event($this->getConfiguration('state'));
             }
         }
     }

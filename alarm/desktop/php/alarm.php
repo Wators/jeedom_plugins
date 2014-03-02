@@ -89,9 +89,25 @@ sendVarToJS('eqType', 'alarm');
                 <div id="div_razAlarm"></div>
             </div>
         </div>
-        <a class="btn btn-success" id="bt_addMode"><i class="fa fa-plus-circle"></i> Ajouter zone</a>
-        <br/><br/>
-        <div id="div_modes"></div>   
+
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#tab_zones">Zones</a></li>
+            <li><a href="#tab_modes">Modes</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane" id="tab_zones">
+                <a class="btn btn-success" id="bt_addZone"><i class="fa fa-plus-circle"></i> Ajouter zone</a>
+                <br/><br/>
+                <div id="div_zones"></div> 
+            </div>
+
+            <div class="tab-pane" id="tab_modes">
+                <a class="btn btn-success" id="bt_addMode"><i class="fa fa-plus-circle"></i> Ajouter zone</a>
+                <br/><br/>
+                <div id="div_modes"></div> 
+            </div>
+        </div>
 
         <form class="form-horizontal">
             <fieldset>
@@ -102,6 +118,32 @@ sendVarToJS('eqType', 'alarm');
             </fieldset>
         </form>
 
+    </div>
+</div>
+
+
+<div class="modal fade" id="md_addZoneMode">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">Ajouter zone</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-lg-4 control-label" >Zone</label>
+                        <div class="col-lg-8" id="md_addZoneModeSelect">
+                            
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a class="btn btn-danger" data-dismiss="modal"><i class="fa fa-minus-circle"></i> Annuler</a>
+                <a class="btn btn-success" id="bt_addZoneModeOk"><i class="fa fa-check-circle"></i> Valider</a>
+            </div>
+        </div>
     </div>
 </div>
 
