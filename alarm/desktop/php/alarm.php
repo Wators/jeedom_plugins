@@ -90,25 +90,27 @@ sendVarToJS('eqType', 'alarm');
             </div>
         </div>
 
-        <ul class="nav nav-tabs">
+        <ul class="nav nav-tabs" id="tab_alarm">
             <li class="active"><a href="#tab_zones">Zones</a></li>
             <li><a href="#tab_modes">Modes</a></li>
         </ul>
 
         <div class="tab-content">
-            <div class="tab-pane" id="tab_zones">
-                <a class="btn btn-success" id="bt_addZone"><i class="fa fa-plus-circle"></i> Ajouter zone</a>
+            <div class="tab-pane active" id="tab_zones">
+                <a class="btn btn-success btn-xs pull-right" id="bt_addZone" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter zone</a>
                 <br/><br/>
                 <div id="div_zones"></div> 
             </div>
 
             <div class="tab-pane" id="tab_modes">
-                <a class="btn btn-success" id="bt_addMode"><i class="fa fa-plus-circle"></i> Ajouter zone</a>
+                <a class="btn btn-success btn-xs pull-right" id="bt_addMode" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter mode</a>
                 <br/><br/>
                 <div id="div_modes"></div> 
             </div>
         </div>
 
+        <br/><br/>
+        <hr/>
         <form class="form-horizontal">
             <fieldset>
                 <div class="form-actions">

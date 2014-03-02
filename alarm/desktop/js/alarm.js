@@ -16,6 +16,12 @@
  */
 
 $(function() {
+    $('#tab_alarm a').click(function(e) {
+        e.preventDefault()
+        $(this).tab('show')
+    })
+
+
     $('#bt_addZone').on('click', function() {
         bootbox.prompt("Nom de la zone ?", function(result) {
             if (result !== null) {
@@ -41,6 +47,7 @@ $(function() {
     })
 
     $("#div_modes").delegate('.bt_addZoneMode', 'click', function() {
+        var el = $(this);
         var zones = $('#div_zones').getValues('.zoneAttr');
         var select = '<select class="form-control">';
         for (var i in zones) {
@@ -48,10 +55,11 @@ $(function() {
         }
         select += '</select>';
         $('#md_addZoneModeSelect').empty().append(select);
-        $("#md_addZoneMode").dialog('open');
+        $("#md_addZoneMode").modal('show');
         $('#bt_addZoneModeOk').off();
         $('#bt_addZoneModeOk').on('click', function() {
-            addZoneMode($(this).closest('.mode'), {zone: $('#md_addZoneModeSelect').find('select').value()});
+            $("#md_addZoneMode").modal('hide');
+            addZoneMode(el.closest('.mode'), {zone: $('#md_addZoneModeSelect').find('select').value()});
         });
     })
 
@@ -191,11 +199,14 @@ function saveEqLogic(_eqLogic) {
         zone.triggers = $(this).find('.trigger').getValues('.triggerAttr');
         _eqLogic.configuration.zones.push(zone);
     });
-    $('#div_zones .mode').each(function() {
+
+    _eqLogic.configuration.modes = [];
+    $('#div_modes .mode').each(function() {
         var mode = $(this).getValues('.modeAttr');
         mode = mode[0];
         _eqLogic.configuration.modes.push(mode);
     });
+
     _eqLogic.configuration.raz = $('#div_razAlarm .raz').getValues('.expressionAttr');
 
 
@@ -233,7 +244,7 @@ function addAction(_el, _action) {
     div += '<div class="col-lg-4 actionOptions">';
     div += displayActionOption(init(_action.cmd, ''), _action.options);
     div += '</div>';
-    div += '<div class="col-lg-1 col-lg-offset-1">';
+    div += '<div class="col-lg-1 col-lg-offset-2">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeAction"></i>';
     div += '</div>';
     div += '</div>';
@@ -275,12 +286,11 @@ function addZone(_zone) {
     var div = '<div class="zone well">';
     div += '<form class="form-horizontal" role="form">';
     div += '<div class="form-group">';
-    div += '<label class="col-lg-1 control-label">Nom de la zone</label>';
+    div += '<label class="col-lg-2 control-label">Nom de la zone</label>';
     div += '<div class="col-lg-2">';
     div += '<span class="zoneAttr label label-info" data-l1key="name" ></span>';
-    div += '<input type="checkbox" class="zoneAttr form-control" data-l1key="isVisible" checked>';
     div += '</div>';
-    div += '<div class="col-lg-2 col-lg-offset-5">';
+    div += '<div class="col-lg-2 col-lg-offset-6">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeZone"></i>';
     div += '<a class="btn btn-default btn-sm bt_addTrigger pull-right"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
     div += '<a class="btn btn-default btn-sm bt_addAction  pull-right" style="margin-left : 5px;"><i class="fa fa-plus-circle"></i> Action</a>';
@@ -302,7 +312,7 @@ function addZone(_zone) {
             addAction($('#div_zones .zone:last'), _zone.actions[i]);
         }
     } else {
-        if (_zone.actions != '') {
+        if ($.trim(_zone.actions) != '') {
             addAction($('#div_zones .zone:last'), _zone.actions);
         }
     }
@@ -312,7 +322,7 @@ function addZone(_zone) {
             addTrigger($('#div_zones .zone:last'), _zone.triggers[i]);
         }
     } else {
-        if (_zone.triggers != '') {
+        if ($.trim(_zone.triggers) != '') {
             addTrigger($('#div_zones .zone:last'), _zone.triggers);
         }
     }
@@ -322,12 +332,11 @@ function addMode(_mode) {
     var div = '<div class="mode well">';
     div += '<form class="form-horizontal" role="form">';
     div += '<div class="form-group">';
-    div += '<label class="col-lg-1 control-label">Nom du mode</label>';
+    div += '<label class="col-lg-2 control-label">Nom du mode</label>';
     div += '<div class="col-lg-2">';
     div += '<span class="modeAttr label label-info" data-l1key="name" ></span>';
-    div += '<input type="checkbox" class="modeAttr form-control" data-l1key="isVisible" checked>';
     div += '</div>';
-    div += '<div class="col-lg-2 col-lg-offset-5">';
+    div += '<div class="col-lg-2 col-lg-offset-6">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeMode"></i>';
     div += '<a class="btn btn-default btn-sm bt_addZoneMode pull-right"><i class="fa fa-plus-circle"></i> Zone</a>';
 
@@ -336,17 +345,19 @@ function addMode(_mode) {
     div += '<div class="div_zonesMode">';
     div += '</div>';
     div += '</form>';
-
     div += '</div>';
     $('#div_modes').append(div);
     $('#div_modes .mode:last').setValues(_mode, '.modeAttr');
-    if (is_array(_mode.zones)) {
-        for (var i in _mode.zones) {
-            addZoneMode($('#div_modes .mode:last'), _mode.zones[i]);
+
+    if (is_array(_mode.zone)) {
+        for (var i in _mode.zone) {
+            if (_mode.zone[i] != '') {
+                addZoneMode($('#div_modes .mode:last'), {zone: _mode.zone[i]});
+            }
         }
     } else {
-        if (_mode.zones != '') {
-            addZoneMode($('#div_modes .mode:last'), _mode.zones);
+        if ($.trim(_mode.zone) != '') {
+            addZoneMode($('#div_modes .mode:last'), {zone: _mode.zone});
         }
     }
 }
@@ -355,16 +366,18 @@ function addZoneMode(_el, _mode) {
     if (!isset(_mode)) {
         _mode = {};
     }
+    console.log(_mode);
     var div = '<div class="zoneMode">';
     div += '<div class="form-group">';
     div += '<label class="col-lg-1 control-label">Zone</label>';
     div += '<div class="col-lg-3">';
-    div += '<span class="modeAttr label label-info" data-l1key="zone"></span>';
+    div += '<span class="modeAttr label label-primary" data-l1key="zone"></span>';
     div += '</div>';
-    div += '<div class="col-lg-1 actionOptions">';
+    div += '<div class="col-lg-1 col-lg-offset-7">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeZoneMode"></i>';
     div += '</div>';
     div += '</div>';
+
     _el.find('.div_zonesMode').append(div);
     _el.find('.zoneMode:last').setValues(_mode, '.modeAttr');
 }
