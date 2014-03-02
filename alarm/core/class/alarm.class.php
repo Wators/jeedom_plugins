@@ -63,7 +63,6 @@ class alarm extends eqLogic {
             $cmd->setSubType('other');
             $cmd->setConfiguration('mode', '1');
             $cmd->setConfiguration('state', $value['name']);
-            $cmd->setIsVisible($value['isVisible']);
             $cmd->save();
         }
 
@@ -165,10 +164,11 @@ class alarm extends eqLogic {
     }
 
     public function execute($_trigger_id, $_value) {
+        
         $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
         $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
         if ($cmd_armed->execCmd() == 1 && $cmd_state->execCmd() != 1) {
-            if ($this->getConfiguration('cmd_zone_id') != '') {
+            if ($this->getConfiguration('cmd_mode_id') != '') {
                 $cmd_mode = cmd::byId($this->getConfiguration('cmd_mode_id'));
                 $select_mode = $cmd_mode->execCmd();
                 $modes = $this->getConfiguration('modes');
@@ -176,7 +176,7 @@ class alarm extends eqLogic {
                     if ($mode['name'] == $select_mode) {
                         $zones = $this->getConfiguration('zones');
                         foreach ($zones as $zone) {
-                            if (in_array($zone['name'], $mode['zone']) || (!is_array($mode['zone']) && $zone['name'] == $mode['zone'])) {
+                            if ((!is_array($mode['zone']) && $zone['name'] == $mode['zone'])  || (is_array($mode['zone']) && in_array($zone['name'], $mode['zone']))) {
                                 foreach ($zone['triggers'] as $trigger) {
                                     if ($trigger['cmd'] == '#' . $_trigger_id . '#') {
                                         if ($_value == 1 || $_value) {
