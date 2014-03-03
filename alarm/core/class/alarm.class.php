@@ -78,13 +78,26 @@ class alarm extends eqLogic {
                 $cmd->remove();
             }
             if ($cmd->getName() == 'Armer') {
-                $cmd->setIsVisible($this->getConfiguration('armed_visible', 1));
+                if ($this->getConfiguration('always_active') == 1) {
+                    $cmd->setIsVisible(0);
+                } else {
+                    $cmd->setIsVisible($this->getConfiguration('armed_visible', 1));
+                }
                 $cmd->save();
             }
             if ($cmd->getName() == 'Libérer') {
-                $cmd->setIsVisible($this->getConfiguration('free_visible', 1));
+                if ($this->getConfiguration('always_active') == 1) {
+                    $cmd->setIsVisible(0);
+                } else {
+                    $cmd->setIsVisible($this->getConfiguration('free_visible', 1));
+                }
                 $cmd->save();
             }
+        }
+
+        if ($this->getConfiguration('always_active') == 1) {
+            $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
+            $cmd_armed->event(1);
         }
     }
 
@@ -164,7 +177,7 @@ class alarm extends eqLogic {
     }
 
     public function execute($_trigger_id, $_value) {
-        
+
         $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
         $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
         if ($cmd_armed->execCmd() == 1 && $cmd_state->execCmd() != 1) {
@@ -176,7 +189,7 @@ class alarm extends eqLogic {
                     if ($mode['name'] == $select_mode) {
                         $zones = $this->getConfiguration('zones');
                         foreach ($zones as $zone) {
-                            if ((!is_array($mode['zone']) && $zone['name'] == $mode['zone'])  || (is_array($mode['zone']) && in_array($zone['name'], $mode['zone']))) {
+                            if ((!is_array($mode['zone']) && $zone['name'] == $mode['zone']) || (is_array($mode['zone']) && in_array($zone['name'], $mode['zone']))) {
                                 foreach ($zone['triggers'] as $trigger) {
                                     if ($trigger['cmd'] == '#' . $_trigger_id . '#') {
                                         if ($_value == 1 || $_value) {
@@ -212,6 +225,7 @@ class alarm extends eqLogic {
             }
         }
     }
+
 }
 
 class alarmCmd extends cmd {

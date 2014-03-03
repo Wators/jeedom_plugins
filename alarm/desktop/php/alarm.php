@@ -64,19 +64,22 @@ sendVarToJS('eqType', 'alarm');
                             <div class="col-lg-1">
                                 <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isEnable" checked/>
                             </div>
-                        </div>
-                        <div class="form-group">
                             <label class="col-lg-4 control-label">Visible</label>
                             <div class="col-lg-1">
                                 <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isVisible" checked/>
                             </div>
                         </div>
+
                         <div class="form-group expertModeHidden">
-                            <label class="col-lg-4 control-label">Armement visible</label>
+                            <label class="col-lg-3 control-label">Actif en permanance</label>
+                            <div class="col-lg-1">
+                                <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="always_active" checked/>
+                            </div>
+                            <label class="col-lg-3 control-label">Armement visible</label>
                             <div class="col-lg-1">
                                 <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="armed_visible" checked/>
                             </div>
-                            <label class="col-lg-4 control-label">Libération visible</label>
+                            <label class="col-lg-3 control-label">Libération visible</label>
                             <div class="col-lg-1">
                                 <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="free_visible" checked/>
                             </div>
@@ -136,7 +139,7 @@ sendVarToJS('eqType', 'alarm');
                     <div class="form-group">
                         <label class="col-lg-4 control-label" >Zone</label>
                         <div class="col-lg-8" id="md_addZoneModeSelect">
-                            
+
                         </div>
                     </div>
                 </form>
