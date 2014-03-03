@@ -48,11 +48,12 @@ $(function() {
 
     $("#div_modes").delegate('.bt_addZoneMode', 'click', function() {
         var el = $(this);
-        var zones = $('#div_zones').getValues('.zoneAttr');
         var select = '<select class="form-control">';
-        for (var i in zones) {
-            select += '<option>' + zones[i].name + '</option>';
-        }
+        $('#div_zones .zone').each(function() {
+            var zone = $(this).getValues('.zoneAttr');
+            zone = zone[0];
+            select += '<option>' + zone.name + '</option>';
+        });
         select += '</select>';
         $('#md_addZoneModeSelect').empty().append(select);
         $("#md_addZoneMode").modal('show');
@@ -366,7 +367,6 @@ function addZoneMode(_el, _mode) {
     if (!isset(_mode)) {
         _mode = {};
     }
-    console.log(_mode);
     var div = '<div class="zoneMode">';
     div += '<div class="form-group">';
     div += '<label class="col-lg-1 control-label">Zone</label>';
