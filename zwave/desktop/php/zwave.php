@@ -79,9 +79,7 @@ sendVarToJS('eqType', 'zwave');
                             <div class="col-lg-1">
                                 <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isEnable" checked/>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-4 control-label">Visible</label>
+                             <label class="col-lg-4 control-label">Visible</label>
                             <div class="col-lg-1">
                                 <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isVisible" checked/>
                             </div>

@@ -51,8 +51,6 @@ sendVarToJS('dontRemoveCmd', '1');
                     <div class="col-lg-1">
                         <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isEnable" size="16" checked/>
                     </div>
-                </div>
-                <div class="form-group">
                     <label class="col-lg-2 control-label" >Visible</label>
                     <div class="col-lg-1">
                         <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isVisible" checked/>
