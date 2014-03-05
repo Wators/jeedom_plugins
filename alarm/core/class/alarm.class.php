@@ -177,39 +177,52 @@ class alarm extends eqLogic {
     }
 
     public function execute($_trigger_id, $_value) {
-
+        log::add('alarm', 'debug', 'Lancement de l\'alarme : ' . $this->getHumanName());
         $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
         $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
         if ($cmd_armed->execCmd() == 1 && $cmd_state->execCmd() != 1) {
+            log::add('alarm', 'debug', 'Alarme en cours');
             if ($this->getConfiguration('cmd_mode_id') != '') {
                 $cmd_mode = cmd::byId($this->getConfiguration('cmd_mode_id'));
                 $select_mode = $cmd_mode->execCmd();
                 $modes = $this->getConfiguration('modes');
                 foreach ($modes as $mode) {
                     if ($mode['name'] == $select_mode) {
+                        log::add('alarm', 'debug', 'Mode actif : ' . $select_mode);
                         $zones = $this->getConfiguration('zones');
                         foreach ($zones as $zone) {
                             if ((!is_array($mode['zone']) && $zone['name'] == $mode['zone']) || (is_array($mode['zone']) && in_array($zone['name'], $mode['zone']))) {
+                                log::add('alarm', 'debug', 'Vérification de la zone : ' . $zone['name']);
                                 foreach ($zone['triggers'] as $trigger) {
                                     if ($trigger['cmd'] == '#' . $_trigger_id . '#') {
                                         if ($_value == 1 || $_value) {
                                             if (isset($trigger['armedDelay']) && is_numeric($trigger['armedDelay']) && $trigger['armedDelay'] > 0) {
                                                 if (strtotime(date('Y-m-d H:i:s')) < strtotime('+' . $trigger['armedDelay'] . ' second' . $cmd_armed->getCollectDate())) {
+                                                    log::add('alarm', 'debug', 'Non déclenchement de l\'alarme car hors delay d\'armement');
                                                     return;
                                                 }
                                             }
                                             if (isset($trigger['waitDelay']) && is_numeric($trigger['waitDelay']) && $trigger['waitDelay'] > 0) {
+                                                log::add('alarm', 'debug', 'Attente de ' . $trigger['waitDelay'] . ' avant déclenchement');
                                                 sleep($trigger['waitDelay']);
+
                                                 if ($cmd_armed->execCmd() == 0) {
+                                                    log::add('alarm', 'debug', 'L\'alarme a été désarmé avant déclenchement');
                                                     return;
                                                 }
                                             }
+                                            log::add('alarm', 'debug', 'Déclenchement de l\alarme');
                                             $cmd_state->event(1);
                                             foreach ($zone['actions'] as $action) {
                                                 $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
                                                 if (is_object($cmd)) {
                                                     try {
-                                                        $cmd->execCmd($action['options']);
+                                                        log::add('alarm', 'debug', 'Exécution de la commande ' . $cmd->getHumanName());
+                                                        $options = array();
+                                                        if (isset($action['options'])) {
+                                                            $options = $action['options'];
+                                                        }
+                                                        $cmd->execCmd($options);
                                                     } catch (Exception $e) {
                                                         log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
                                                     }
