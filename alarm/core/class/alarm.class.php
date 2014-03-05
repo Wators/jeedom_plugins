@@ -112,7 +112,6 @@ class alarm extends eqLogic {
         $cmd->save();
         $this->setConfiguration('cmd_armed_id', $cmd->getId());
         $this->save();
-        $cmd_armed_id = $cmd->getId();
 
         $cmd = new alarmCmd();
         $cmd->setName('Status');
@@ -130,7 +129,10 @@ class alarm extends eqLogic {
         $cmd->setName('Mode');
         $cmd->setEqLogic_id($this->id);
         $cmd->setType('info');
+        $cmd->setSubType('string');
+        $cmd->setEventOnly(1);
         $cmd->setorder(3);
+        $cmd->save();
         $this->setConfiguration('cmd_mode_id', $cmd->getId());
         $this->save();
 

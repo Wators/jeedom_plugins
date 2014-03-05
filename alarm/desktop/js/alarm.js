@@ -293,9 +293,8 @@ function addZone(_zone) {
     div += '</div>';
     div += '<div class="col-lg-2 col-lg-offset-6">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeZone"></i>';
-    div += '<a class="btn btn-default btn-sm bt_addTrigger btn-success pull-right"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
     div += '<a class="btn btn-default btn-sm bt_addAction btn-warning  pull-right" style="margin-left : 5px;"><i class="fa fa-plus-circle"></i> Action</a>';
-
+    div += '<a class="btn btn-default btn-sm bt_addTrigger btn-success pull-right"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
     div += '</div>';
     div += '</div>';
 
