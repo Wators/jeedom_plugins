@@ -6,7 +6,7 @@
     <icon>fa fa-rss</icon>
     <licence>AGPL</licence>
     <author>Loïc Gevrey</author>
-    <installation>Il faut installer l'application zway (http://razberry.z-wave.me/). Deux possibilitées :
+    <installation>Il faut installer l'application zway (http://razberry.z-wave.me/) :
                  - "wget -q -O - jeedom.fr/ressources/z-way/install.sh | sudo bash"
     </installation>
     <require>1.10</require>
