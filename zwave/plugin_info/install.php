@@ -32,6 +32,11 @@ function install() {
     $cron->setDeamon(1);
     $cron->setSchedule('* * * * *');
     $cron->save();
+
+    $cibDir = dirname(__FILE__) . '/../ressources';
+    if (file_exists($cibDir)) {
+        rrmdir($cibDir);
+    }
 }
 
 function remove() {
