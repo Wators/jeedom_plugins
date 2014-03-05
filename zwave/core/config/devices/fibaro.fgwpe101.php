@@ -32,6 +32,9 @@ $deviceConfiguration = array(
             array('name' => 'Consommation', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 0, 'unite' => 'kWh', 'eventOnly' => 1,
                 'configuration' => array('class' => '0x32', 'value' => 'data[0].val')
             ),
+            array('name' => 'Etat', 'type' => 'info', 'subtype' => 'binary', 'isVisible' => 1, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                'configuration' => array('class' => '0x25', 'value' => 'data.level')
+            ),
             array('name' => 'On', 'type' => 'action', 'subtype' => 'other', 'isVisible' => 1,
                 'configuration' => array('class' => '0x25', 'value' => 'Set(255)')
             ),

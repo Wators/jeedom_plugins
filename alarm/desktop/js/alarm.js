@@ -237,9 +237,9 @@ function addAction(_el, _action) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-1 control-label">Action</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm listEquipementAction"><i class="fa fa-list-alt "></i></a>';
+    div += '<a class="btn btn-default btn-sm btn-warning listEquipementAction"><i class="fa fa-list-alt "></i></a>';
     div += '</div>';
-    div += '<div class="col-lg-3">';
+    div += '<div class="col-lg-3 has-warning">';
     div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
     div += '</div>';
     div += '<div class="col-lg-4 actionOptions">';
@@ -262,17 +262,17 @@ function addTrigger(_el, _trigger) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-1 control-label">Déclencheur</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm listEquipementInfo"><i class="fa fa-list-alt"></i></a>';
+    div += '<a class="btn btn-default btn-sm listEquipementInfo btn-success"><i class="fa fa-list-alt"></i></a>';
     div += '</div>';
-    div += '<div class="col-lg-3">';
+    div += '<div class="col-lg-3 has-success">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="cmd" />';
     div += '</div>';
     div += '<label class="col-lg-2 control-label">Délai activation</label>';
-    div += '<div class="col-lg-1">';
+    div += '<div class="col-lg-1 has-success">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="armedDelay" />';
     div += '</div>';
     div += '<label class="col-lg-2 control-label">Délai déclenchement</label>';
-    div += '<div class="col-lg-1">';
+    div += '<div class="col-lg-1 has-success">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="waitDelay" />';
     div += '</div>';
     div += '<div class="col-lg-1 actionOptions">';
@@ -293,8 +293,8 @@ function addZone(_zone) {
     div += '</div>';
     div += '<div class="col-lg-2 col-lg-offset-6">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeZone"></i>';
-    div += '<a class="btn btn-default btn-sm bt_addTrigger pull-right"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
-    div += '<a class="btn btn-default btn-sm bt_addAction  pull-right" style="margin-left : 5px;"><i class="fa fa-plus-circle"></i> Action</a>';
+    div += '<a class="btn btn-default btn-sm bt_addTrigger btn-success pull-right"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
+    div += '<a class="btn btn-default btn-sm bt_addAction btn-warning  pull-right" style="margin-left : 5px;"><i class="fa fa-plus-circle"></i> Action</a>';
 
     div += '</div>';
     div += '</div>';
