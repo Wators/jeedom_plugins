@@ -265,8 +265,7 @@ class alarm extends eqLogic {
             $this->setConfiguration('pingState', 0);
             $this->save();
             log::add('alarm', 'debug', 'Alert perte ping éxecution des actions');
-            $actionPings = $this->getConfiguration('actionPing');
-            foreach ($actionPings as $action) {
+            foreach ($this->getConfiguration('ping') as $action) {
                 $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
                 if (is_object($cmd)) {
                     try {
@@ -463,9 +462,8 @@ class alarmCmd extends cmd {
 
 
                     /*                     * *****************Activation reussi***************** */
-                    $activationOks = $eqLogic->getConfiguration('actionActivationOk');
                     log::add('alarm', 'debug', 'Activation de l\'alarme réussie');
-                    foreach ($activationOks as $activationOk) {
+                    foreach ($eqLogic->getConfiguration('activationOk') as $activationOk) {
                         $cmd = cmd::byId(str_replace('#', '', $activationOk['cmd']));
                         $option = array();
                         if (isset($activationOk['options'])) {

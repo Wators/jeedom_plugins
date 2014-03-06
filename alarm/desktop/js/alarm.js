@@ -70,20 +70,12 @@ $(function() {
     });
 
     $("#div_zones").delegate('.bt_addAction', 'click', function() {
-        addAction($(this).closest('.zone'), '');
+        addAction({}, 'action', 'Action', $(this).closest('.zone'));
     });
-
-    $("#div_zones").delegate('.bt_removeAction', 'click', function() {
-        $(this).closest('.action').remove();
-    })
 
     $("#div_zones").delegate('.bt_addActionImmediate', 'click', function() {
-        addActionImmediate($(this).closest('.zone'), '');
+        addAction({}, 'actionImmediate', 'Action immédiat', $(this).closest('.zone'));
     });
-
-    $("#div_zones").delegate('.bt_removeActionImmediate', 'click', function() {
-        $(this).closest('.actionImmediat').remove();
-    })
 
     $("#div_zones").delegate('.bt_addTrigger', 'click', function() {
         addTrigger($(this).closest('.zone'), '');
@@ -100,179 +92,49 @@ $(function() {
         });
     });
 
-
-    $("#div_zones").delegate(".listEquipementAction", 'click', function() {
-        var el = $(this).closest('.action').find('.expressionAttr[data-l1key=cmd]');
-        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
-            el.value(result.human);
-            el.closest('.action').find('.actionOptions').html(displayActionOption(el.value(), ''));
-        });
-    });
-
-    $("#div_zones").delegate(".listEquipementActionImmediate", 'click', function() {
-        var el = $(this).closest('.actionImmediate').find('.expressionAttr[data-l1key=cmd]');
-        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
-            el.value(result.human);
-            el.closest('.actionImmediate').find('.actionOptions').html(displayActionOption(el.value(), ''));
-        });
-    });
-
-
-    $('body').delegate('.action .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
-        var expression = $(this).closest('.action').getValues('.expressionAttr');
-        $(this).closest('.action').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
-    });
-
-    $('body').delegate('.actionImmediate .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
-        var expression = $(this).closest('.actionImmediate').getValues('.expressionAttr');
-        $(this).closest('.actionImmediate').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
-    });
-
     /**************** RAZ Alarm ***********/
 
     $('#btn_addRazAlarm').on('click', function() {
-        addRazAlarm({});
-    });
-
-    $("#div_razAlarm").delegate(".listEquipementRaz", 'click', function() {
-        var el = $(this).closest('.raz').find('.expressionAttr[data-l1key=cmd]');
-        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
-            el.value(result.human);
-            el.closest('.raz').find('.actionOptions').html(displayActionOption(el.value(), ''));
-        });
-    });
-
-    $('#div_razAlarm').delegate('.raz .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
-        var expression = $(this).closest('.raz').getValues('.expressionAttr');
-        $(this).closest('.raz').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
-    });
-
-    $("#div_razAlarm").delegate('.bt_removeRaz', 'click', function() {
-        $(this).closest('.raz').remove();
+        addAction({}, 'raz', 'RaZ');
     });
 
     $('#btn_addRazImmediateAlarm').on('click', function() {
-        addImmediateRazAlarm({});
-    });
-
-    $("#div_razImmediateAlarm").delegate(".listEquipementRazImmediate", 'click', function() {
-        var el = $(this).closest('.razImmediate').find('.expressionAttr[data-l1key=cmd]');
-        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
-            el.value(result.human);
-            el.closest('.razImmediate').find('.actionOptions').html(displayActionOption(el.value(), ''));
-        });
-    });
-
-    $('#div_razImmediateAlarm').delegate('.razImmediat .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
-        var expression = $(this).closest('.razImmediat').getValues('.expressionAttr');
-        $(this).closest('.razImmediat').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
-    });
-
-    $("#div_razImmediateAlarm").delegate('.bt_removeRaz', 'click', function() {
-        $(this).closest('.razImmediat').remove();
+        addAction({}, 'razImmediate', 'RaZ immédiat');
     });
 
     /**************Activation OK**********************/
 
     $('#btn_addActionActivationOk').on('click', function() {
-        addActionActivationOk({});
-    });
-
-    $("#div_activationOk").delegate(".listEquipementActivationOk", 'click', function() {
-        var el = $(this).closest('.actionActivationOk').find('.expressionAttr[data-l1key=cmd]');
-        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
-            el.value(result.human);
-            el.closest('.actionActivationOk').find('.actionOptions').html(displayActionOption(el.value(), ''));
-        });
-    });
-
-    $('#div_activationOk').delegate('.actionActivationOk .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
-        var expression = $(this).closest('.actionActivationOk').getValues('.expressionAttr');
-        $(this).closest('.actionActivationOk').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
-    });
-
-    $("#div_activationOk").delegate('.bt_removeActionActivationOk', 'click', function() {
-        $(this).closest('.actionActivationOk').remove();
+        addAction({}, 'actionActivationOk', 'Action');
     });
 
     /**************** PING ***********/
 
     $('#btn_addPingAction').on('click', function() {
-        addActionPing({});
+        addAction({}, 'ping', 'Action');
     });
 
-    $("#div_actionsPing").delegate(".listEquipementActionPing", 'click', function() {
-        var el = $(this).closest('.actionPing').find('.expressionAttr[data-l1key=cmd]');
+    $("body").delegate(".listEquipementAction", 'click', function() {
+        var type = $(this).attr('data-type');
+        var el = $(this).closest('.' + type).find('.expressionAttr[data-l1key=cmd]');
         cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
             el.value(result.human);
-            el.closest('.actionPing').find('.actionOptions').html(displayActionOption(el.value(), ''));
+            el.closest('.' + type).find('.actionOptions').html(displayActionOption(el.value(), ''));
         });
     });
 
-    $('#div_actionsPing').delegate('.actionPing .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
-        var expression = $(this).closest('.actionPing').getValues('.expressionAttr');
-        $(this).closest('.actionPing').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
+    $("body").delegate('.bt_removeAction', 'click', function() {
+        var type = $(this).attr('data-type');
+        $(this).closest('.' + type).remove();
     });
 
-    $("#div_actionsPing").delegate('.bt_removeActionPing', 'click', function() {
-        $(this).closest('.raz').remove();
-    })
+    $('body').delegate('.cmdAction.expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
+        var type = $(this).attr('data-type')
+        var expression = $(this).closest('.' + type).getValues('.expressionAttr');
+        $(this).closest('.' + type).find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
+    });
 
 });
-
-function addRazAlarm(_raz) {
-    if (!isset(_raz)) {
-        _raz = {};
-    }
-    if (!isset(_raz.options)) {
-        _raz.options = {};
-    }
-    var div = '<div class="raz">';
-    div += '<div class="form-group">';
-    div += '<label class="col-lg-1 control-label">RaZ</label>';
-    div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm listEquipementRaz"><i class="fa fa-list-alt"></i></a>';
-    div += '</div>';
-    div += '<div class="col-lg-3">';
-    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
-    div += '</div>';
-    div += '<div class="col-lg-6 actionOptions">';
-    div += displayActionOption(init(_raz.cmd, ''), _raz.options);
-    div += '</div>';
-    div += '<div class="col-lg-1">';
-    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeRaz"></i>';
-    div += '</div>';
-    div += '</div>';
-    $('#div_razAlarm').append(div);
-    $('#div_razAlarm .raz:last').setValues(_raz, '.expressionAttr');
-}
-
-function addImmediateRazAlarm(_raz) {
-    if (!isset(_raz)) {
-        _raz = {};
-    }
-    if (!isset(_raz.options)) {
-        _raz.options = {};
-    }
-    var div = '<div class="razImmediate">';
-    div += '<div class="form-group">';
-    div += '<label class="col-lg-1 control-label">RaZ immédiate</label>';
-    div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm listEquipementRazImmediate"><i class="fa fa-list-alt"></i></a>';
-    div += '</div>';
-    div += '<div class="col-lg-3">';
-    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
-    div += '</div>';
-    div += '<div class="col-lg-6 actionOptions">';
-    div += displayActionOption(init(_raz.cmd, ''), _raz.options);
-    div += '</div>';
-    div += '<div class="col-lg-1">';
-    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeImmediateRaz"></i>';
-    div += '</div>';
-    div += '</div>';
-    $('#div_razImmediateAlarm').append(div);
-    $('#div_razImmediateAlarm .razImmediate:last').setValues(_raz, '.expressionAttr');
-}
 
 function displayActionOption(_expression, _options) {
     var html = '';
@@ -327,10 +189,10 @@ function saveEqLogic(_eqLogic) {
         _eqLogic.configuration.modes.push(mode);
     });
 
-    _eqLogic.configuration.raz = $('#div_razAlarm .raz').getValues('.expressionAttr');
-    _eqLogic.configuration.razImmediate = $('#div_razImmediateAlarm .razImmediate').getValues('.expressionAttr');
-    _eqLogic.configuration.actionPing = $('#div_actionsPing .actionPing').getValues('.expressionAttr');
-    _eqLogic.configuration.actionActivationOk = $('#div_activationOk .actionActivationOk').getValues('.expressionAttr');
+    _eqLogic.configuration.raz = $('#div_raz .raz').getValues('.expressionAttr');
+    _eqLogic.configuration.razImmediate = $('#div_razImmediat .razImmediate').getValues('.expressionAttr');
+    _eqLogic.configuration.ping = $('#div_ping .ping').getValues('.expressionAttr');
+    _eqLogic.configuration.activationOk = $('#div_activationOk .activationOk').getValues('.expressionAttr');
 
     return _eqLogic;
 }
@@ -346,127 +208,50 @@ function printEqLogic(_eqLogic) {
         addMode(_eqLogic.configuration.modes[i]);
     }
     for (var i in _eqLogic.configuration.raz) {
-        addRazAlarm(_eqLogic.configuration.raz[i]);
+        addAction(_eqLogic.configuration.raz[i], 'raz', 'RaZ');
     }
     for (var i in _eqLogic.configuration.razImmediate) {
-        addImmediateRazAlarm(_eqLogic.configuration.razImmediate[i]);
+        addAction(_eqLogic.configuration.razImmediate[i], 'razImmediate', 'RaZ immédiat');
     }
-    for (var i in _eqLogic.configuration.actionPing) {
-        addActionPing(_eqLogic.configuration.actionPing[i]);
+    for (var i in _eqLogic.configuration.ping) {
+        addAction(_eqLogic.configuration.ping[i], 'ping', 'Action');
     }
-    
-    for (var i in _eqLogic.configuration.actionActivationOk) {
-        addActionActivationOk(_eqLogic.configuration.actionActivationOk[i]);
+
+    for (var i in _eqLogic.configuration.activationOk) {
+        addAction(_eqLogic.configuration.activationOk[i], 'activationOk', 'Action');
     }
 }
 
-function addAction(_el, _action) {
+function addAction(_action, _type, _name, _el) {
     if (!isset(_action)) {
         _action = {};
     }
     if (!isset(_action.options)) {
         _action.options = {};
     }
-    var div = '<div class="action">';
+    var div = '<div class="' + _type + '">';
     div += '<div class="form-group">';
-    div += '<label class="col-lg-1 control-label">Action</label>';
+    div += '<label class="col-lg-1 control-label">' + _name + '</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-sm btn-danger listEquipementAction"><i class="fa fa-list-alt "></i></a>';
+    div += '<a class="btn btn-default btn-sm listEquipementAction" data-type="' + _type + '"><i class="fa fa-list-alt"></i></a>';
     div += '</div>';
-    div += '<div class="col-lg-3 has-error">';
-    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
+    div += '<div class="col-lg-3">';
+    div += '<input class="expressionAttr form-control input-sm cmdAction" data-l1key="cmd" data-type="' + _type + '" />';
     div += '</div>';
-    div += '<div class="col-lg-4 actionOptions">';
+    div += '<div class="col-lg-6 actionOptions">';
     div += displayActionOption(init(_action.cmd, ''), _action.options);
     div += '</div>';
-    div += '<div class="col-lg-1 col-lg-offset-2">';
-    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeAction"></i>';
-    div += '</div>';
-    div += '</div>';
-    _el.find('.div_actions').append(div);
-    _el.find('.action:last').setValues(_action, '.expressionAttr');
-
-}
-
-function addActionImmediate(_el, _actionImmediate) {
-    if (!isset(_actionImmediate)) {
-        _actionImmediate = {};
-    }
-    if (!isset(_actionImmediate.options)) {
-        _actionImmediate.options = {};
-    }
-    var div = '<div class="actionImmediate">';
-    div += '<div class="form-group">';
-    div += '<label class="col-lg-1 control-label">Action</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-sm btn-warning listEquipementActionImmediate"><i class="fa fa-list-alt"></i></a>';
-    div += '</div>';
-    div += '<div class="col-lg-3 has-warning">';
-    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
-    div += '</div>';
-    div += '<div class="col-lg-4 actionOptions">';
-    div += displayActionOption(init(_actionImmediate.cmd, ''), _actionImmediate.options);
-    div += '</div>';
-    div += '<div class="col-lg-1 col-lg-offset-2">';
-    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeActionImmediate"></i>';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeAction" data-type="' + _type + '"></i>';
     div += '</div>';
     div += '</div>';
-    _el.find('.div_actionsImmediate').append(div);
-    _el.find('.actionImmediate:last').setValues(_actionImmediate, '.expressionAttr');
-}
-
-function addActionPing(_actionPing) {
-    if (!isset(_actionPing)) {
-        _actionPing = {};
+    if (isset(_el)) {
+        _el.find('.div_' + _type).append(div);
+        _el.find('.' + _type + ':last').setValues(_action, '.expressionAttr');
+    } else {
+        $('#div_' + _type).append(div);
+        $('#div_' + _type + ' .' + _type + ':last').setValues(_action, '.expressionAttr');
     }
-    if (!isset(_actionPing.options)) {
-        _actionPing.options = {};
-    }
-    var div = '<div class="actionPing">';
-    div += '<div class="form-group">';
-    div += '<label class="col-lg-1 control-label">Action</label>';
-    div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm listEquipementActionPing"><i class="fa fa-list-alt"></i></a>';
-    div += '</div>';
-    div += '<div class="col-lg-3 has-warning">';
-    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
-    div += '</div>';
-    div += '<div class="col-lg-4 actionOptions">';
-    div += displayActionOption(init(_actionPing.cmd, ''), _actionPing.options);
-    div += '</div>';
-    div += '<div class="col-lg-1 col-lg-offset-2">';
-    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeActionImmediate"></i>';
-    div += '</div>';
-    div += '</div>';
-    $('#div_actionsPing').append(div);
-    $('#div_actionsPing .actionPing:last').setValues(_actionPing, '.expressionAttr');
-}
-
-function addActionActivationOk(_actionActivationOk) {
-    if (!isset(_actionActivationOk)) {
-        _actionActivationOk = {};
-    }
-    if (!isset(_actionActivationOk.options)) {
-        _actionActivationOk.options = {};
-    }
-    var div = '<div class="actionActivationOk">';
-    div += '<div class="form-group">';
-    div += '<label class="col-lg-1 control-label">Action</label>';
-    div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm listEquipementActivationOk"><i class="fa fa-list-alt"></i></a>';
-    div += '</div>';
-    div += '<div class="col-lg-3 has-warning">';
-    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
-    div += '</div>';
-    div += '<div class="col-lg-4 actionOptions">';
-    div += displayActionOption(init(_actionActivationOk.cmd, ''), _actionActivationOk.options);
-    div += '</div>';
-    div += '<div class="col-lg-1 col-lg-offset-2">';
-    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeActionActivationOk"></i>';
-    div += '</div>';
-    div += '</div>';
-    $('#div_activationOk').append(div);
-    $('#div_activationOk .actionActivationOk:last').setValues(_actionActivationOk, '.expressionAttr');
 }
 
 function addTrigger(_el, _trigger) {
@@ -520,9 +305,9 @@ function addZone(_zone) {
 
     div += '<div class="div_triggers"></div>';
     div += '<hr/>';
-    div += '<div class="div_actionsImmediate"></div>';
+    div += '<div class="div_actionImmediate"></div>';
     div += '<hr/>';
-    div += '<div class="div_actions"></div>';
+    div += '<div class="div_action"></div>';
 
     div += '</form>';
 
@@ -531,21 +316,21 @@ function addZone(_zone) {
     $('#div_zones .zone:last').setValues(_zone, '.zoneAttr');
     if (is_array(_zone.actions)) {
         for (var i in _zone.actions) {
-            addAction($('#div_zones .zone:last'), _zone.actions[i]);
+            addAction(_zone.actions[i], 'action', 'Action', $('#div_zones .zone:last'));
         }
     } else {
         if ($.trim(_zone.actions) != '') {
-            addAction($('#div_zones .zone:last'), _zone.actions);
+            addAction(_zone.actions[i], 'action', 'Action', $('#div_zones .zone:last'));
         }
     }
 
     if (is_array(_zone.actionsImmediate)) {
         for (var i in _zone.actionsImmediate) {
-            addActionImmediate($('#div_zones .zone:last'), _zone.actionsImmediate[i]);
+            addAction(_zone.actionsImmediate[i], 'actionImmediate', 'Action immédiat', $('#div_zones .zone:last'));
         }
     } else {
         if ($.trim(_zone.actionsImmediate) != '') {
-            addActionImmediate($('#div_zones .zone:last'), _zone.actionsImmediate);
+            addAction(_zone.actionsImmediate, 'actionImmediate', 'Action immédiat', $('#div_zones .zone:last'));
         }
     }
 

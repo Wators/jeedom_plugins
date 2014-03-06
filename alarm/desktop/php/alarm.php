@@ -115,12 +115,12 @@ sendVarToJS('eqType', 'alarm');
                 <a class='btn btn-warning btn-xs pull-right' id="btn_addRazImmediateAlarm" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter RaZ immédiat</a>
                 <br/><br/>
                 <form class="form-horizontal">
-                    <div id="div_razAlarm"></div>
+                    <div id="div_raz"></div>
                 </form>
                 <hr/>
                 <br/>
                 <form class="form-horizontal">
-                    <div id="div_razImmediateAlarm"></div>
+                    <div id="div_razImmediate"></div>
                 </form>
             </div>
 
@@ -128,7 +128,7 @@ sendVarToJS('eqType', 'alarm');
                 <a class='btn btn-success btn-xs pull-right' id="btn_addPingAction" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter action perte de ping</a>
                 <br/><br/>
                 <form class="form-horizontal">
-                    <div id="div_actionsPing"></div>
+                    <div id="div_ping"></div>
                 </form>
             </div>
 
