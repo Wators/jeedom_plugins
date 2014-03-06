@@ -10,7 +10,7 @@ if (!isConnect()) {
 <div class="form-group">
     <label class="col-lg-2 control-label" >Type du port</label>
     <div class="col-lg-3">
-        <select port="#portNumber#" class="form-control sel_portType">
+        <select data-port="#portNumber#" class="form-control sel_portType">
             <option value='0'>Selectionner une option...</option>
             <option data-cmdName='analogique.read' value='2' data-exclude='2,3,4,102'>[2] Entrée port analogique</option>
             <option data-cmdName='ldr' value='4' data-exclude='2,3,4,102'>[4] LDR</option>

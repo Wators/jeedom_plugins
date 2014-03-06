@@ -71,9 +71,9 @@ $(function() {
         return false;
     });
 
-    if (select_id != -1) {
-        if ($('#ul_jeenode .li_jeenode[data-jeenodeReal_id=' + select_id + ']').length != 0) {
-            $('#ul_jeenode .li_jeenode[data-jeenodeReal_id=' + select_id + ']').click();
+    if (getUrlVars('id') != -1) {
+        if ($('#ul_jeenode .li_jeenode[data-jeenodeReal_id=' + getUrlVars('id') + ']').length != 0) {
+            $('#ul_jeenode .li_jeenode[data-jeenodeReal_id=' + getUrlVars('id') + ']').click();
         } else {
             $('#ul_jeenode .li_jeenode:first').click();
         }
@@ -221,7 +221,7 @@ function saveJeenode() {
                     eqLogic = eqLogic[0];
                     eqLogic.configuration = {};
                     eqLogic.configuration.portType = [];
-                    eqLogic['plugin'] = 'jeenode';
+                    eqLogic['eqType_name'] = 'jeenode';
                     eqLogic['eqReal_id'] = eqReal.id;
                     $(this).find('.portType').each(function() {
                         eqLogic.configuration.portType.push($(this).attr('data-code'));

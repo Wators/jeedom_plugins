@@ -34,9 +34,9 @@ class jeenodeReal extends eqReal {
     }
 
     /*     * *********************Methode d'instance************************* */
-    
-    public function preSave(){
-        if($this->getLogicalId() == '' || !is_numeric($this->getLogicalId())){
+
+    public function preSave() {
+        if ($this->getLogicalId() == '' || !is_numeric($this->getLogicalId())) {
             throw new Exception('Le node ID ne peut etre vide et doit etre un nombre');
         }
     }
@@ -59,7 +59,7 @@ class jeenodeReal extends eqReal {
                 $jeenodeMaster = $jeenodeMaster[0];
             }
             $masterIp = $jeenodeMaster->getConfiguration('IP');
-            $node = $this->logicalId;
+            $node = $this->getLogicalId();
         }
         return 'http://' . $masterIp . '/?n=' . $node;
     }
@@ -82,7 +82,7 @@ class jeenodeReal extends eqReal {
     /*     * **********************Getteur Setteur*************************** */
 
     public function getPortNumber($_portNumber) {
-        return jeenode::byNodeIdAndPortNumber($this->id, $_portNumber);
+        return jeenode::byNodeIdAndPortNumber($this->getId(), $_portNumber);
     }
 
 }
@@ -152,6 +152,25 @@ class jeenode extends eqLogic {
 
     public function getLinkToConfiguration() {
         return 'index.php?v=d&p=jeenode&m=jeenode&id=' . $this->getEqReal_id();
+    }
+
+    public function ping() {
+        if ($this->getConfiguration('mode') == 'actif') {
+            if ($this->getStatus('lastCommunication', date('Y-m-d H:i:s')) < date('Y-m-d H:i:s', strtotime('-2 minutes' . date('Y-m-d H:i:s')))) {
+                try {
+                    $eqReal = $this->getEqReal();
+                    $eqReal->getUptime();
+                    return true;
+                } catch (Exception $e) {
+                    
+                }
+            }
+        } else {
+            if ($this->getStatus('lastCommunication', date('Y-m-d H:i:s')) < date('Y-m-d H:i:s', strtotime('-' . $this->getTimeout() . ' minutes' . date('Y-m-d H:i:s')))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /*     * **********************Getteur Setteur*************************** */

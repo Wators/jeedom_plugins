@@ -151,7 +151,6 @@ if (!isConnect()) {
             return;
         }
         var logicalId = _select.attr('data-port');
-
         var port = $('#div_jeenodePort' + logicalId);
         if (portType != 'none') {
             port.find('.eqLogicAttr').prop('disabled', false);
