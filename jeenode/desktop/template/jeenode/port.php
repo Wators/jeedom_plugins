@@ -59,11 +59,23 @@ if (!isConnect()) {
     <div class="col-lg-1">
         <input type="checkbox" class="eqLogicAttr" data-l1key="isEnable" disabled checked/>
     </div>
-</div>
-<div class="form-group">
     <label class="col-lg-2 control-label" >Visible</label>
     <div class="col-lg-1">
         <input type="checkbox" class="eqLogicAttr" data-l1key="isVisible" disabled checked/>
+    </div>
+</div>
+
+<div class="form-group">
+    <label class="col-lg-2 control-label">Catégorie</label>
+    <div class="col-lg-8">
+        <?php
+        foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value) {
+            echo '<label class="checkbox-inline">';
+            echo '<input type="checkbox" class="eqLogicAttr" data-l1key="category" data-l2key="' . $key . '" />' . $value['name'];
+            echo '</label>';
+        }
+        ?>
+
     </div>
 </div>
 

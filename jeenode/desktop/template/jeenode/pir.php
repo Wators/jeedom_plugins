@@ -24,4 +24,8 @@ if (!isConnect()) {
     <div class="col-lg-1" >
         <input class="cmdAttr form-control" data-l1key="isHistorized" type="checkbox" /> 
     </div>
+    <label class="col-lg-1 control-label" >Inverser</label>
+    <div class="col-lg-1" >
+        <input class="cmdAttr form-control" data-l1key="display" data-l2key="invertBinary" type="checkbox" /> 
+    </div>
 </div>
