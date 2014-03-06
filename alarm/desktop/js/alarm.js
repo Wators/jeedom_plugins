@@ -151,6 +151,27 @@ $(function() {
         $(this).closest('.raz').remove();
     });
 
+    $('#btn_addRazImmediateAlarm').on('click', function() {
+        addImmediateRazAlarm({});
+    });
+
+    $("#div_razImmediateAlarm").delegate(".listEquipementRazImmediate", 'click', function() {
+        var el = $(this).closest('.razImmediate').find('.expressionAttr[data-l1key=cmd]');
+        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
+            el.value(result.human);
+            el.closest('.razImmediate').find('.actionOptions').html(displayActionOption(el.value(), ''));
+        });
+    });
+
+    $('#div_razImmediateAlarm').delegate('.razImmediat .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
+        var expression = $(this).closest('.razImmediat').getValues('.expressionAttr');
+        $(this).closest('.razImmediat').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
+    });
+
+    $("#div_razImmediateAlarm").delegate('.bt_removeRaz', 'click', function() {
+        $(this).closest('.razImmediat').remove();
+    });
+
     /**************** PING ***********/
 
     $('#btn_addPingAction').on('click', function() {
@@ -185,7 +206,7 @@ function addRazAlarm(_raz) {
     }
     var div = '<div class="raz">';
     div += '<div class="form-group">';
-    div += '<label class="col-lg-1 control-label">Action</label>';
+    div += '<label class="col-lg-1 control-label">RaZ</label>';
     div += '<div class="col-lg-1">';
     div += '<a class="btn btn-default btn-sm listEquipementRaz"><i class="fa fa-list-alt"></i></a>';
     div += '</div>';
@@ -201,6 +222,33 @@ function addRazAlarm(_raz) {
     div += '</div>';
     $('#div_razAlarm').append(div);
     $('#div_razAlarm .raz:last').setValues(_raz, '.expressionAttr');
+}
+
+function addImmediateRazAlarm(_raz) {
+    if (!isset(_raz)) {
+        _raz = {};
+    }
+    if (!isset(_raz.options)) {
+        _raz.options = {};
+    }
+    var div = '<div class="razImmediate">';
+    div += '<div class="form-group">';
+    div += '<label class="col-lg-1 control-label">RaZ immédiate</label>';
+    div += '<div class="col-lg-1">';
+    div += '<a class="btn btn-default btn-sm listEquipementRazImmediate"><i class="fa fa-list-alt"></i></a>';
+    div += '</div>';
+    div += '<div class="col-lg-3">';
+    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
+    div += '</div>';
+    div += '<div class="col-lg-6 actionOptions">';
+    div += displayActionOption(init(_raz.cmd, ''), _raz.options);
+    div += '</div>';
+    div += '<div class="col-lg-1">';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeImmediateRaz"></i>';
+    div += '</div>';
+    div += '</div>';
+    $('#div_razImmediateAlarm').append(div);
+    $('#div_razImmediateAlarm .razImmediate:last').setValues(_raz, '.expressionAttr');
 }
 
 function displayActionOption(_expression, _options) {
@@ -257,9 +305,8 @@ function saveEqLogic(_eqLogic) {
     });
 
     _eqLogic.configuration.raz = $('#div_razAlarm .raz').getValues('.expressionAttr');
-
+    _eqLogic.configuration.razImmediate = $('#div_razImmediateAlarm .razImmediate').getValues('.expressionAttr');
     _eqLogic.configuration.actionPing = $('#div_actionsPing .actionPing').getValues('.expressionAttr');
-
 
     return _eqLogic;
 }
@@ -277,7 +324,9 @@ function printEqLogic(_eqLogic) {
     for (var i in _eqLogic.configuration.raz) {
         addRazAlarm(_eqLogic.configuration.raz[i]);
     }
-
+    for (var i in _eqLogic.configuration.razImmediate) {
+        addImmediateRazAlarm(_eqLogic.configuration.razImmediate[i]);
+    }
     for (var i in _eqLogic.configuration.actionPing) {
         addActionPing(_eqLogic.configuration.actionPing[i]);
     }

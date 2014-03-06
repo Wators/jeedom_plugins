@@ -111,9 +111,15 @@ sendVarToJS('eqType', 'alarm');
 
             <div class="tab-pane" id="tab_raz">
                 <a class='btn btn-success btn-xs pull-right' id="btn_addRazAlarm" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter RaZ</a>
+                <a class='btn btn-warning btn-xs pull-right' id="btn_addRazImmediateAlarm" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter RaZ immédiat</a>
                 <br/><br/>
                 <form class="form-horizontal">
                     <div id="div_razAlarm"></div>
+                </form>
+                <hr/>
+                <br/>
+                <form class="form-horizontal">
+                    <div id="div_razImmediateAlarm"></div>
                 </form>
             </div>
 

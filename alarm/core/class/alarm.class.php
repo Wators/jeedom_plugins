@@ -385,8 +385,13 @@ class alarmCmd extends cmd {
         if ($this->getConfiguration('armed') == '1') {
             if ($eqLogic->getConfiguration('cmd_armed_id') != '') {
                 $cmd_armed = cmd::byId($eqLogic->getConfiguration('cmd_armed_id'));
+
                 $cmd_state = cmd::byId($eqLogic->getConfiguration('cmd_state_id'));
+                $cmd_immediateState = cmd::byId($eqLogic->getConfiguration('cmd_immediatState_id'));
                 if ($this->getConfiguration('state') == 0) {
+                    $cmd_armed->event($this->getConfiguration('state'));
+
+                    /* RaZ */
                     if ($cmd_state->execCmd() == 1) {
                         log::add('alarm', 'debug', 'Remise à zero de l\'alarme');
                         foreach ($eqLogic->getConfiguration('raz') as $raz) {
@@ -405,13 +410,61 @@ class alarmCmd extends cmd {
                             }
                         }
                     }
+
+                    /* RaZ immediate */
+                    if ($cmd_immediateState->execCmd() == 1) {
+                        log::add('alarm', 'debug', 'Remise à zero immédiate de l\'alarme');
+                        foreach ($eqLogic->getConfiguration('razImmediate') as $razImmediate) {
+                            $cmd = cmd::byId(str_replace('#', '', $razImmediate['cmd']));
+                            $option = array();
+                            if (isset($razImmediate['options'])) {
+                                $option = $razImmediate['options'];
+                            }
+                            log::add('alarm', 'debug', 'Exécution de ' . $cmd->getHumanName() . ' avec les options : ' . print_r($option, true));
+                            if (is_object($cmd)) {
+                                try {
+                                    $cmd->execCmd($option);
+                                } catch (Exception $e) {
+                                    log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
+                                }
+                            }
+                        }
+                    }
                     $cmd_state->event(0);
+                    $cmd_immediateState->event(0);
                     $eqLogic->setConfiguration('pingState', 1);
                     $eqLogic->save();
+                } else {
+                    $cmd_armed->event($this->getConfiguration('state'));
+                    $cmd_mode = cmd::byId($eqLogic->getConfiguration('cmd_mode_id'));
+                    $select_mode = $cmd_mode->execCmd();
+                    $modes = $eqLogic->getConfiguration('modes');
+                    $zones = $eqLogic->getConfiguration('zones');
+                    foreach ($modes as $mode) {
+                        if ($mode['name'] == $select_mode) {
+                            foreach ($zones as $zone) {
+                                if ((!is_array($mode['zone']) && $zone['name'] == $mode['zone']) || (is_array($mode['zone']) && in_array($zone['name'], $mode['zone']))) {
+                                    log::add('alarm', 'debug', 'Vérification de la zone : ' . $zone['name']);
+                                    foreach ($zone['triggers'] as $trigger) {
+                                        $cmd = cmd::byId(str_replace('#', '', $trigger['cmd']));
+                                        if (is_object($cmd)) {
+                                            log::add('alarm', 'debug', 'Vérification de la commande : ' . $cmd->getHumanName());
+                                            $result = $cmd->execCmd();
+                                            if ($result == 1) {
+                                                $eqLogic->launch($cmd->getId(), $result);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-                $cmd_armed->event($this->getConfiguration('state'));
             }
         }
+
+
         if ($this->getConfiguration('mode') == '1') {
             if ($eqLogic->getConfiguration('cmd_mode_id') != '') {
                 $cmd_zone = cmd::byId($eqLogic->getConfiguration('cmd_mode_id'));
