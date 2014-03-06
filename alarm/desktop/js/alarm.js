@@ -172,6 +172,29 @@ $(function() {
         $(this).closest('.razImmediat').remove();
     });
 
+    /**************Activation OK**********************/
+
+    $('#btn_addActionActivationOk').on('click', function() {
+        addActionActivationOk({});
+    });
+
+    $("#div_activationOk").delegate(".listEquipementActivationOk", 'click', function() {
+        var el = $(this).closest('.actionActivationOk').find('.expressionAttr[data-l1key=cmd]');
+        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
+            el.value(result.human);
+            el.closest('.actionActivationOk').find('.actionOptions').html(displayActionOption(el.value(), ''));
+        });
+    });
+
+    $('#div_activationOk').delegate('.actionActivationOk .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
+        var expression = $(this).closest('.actionActivationOk').getValues('.expressionAttr');
+        $(this).closest('.actionActivationOk').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
+    });
+
+    $("#div_activationOk").delegate('.bt_removeActionActivationOk', 'click', function() {
+        $(this).closest('.actionActivationOk').remove();
+    });
+
     /**************** PING ***********/
 
     $('#btn_addPingAction').on('click', function() {
@@ -307,6 +330,7 @@ function saveEqLogic(_eqLogic) {
     _eqLogic.configuration.raz = $('#div_razAlarm .raz').getValues('.expressionAttr');
     _eqLogic.configuration.razImmediate = $('#div_razImmediateAlarm .razImmediate').getValues('.expressionAttr');
     _eqLogic.configuration.actionPing = $('#div_actionsPing .actionPing').getValues('.expressionAttr');
+    _eqLogic.configuration.actionActivationOk = $('#div_activationOk .actionActivationOk').getValues('.expressionAttr');
 
     return _eqLogic;
 }
@@ -329,6 +353,10 @@ function printEqLogic(_eqLogic) {
     }
     for (var i in _eqLogic.configuration.actionPing) {
         addActionPing(_eqLogic.configuration.actionPing[i]);
+    }
+    
+    for (var i in _eqLogic.configuration.actionActivationOk) {
+        addActionActivationOk(_eqLogic.configuration.actionActivationOk[i]);
     }
 }
 
@@ -412,6 +440,33 @@ function addActionPing(_actionPing) {
     div += '</div>';
     $('#div_actionsPing').append(div);
     $('#div_actionsPing .actionPing:last').setValues(_actionPing, '.expressionAttr');
+}
+
+function addActionActivationOk(_actionActivationOk) {
+    if (!isset(_actionActivationOk)) {
+        _actionActivationOk = {};
+    }
+    if (!isset(_actionActivationOk.options)) {
+        _actionActivationOk.options = {};
+    }
+    var div = '<div class="actionActivationOk">';
+    div += '<div class="form-group">';
+    div += '<label class="col-lg-1 control-label">Action</label>';
+    div += '<div class="col-lg-1">';
+    div += '<a class="btn btn-default btn-sm listEquipementActivationOk"><i class="fa fa-list-alt"></i></a>';
+    div += '</div>';
+    div += '<div class="col-lg-3 has-warning">';
+    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
+    div += '</div>';
+    div += '<div class="col-lg-4 actionOptions">';
+    div += displayActionOption(init(_actionActivationOk.cmd, ''), _actionActivationOk.options);
+    div += '</div>';
+    div += '<div class="col-lg-1 col-lg-offset-2">';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeActionActivationOk"></i>';
+    div += '</div>';
+    div += '</div>';
+    $('#div_activationOk').append(div);
+    $('#div_activationOk .actionActivationOk:last').setValues(_actionActivationOk, '.expressionAttr');
 }
 
 function addTrigger(_el, _trigger) {

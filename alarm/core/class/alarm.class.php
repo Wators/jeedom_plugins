@@ -460,6 +460,26 @@ class alarmCmd extends cmd {
                             }
                         }
                     }
+
+
+                    /*                     * *****************Activation reussi***************** */
+                    $activationOks = $eqLogic->getConfiguration('actionActivationOk');
+                    log::add('alarm', 'debug', 'Activation de l\'alarme réussie');
+                    foreach ($activationOks as $activationOk) {
+                        $cmd = cmd::byId(str_replace('#', '', $activationOk['cmd']));
+                        $option = array();
+                        if (isset($activationOk['options'])) {
+                            $option = $activationOk['options'];
+                        }
+                        log::add('alarm', 'debug', 'Exécution de ' . $cmd->getHumanName() . ' avec les options : ' . print_r($option, true));
+                        if (is_object($cmd)) {
+                            try {
+                                $cmd->execCmd($option);
+                            } catch (Exception $e) {
+                                log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
+                            }
+                        }
+                    }
                 }
             }
         }

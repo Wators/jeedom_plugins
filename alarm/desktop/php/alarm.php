@@ -94,6 +94,7 @@ sendVarToJS('eqType', 'alarm');
             <li><a href="#tab_modes">Modes</a></li>
             <li><a href="#tab_raz">Remise à zéro</a></li>
             <li><a href="#tab_ping">Pertes ping</a></li>
+            <li><a href="#tab_activeOk">Activation OK</a></li>
         </ul>
 
         <div class="tab-content">
@@ -128,6 +129,14 @@ sendVarToJS('eqType', 'alarm');
                 <br/><br/>
                 <form class="form-horizontal">
                     <div id="div_actionsPing"></div>
+                </form>
+            </div>
+
+            <div class="tab-pane" id="tab_activeOk">
+                <a class='btn btn-success btn-xs pull-right' id="btn_addActionActivationOk" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter action lors de lactivation OK</a>
+                <br/><br/>
+                <form class="form-horizontal">
+                    <div id="div_activationOk"></div>
                 </form>
             </div>
         </div>
