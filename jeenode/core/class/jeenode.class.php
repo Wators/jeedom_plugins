@@ -34,6 +34,12 @@ class jeenodeReal extends eqReal {
     }
 
     /*     * *********************Methode d'instance************************* */
+    
+    public function preSave(){
+        if($this->getLogicalId() == '' || !is_numeric($this->getLogicalId())){
+            throw new Exception('Le node ID ne peut etre vide et doit etre un nombre');
+        }
+    }
 
     public function updateLastCommunication() {
         $this->setConfiguration('lastCommunication', date('Y-m-d H:i'));
@@ -41,9 +47,9 @@ class jeenodeReal extends eqReal {
     }
 
     public function getHttpHeader() {
-        if ($this->type == 'master') {
+        if ($this->getType() == 'master') {
             $masterIp = $this->getConfiguration('IP');
-            $node = $this->logicalId;
+            $node = $this->getLogicalId();
         } else {
             $jeenodeMaster = jeenodeReal::byLogicalId($this->getConfiguration('masterId'), 'jeenode');
             if (count($jeenodeMaster) != 1) {

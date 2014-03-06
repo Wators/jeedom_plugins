@@ -80,6 +80,18 @@ $(function() {
     } else {
         $('#ul_jeenode .li_jeenode:first').click();
     }
+
+    $('body').delegate('.eqRealAttr', 'change', function() {
+        modifyWithoutSave = true;
+    });
+
+    $('body').delegate('.eqLogicAttr', 'change', function() {
+        modifyWithoutSave = true;
+    });
+
+    $('body').delegate('.cmdAttr', 'change', function() {
+        modifyWithoutSave = true;
+    });
 });
 
 function printJeenode(_name, _type, _jeenodeRealId) {
@@ -136,6 +148,7 @@ function getJeenodeConf(_type, _jeenodeRealId) {
                 }
             }
             $('body').setValues(data.result, '.eqRealAttr');
+            modifyWithoutSave = false;
         }
     });
 }
@@ -187,6 +200,7 @@ function removeJeenode(_id) {
                 $('#div_alert').showAlert({message: data.result, level: 'danger'});
                 return;
             }
+            modifyWithoutSave = false;
             window.location.replace('index.php?v=d&p=jeenode');
         }
     });
@@ -200,10 +214,6 @@ function saveJeenode() {
             var eqReal = $(this).getValues('.eqRealAttr');
             eqReal = eqReal[0];
             eqReal.id = $('.li_jeenode.active').attr('data-jeenodeReal_id');
-
-            if (isNaN(eqReal.logicalId) || eqReal.logicalId == '') {
-                throw('Le node ID ne peut etre vide et doit etre un nombre');
-            }
             eqReal.eqLogic = [];
             $(this).find('.eqLogic').each(function() {
                 if ($(this).find('.portType').length > 0) {
@@ -245,6 +255,7 @@ function saveJeenode() {
             $('#div_alert').showAlert({message: 'Jeenode sauvegardé', level: 'success'});
             var li = $('.li_jeenode.active');
             printJeenode(li.attr('data-name'), li.attr('data-type'), li.attr('data-jeenodeReal_id'));
+            modifyWithoutSave = false;
         }
     });
 }

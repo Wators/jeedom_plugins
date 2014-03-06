@@ -284,9 +284,9 @@ class alarmCmd extends cmd {
                 $cmd_armed->event($this->getConfiguration('state'));
             }
         }
-        if ($this->getConfiguration('zone') == '1') {
-            if ($eqLogic->getConfiguration('cmd_zone_id') != '') {
-                $cmd_zone = cmd::byId($eqLogic->getConfiguration('cmd_zone_id'));
+        if ($this->getConfiguration('mode') == '1') {
+            if ($eqLogic->getConfiguration('cmd_mode_id') != '') {
+                $cmd_zone = cmd::byId($eqLogic->getConfiguration('cmd_mode_id'));
                 $cmd_zone->event($this->getConfiguration('state'));
             }
         }

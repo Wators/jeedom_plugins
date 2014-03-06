@@ -87,6 +87,10 @@ $(function() {
     } else {
         $('#ul_widget .li_widget:first').click();
     }
+
+    $('body').delegate('.widgetAttr', 'change', function() {
+        modifyWithoutSave = true;
+    });
 });
 
 function printWidget(_path) {
@@ -143,6 +147,7 @@ function printWidget(_path) {
             activateTooltips();
             $('#div_widgetResult').empty();
             $('#div_widgetResult').append('<iframe src="index.php?v=d&plugin=widget&modal=widget.result&path=' + data.result.path + '" frameBorder="0"></iframe>');
+            modifyWithoutSave = false;
         }
     });
 }
@@ -178,6 +183,7 @@ function saveWidget() {
                 }
             }
             url += 'id=' + data.result.path + '&saveSuccessFull=1';
+            modifyWithoutSave = false;
             window.location.href = url;
         }
     });
@@ -239,6 +245,7 @@ function removeWidget(_path) {
                 }
             }
             url += 'removeSuccessFull=1';
+            modifyWithoutSave = false;
             window.location.href = url;
         }
     });
