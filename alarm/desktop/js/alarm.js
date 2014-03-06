@@ -108,7 +108,7 @@ $(function() {
             el.closest('.action').find('.actionOptions').html(displayActionOption(el.value(), ''));
         });
     });
-    
+
     $("#div_zones").delegate(".listEquipementActionImmediate", 'click', function() {
         var el = $(this).closest('.actionImmediate').find('.expressionAttr[data-l1key=cmd]');
         cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
@@ -117,10 +117,18 @@ $(function() {
         });
     });
 
+
     $('body').delegate('.action .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
         var expression = $(this).closest('.action').getValues('.expressionAttr');
         $(this).closest('.action').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
     });
+
+    $('body').delegate('.actionImmediate .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
+        var expression = $(this).closest('.actionImmediate').getValues('.expressionAttr');
+        $(this).closest('.actionImmediate').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
+    });
+
+    /**************** RAZ Alarm ***********/
 
     $('#btn_addRazAlarm').on('click', function() {
         addRazAlarm({});
@@ -140,6 +148,29 @@ $(function() {
     });
 
     $("#div_razAlarm").delegate('.bt_removeRaz', 'click', function() {
+        $(this).closest('.raz').remove();
+    });
+
+    /**************** PING ***********/
+
+    $('#btn_addPingAction').on('click', function() {
+        addActionPing({});
+    });
+
+    $("#div_actionsPing").delegate(".listEquipementActionPing", 'click', function() {
+        var el = $(this).closest('.actionPing').find('.expressionAttr[data-l1key=cmd]');
+        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
+            el.value(result.human);
+            el.closest('.actionPing').find('.actionOptions').html(displayActionOption(el.value(), ''));
+        });
+    });
+
+    $('#div_actionsPing').delegate('.actionPing .expressionAttr[data-l1key=cmd]', 'focusout', function(event) {
+        var expression = $(this).closest('.actionPing').getValues('.expressionAttr');
+        $(this).closest('.actionPing').find('.actionOptions').html(displayActionOption($(this).value(), init(expression[0].options)));
+    });
+
+    $("#div_actionsPing").delegate('.bt_removeActionPing', 'click', function() {
         $(this).closest('.raz').remove();
     })
 
@@ -227,6 +258,8 @@ function saveEqLogic(_eqLogic) {
 
     _eqLogic.configuration.raz = $('#div_razAlarm .raz').getValues('.expressionAttr');
 
+    _eqLogic.configuration.actionPing = $('#div_actionsPing .actionPing').getValues('.expressionAttr');
+
 
     return _eqLogic;
 }
@@ -244,6 +277,10 @@ function printEqLogic(_eqLogic) {
     for (var i in _eqLogic.configuration.raz) {
         addRazAlarm(_eqLogic.configuration.raz[i]);
     }
+
+    for (var i in _eqLogic.configuration.actionPing) {
+        addActionPing(_eqLogic.configuration.actionPing[i]);
+    }
 }
 
 function addAction(_el, _action) {
@@ -257,7 +294,7 @@ function addAction(_el, _action) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-1 control-label">Action</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm btn-danger listEquipementAction"><i class="fa fa-list-alt "></i></a>';
+    div += '<a class="btn btn-sm btn-danger listEquipementAction"><i class="fa fa-list-alt "></i></a>';
     div += '</div>';
     div += '<div class="col-lg-3 has-error">';
     div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
@@ -285,7 +322,7 @@ function addActionImmediate(_el, _actionImmediate) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-1 control-label">Action</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm btn-warning listEquipementActionImmediate"><i class="fa fa-list-alt"></i></a>';
+    div += '<a class="btn btn-sm btn-warning listEquipementActionImmediate"><i class="fa fa-list-alt"></i></a>';
     div += '</div>';
     div += '<div class="col-lg-3 has-warning">';
     div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
@@ -299,7 +336,33 @@ function addActionImmediate(_el, _actionImmediate) {
     div += '</div>';
     _el.find('.div_actionsImmediate').append(div);
     _el.find('.actionImmediate:last').setValues(_actionImmediate, '.expressionAttr');
+}
 
+function addActionPing(_actionPing) {
+    if (!isset(_actionPing)) {
+        _actionPing = {};
+    }
+    if (!isset(_actionPing.options)) {
+        _actionPing.options = {};
+    }
+    var div = '<div class="actionPing">';
+    div += '<div class="form-group">';
+    div += '<label class="col-lg-1 control-label">Action</label>';
+    div += '<div class="col-lg-1">';
+    div += '<a class="btn btn-default btn-sm listEquipementActionPing"><i class="fa fa-list-alt"></i></a>';
+    div += '</div>';
+    div += '<div class="col-lg-3 has-warning">';
+    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
+    div += '</div>';
+    div += '<div class="col-lg-4 actionOptions">';
+    div += displayActionOption(init(_actionPing.cmd, ''), _actionPing.options);
+    div += '</div>';
+    div += '<div class="col-lg-1 col-lg-offset-2">';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeActionImmediate"></i>';
+    div += '</div>';
+    div += '</div>';
+    $('#div_actionsPing').append(div);
+    $('#div_actionsPing .actionPing:last').setValues(_actionPing, '.expressionAttr');
 }
 
 function addTrigger(_el, _trigger) {
@@ -323,7 +386,7 @@ function addTrigger(_el, _trigger) {
     div += '<div class="col-lg-1 has-success">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="waitDelay" />';
     div += '</div>';
-     div += '<label class="col-lg-1 control-label">Ping</label>';
+    div += '<label class="col-lg-1 control-label">Ping</label>';
     div += '<div class="col-lg-1 has-success">';
     div += '<input type="checkbox" class="triggerAttr form-control input-sm" data-l1key="ping" />';
     div += '</div>';
@@ -371,7 +434,7 @@ function addZone(_zone) {
             addAction($('#div_zones .zone:last'), _zone.actions);
         }
     }
-    
+
     if (is_array(_zone.actionsImmediate)) {
         for (var i in _zone.actionsImmediate) {
             addActionImmediate($('#div_zones .zone:last'), _zone.actionsImmediate[i]);

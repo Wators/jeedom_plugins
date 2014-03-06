@@ -213,17 +213,38 @@ class alarm extends eqLogic {
                 }
             }
         }
-
+        $pingOk = true;
         foreach ($eqLogicList as $eqLogic) {
             log::add('alarm', 'debug', 'Test ping sur : ' . $eqLogic->getHumanName());
             if (method_exists($eqLogic, 'ping')) {
                 if (!$eqLogic->ping()) {
                     log::add('alarm', 'debug', 'Ping NOK sur : ' . $eqLogic->getHumanName());
+                    $pingOk = false;
                 } else {
                     log::add('alarm', 'debug', 'Ping OK sur : ' . $eqLogic->getHumanName());
                 }
             } else {
                 log::add('alarm', 'debug', 'Aucune méthode de ping pour : ' . $eqLogic->getHumanName());
+            }
+        }
+
+        if (!$pingOk) {
+            log::add('alarm', 'debug', 'Alert perte ping éxecution des actions');
+            $actionPings = $this->getConfiguration('actionPing');
+            foreach ($actionPings as $action) {
+                $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
+                if (is_object($cmd)) {
+                    try {
+                        log::add('alarm', 'debug', 'Exécution de la commande ' . $cmd->getHumanName());
+                        $options = array();
+                        if (isset($action['options'])) {
+                            $options = $action['options'];
+                        }
+                        $cmd->execCmd($options);
+                    } catch (Exception $e) {
+                        log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
+                    }
+                }
             }
         }
     }

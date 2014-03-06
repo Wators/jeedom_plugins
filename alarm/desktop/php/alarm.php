@@ -87,15 +87,13 @@ sendVarToJS('eqType', 'alarm');
                     </fieldset> 
                 </form>
             </div>
-            <div class="col-lg-6">
-                <legend>RaZ de l'alarme <a class='btn btn-default btn-xs pull-right' id="btn_addRazAlarm"><i class="fa fa-plus-circle"></i> Ajouter</a></legend>
-                <div id="div_razAlarm"></div>
-            </div>
         </div>
 
         <ul class="nav nav-tabs" id="tab_alarm">
             <li class="active"><a href="#tab_zones">Zones</a></li>
             <li><a href="#tab_modes">Modes</a></li>
+            <li><a href="#tab_raz">Remise à zéro</a></li>
+            <li><a href="#tab_ping">Ping</a></li>
         </ul>
 
         <div class="tab-content">
@@ -109,6 +107,22 @@ sendVarToJS('eqType', 'alarm');
                 <a class="btn btn-success btn-xs pull-right" id="bt_addMode" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter mode</a>
                 <br/><br/>
                 <div id="div_modes"></div> 
+            </div>
+            
+            <div class="tab-pane" id="tab_raz">
+                <a class='btn btn-success btn-xs pull-right' id="btn_addRazAlarm" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter RaZ</a>
+                <br/><br/>
+                <form class="form-horizontal">
+                <div id="div_razAlarm"></div>
+                </form>
+            </div>
+            
+            <div class="tab-pane" id="tab_ping">
+                <a class='btn btn-success btn-xs pull-right' id="btn_addPingAction" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter action perte de ping</a>
+                <br/><br/>
+                <form class="form-horizontal">
+                <div id="div_actionsPing"></div>
+                </form>
             </div>
         </div>
 
