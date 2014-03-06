@@ -77,6 +77,14 @@ $(function() {
         $(this).closest('.action').remove();
     })
 
+    $("#div_zones").delegate('.bt_addActionImmediate', 'click', function() {
+        addActionImmediate($(this).closest('.zone'), '');
+    });
+
+    $("#div_zones").delegate('.bt_removeActionImmediate', 'click', function() {
+        $(this).closest('.actionImmediat').remove();
+    })
+
     $("#div_zones").delegate('.bt_addTrigger', 'click', function() {
         addTrigger($(this).closest('.zone'), '');
     });
@@ -98,6 +106,14 @@ $(function() {
         cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
             el.value(result.human);
             el.closest('.action').find('.actionOptions').html(displayActionOption(el.value(), ''));
+        });
+    });
+    
+    $("#div_zones").delegate(".listEquipementActionImmediate", 'click', function() {
+        var el = $(this).closest('.actionImmediate').find('.expressionAttr[data-l1key=cmd]');
+        cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
+            el.value(result.human);
+            el.closest('.actionImmediate').find('.actionOptions').html(displayActionOption(el.value(), ''));
         });
     });
 
@@ -197,6 +213,7 @@ function saveEqLogic(_eqLogic) {
         var zone = $(this).getValues('.zoneAttr');
         zone = zone[0];
         zone.actions = $(this).find('.action').getValues('.expressionAttr');
+        zone.actionsImmediate = $(this).find('.actionImmediate').getValues('.expressionAttr');
         zone.triggers = $(this).find('.trigger').getValues('.triggerAttr');
         _eqLogic.configuration.zones.push(zone);
     });
@@ -215,6 +232,9 @@ function saveEqLogic(_eqLogic) {
 }
 
 function printEqLogic(_eqLogic) {
+    $('#div_zones').empty();
+    $('#div_modes').empty();
+    $('#div_razAlarm').empty();
     for (var i in _eqLogic.configuration.zones) {
         addZone(_eqLogic.configuration.zones[i]);
     }
@@ -237,9 +257,9 @@ function addAction(_el, _action) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-1 control-label">Action</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm btn-warning listEquipementAction"><i class="fa fa-list-alt "></i></a>';
+    div += '<a class="btn btn-default btn-sm btn-danger listEquipementAction"><i class="fa fa-list-alt "></i></a>';
     div += '</div>';
-    div += '<div class="col-lg-3 has-warning">';
+    div += '<div class="col-lg-3 has-error">';
     div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
     div += '</div>';
     div += '<div class="col-lg-4 actionOptions">';
@@ -251,6 +271,34 @@ function addAction(_el, _action) {
     div += '</div>';
     _el.find('.div_actions').append(div);
     _el.find('.action:last').setValues(_action, '.expressionAttr');
+
+}
+
+function addActionImmediate(_el, _actionImmediate) {
+    if (!isset(_actionImmediate)) {
+        _actionImmediate = {};
+    }
+    if (!isset(_actionImmediate.options)) {
+        _actionImmediate.options = {};
+    }
+    var div = '<div class="actionImmediate">';
+    div += '<div class="form-group">';
+    div += '<label class="col-lg-1 control-label">Action</label>';
+    div += '<div class="col-lg-1">';
+    div += '<a class="btn btn-default btn-sm btn-warning listEquipementActionImmediate"><i class="fa fa-list-alt"></i></a>';
+    div += '</div>';
+    div += '<div class="col-lg-3 has-warning">';
+    div += '<input class="expressionAttr form-control input-sm" data-l1key="cmd" />';
+    div += '</div>';
+    div += '<div class="col-lg-4 actionOptions">';
+    div += displayActionOption(init(_actionImmediate.cmd, ''), _actionImmediate.options);
+    div += '</div>';
+    div += '<div class="col-lg-1 col-lg-offset-2">';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeActionImmediate"></i>';
+    div += '</div>';
+    div += '</div>';
+    _el.find('.div_actionsImmediate').append(div);
+    _el.find('.actionImmediate:last').setValues(_actionImmediate, '.expressionAttr');
 
 }
 
@@ -267,15 +315,19 @@ function addTrigger(_el, _trigger) {
     div += '<div class="col-lg-3 has-success">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="cmd" />';
     div += '</div>';
-    div += '<label class="col-lg-2 control-label">Délai activation</label>';
+    div += '<label class="col-lg-1 control-label">Délai activation</label>';
     div += '<div class="col-lg-1 has-success">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="armedDelay" />';
     div += '</div>';
-    div += '<label class="col-lg-2 control-label">Délai déclenchement</label>';
+    div += '<label class="col-lg-1 control-label">Délai déclenchement</label>';
     div += '<div class="col-lg-1 has-success">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="waitDelay" />';
     div += '</div>';
-    div += '<div class="col-lg-1 actionOptions">';
+     div += '<label class="col-lg-1 control-label">Ping</label>';
+    div += '<div class="col-lg-1 has-success">';
+    div += '<input type="checkbox" class="triggerAttr form-control input-sm" data-l1key="ping" />';
+    div += '</div>';
+    div += '<div class="col-lg-1">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeTrigger"></i>';
     div += '</div>';
     div += '</div>';
@@ -291,16 +343,19 @@ function addZone(_zone) {
     div += '<div class="col-lg-2">';
     div += '<span class="zoneAttr label label-info" data-l1key="name" ></span>';
     div += '</div>';
-    div += '<div class="col-lg-2 col-lg-offset-6">';
+    div += '<div class="col-lg-3 col-lg-offset-5">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeZone"></i>';
-    div += '<a class="btn btn-default btn-sm bt_addAction btn-warning  pull-right" style="margin-left : 5px;"><i class="fa fa-plus-circle"></i> Action</a>';
-    div += '<a class="btn btn-default btn-sm bt_addTrigger btn-success pull-right"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
+    div += '<a class="btn btn-sm bt_addAction btn-danger  pull-right" style="margin-left : 5px;"><i class="fa fa-plus-circle"></i> Action</a>';
+    div += '<a class="btn btn-warning btn-sm bt_addActionImmediate pull-right" style="margin-left : 5px;"><i class="fa fa-plus-circle"></i> Action immédiate</a>';
+    div += '<a class="btn btn-sm bt_addTrigger btn-success pull-right"><i class="fa fa-plus-circle"></i> Déclencheur</a>';
     div += '</div>';
     div += '</div>';
 
-    div += '<div class="div_actions">';
-    div += '<hr />';
-    div += '<div class="div_triggers">';
+    div += '<div class="div_triggers"></div>';
+    div += '<hr/>';
+    div += '<div class="div_actionsImmediate"></div>';
+    div += '<hr/>';
+    div += '<div class="div_actions"></div>';
 
     div += '</form>';
 
@@ -314,6 +369,16 @@ function addZone(_zone) {
     } else {
         if ($.trim(_zone.actions) != '') {
             addAction($('#div_zones .zone:last'), _zone.actions);
+        }
+    }
+    
+    if (is_array(_zone.actionsImmediate)) {
+        for (var i in _zone.actionsImmediate) {
+            addActionImmediate($('#div_zones .zone:last'), _zone.actionsImmediate[i]);
+        }
+    } else {
+        if ($.trim(_zone.actionsImmediate) != '') {
+            addActionImmediate($('#div_zones .zone:last'), _zone.actionsImmediate);
         }
     }
 

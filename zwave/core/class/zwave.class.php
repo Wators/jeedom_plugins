@@ -394,6 +394,25 @@ class zwave extends eqLogic {
         return $return;
     }
 
+    public function ping() {
+        $info = $this->getInfo();
+        if ($info['state']['value'] == 'Réveillé') {
+            $cmds = $this->getCmd();
+            $cmds[0]->forceUpdate();
+            if ($this->getStatus('lastCommunication', date('Y-m-d H:i:s')) < date('Y-m-d H:i:s', strtotime('-2 minutes' . date('Y-m-d H:i:s')))) {
+                sleep(5);
+            }
+            if ($this->getStatus('lastCommunication', date('Y-m-d H:i:s')) < date('Y-m-d H:i:s', strtotime('-2 minutes' . date('Y-m-d H:i:s')))) {
+                return false;
+            }
+        } else {
+            if ($this->getStatus('lastCommunication', date('Y-m-d H:i:s')) < date('Y-m-d H:i:s', strtotime('-' . $this->getTimeout() . ' minutes' . date('Y-m-d H:i:s')))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public function getInfo() {
         $return = array();
         if (!is_numeric($this->getLogicalId())) {

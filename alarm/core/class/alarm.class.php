@@ -41,6 +41,12 @@ class alarm extends eqLogic {
         }
     }
 
+    public static function cron() {
+        foreach (eqLogic::byType('alarm') as $eqLogic) {
+            $eqLogic->ping();
+        }
+    }
+
     /*     * *********************Methode d'instance************************* */
 
     public function postSave() {
@@ -178,6 +184,50 @@ class alarm extends eqLogic {
         return true;
     }
 
+    public function ping() {
+        $eqLogicList = array();
+        log::add('alarm', 'debug', 'Lancement du ping de l\'alarme : ' . $this->getHumanName());
+        if ($this->getConfiguration('cmd_mode_id') != '') {
+            $cmd_mode = cmd::byId($this->getConfiguration('cmd_mode_id'));
+            $select_mode = $cmd_mode->execCmd();
+            $modes = $this->getConfiguration('modes');
+            foreach ($modes as $mode) {
+                if ($mode['name'] == $select_mode) {
+                    log::add('alarm', 'debug', 'Mode actif : ' . $select_mode);
+                    $zones = $this->getConfiguration('zones');
+                    foreach ($zones as $zone) {
+                        if ((!is_array($mode['zone']) && $zone['name'] == $mode['zone']) || (is_array($mode['zone']) && in_array($zone['name'], $mode['zone']))) {
+                            log::add('alarm', 'debug', 'Vérification de la zone : ' . $zone['name']);
+                            foreach ($zone['triggers'] as $trigger) {
+                                if (isset($trigger['ping']) && $trigger['ping'] == 1) {
+                                    $cmd = cmd::byId(str_replace('#', '', $trigger['cmd']));
+                                    log::add('alarm', 'debug', 'ping nécessaire pour : ' . $cmd->getHumanName());
+                                    if (!isset($eqLogicList[$cmd->getEqLogic_id()]) && is_object($cmd)) {
+                                        $eqLogicList[$cmd->getEqLogic_id()] = $cmd->getEqLogic();
+                                        log::add('alarm', 'debug', 'Ajout eqLogic pour test de ping : ' . $eqLogicList[$cmd->getEqLogic_id()]->getHumanName());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach ($eqLogicList as $eqLogic) {
+            log::add('alarm', 'debug', 'Test ping sur : ' . $eqLogic->getHumanName());
+            if (method_exists($eqLogic, 'ping')) {
+                if (!$eqLogic->ping()) {
+                    log::add('alarm', 'debug', 'Ping NOK sur : ' . $eqLogic->getHumanName());
+                } else {
+                    log::add('alarm', 'debug', 'Ping OK sur : ' . $eqLogic->getHumanName());
+                }
+            } else {
+                log::add('alarm', 'debug', 'Aucune méthode de ping pour : ' . $eqLogic->getHumanName());
+            }
+        }
+    }
+
     public function execute($_trigger_id, $_value) {
         log::add('alarm', 'debug', 'Lancement de l\'alarme : ' . $this->getHumanName());
         $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
@@ -198,6 +248,23 @@ class alarm extends eqLogic {
                                 foreach ($zone['triggers'] as $trigger) {
                                     if ($trigger['cmd'] == '#' . $_trigger_id . '#') {
                                         if ($_value == 1 || $_value) {
+
+                                            foreach ($zone['actionsImmediate'] as $action) {
+                                                $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
+                                                if (is_object($cmd)) {
+                                                    try {
+                                                        log::add('alarm', 'debug', 'Exécution immediate de la commande ' . $cmd->getHumanName());
+                                                        $options = array();
+                                                        if (isset($action['options'])) {
+                                                            $options = $action['options'];
+                                                        }
+                                                        $cmd->execCmd($options);
+                                                    } catch (Exception $e) {
+                                                        log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
+                                                    }
+                                                }
+                                            }
+
                                             if (isset($trigger['armedDelay']) && is_numeric($trigger['armedDelay']) && $trigger['armedDelay'] > 0) {
                                                 if (strtotime(date('Y-m-d H:i:s')) < strtotime('+' . $trigger['armedDelay'] . ' second' . $cmd_armed->getCollectDate())) {
                                                     log::add('alarm', 'debug', 'Non déclenchement de l\'alarme car hors delay d\'armement');
