@@ -21,79 +21,79 @@ sendVarToJS('eqType', 'alarm');
         </div>
     </div>
     <div class="col-lg-10 eqLogic" style="border-left: solid 1px #EEE; padding-left: 25px;display: none;">
-        <div class="row">
-            <div class="col-lg-6">
-                <form class="form-horizontal">
-                    <fieldset>
-                        <legend>Général</legend>
-                        <div class="form-group">
-                            <label class="col-lg-4 control-label">Nom de l'alarme</label>
-                            <div class="col-lg-8">
-                                <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
-                                <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="Nom de la zone"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-4 control-label" >Objet parent</label>
-                            <div class="col-lg-8">
-                                <select id="sel_object" class="eqLogicAttr form-control" data-l1key="object_id">
-                                    <option value="">Aucun</option>
-                                    <?php
-                                    foreach (object::all() as $object) {
-                                        echo '<option value="' . $object->getId() . '">' . $object->getName() . '</option>';
-                                    }
-                                    ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-4 control-label">Catégorie</label>
-                            <div class="col-lg-8">
-                                <?php
-                                foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value) {
-                                    echo '<label class="checkbox-inline">';
-                                    echo '<input type="checkbox" class="eqLogicAttr" data-l1key="category" data-l2key="' . $key . '" />' . $value['name'];
-                                    echo '</label>';
-                                }
-                                ?>
+        <form class="form-horizontal">
+            <fieldset>
+                <legend>Général</legend>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label">Nom de l'alarme</label>
+                    <div class="col-lg-3">
+                        <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
+                        <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="Nom de la zone"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label" >Objet parent</label>
+                    <div class="col-lg-3">
+                        <select id="sel_object" class="eqLogicAttr form-control" data-l1key="object_id">
+                            <option value="">Aucun</option>
+                            <?php
+                            foreach (object::all() as $object) {
+                                echo '<option value="' . $object->getId() . '">' . $object->getName() . '</option>';
+                            }
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label">Catégorie</label>
+                    <div class="col-lg-3">
+                        <?php
+                        foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value) {
+                            echo '<label class="checkbox-inline">';
+                            echo '<input type="checkbox" class="eqLogicAttr" data-l1key="category" data-l2key="' . $key . '" />' . $value['name'];
+                            echo '</label>';
+                        }
+                        ?>
 
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-lg-4 control-label">Activer</label>
-                            <div class="col-lg-1">
-                                <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isEnable" checked/>
-                            </div>
-                            <label class="col-lg-4 control-label">Visible</label>
-                            <div class="col-lg-1">
-                                <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isVisible" checked/>
-                            </div>
-                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label">Activer</label>
+                    <div class="col-lg-1">
+                        <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isEnable" checked/>
+                    </div>
+                    <label class="col-lg-2 control-label">Visible</label>
+                    <div class="col-lg-1">
+                        <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isVisible" checked/>
+                    </div>
+                </div>
 
-                        <div class="form-group expertModeHidden">
-                            <label class="col-lg-3 control-label">Actif en permanance</label>
-                            <div class="col-lg-1">
-                                <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="always_active"/>
-                            </div>
-                            <label class="col-lg-3 control-label">Armement visible</label>
-                            <div class="col-lg-1">
-                                <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="armed_visible" checked/>
-                            </div>
-                            <label class="col-lg-3 control-label">Libération visible</label>
-                            <div class="col-lg-1">
-                                <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="free_visible" checked/>
-                            </div>
-                        </div>
-                    </fieldset> 
-                </form>
-            </div>
-        </div>
+                <div class="form-group expertModeHidden">
+                    <label class="col-lg-2 control-label">Actif en permanance</label>
+                    <div class="col-lg-1">
+                        <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="always_active"/>
+                    </div>
+                    <label class="col-lg-2 control-label">Armement visible</label>
+                    <div class="col-lg-1">
+                        <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="armed_visible" checked/>
+                    </div>
+                    <label class="col-lg-2 control-label">Libération visible</label>
+                    <div class="col-lg-1">
+                        <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="free_visible" checked/>
+                    </div>
+                    <label class="col-lg-2 control-label">Status immédiat visible</label>
+                    <div class="col-lg-1">
+                        <input type="checkbox" class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="immediateState_visible"/>
+                    </div>
+                </div>
+            </fieldset> 
+        </form>
 
         <ul class="nav nav-tabs" id="tab_alarm">
             <li class="active"><a href="#tab_zones">Zones</a></li>
             <li><a href="#tab_modes">Modes</a></li>
             <li><a href="#tab_raz">Remise à zéro</a></li>
-            <li><a href="#tab_ping">Ping</a></li>
+            <li><a href="#tab_ping">Pertes ping</a></li>
         </ul>
 
         <div class="tab-content">
@@ -108,20 +108,20 @@ sendVarToJS('eqType', 'alarm');
                 <br/><br/>
                 <div id="div_modes"></div> 
             </div>
-            
+
             <div class="tab-pane" id="tab_raz">
                 <a class='btn btn-success btn-xs pull-right' id="btn_addRazAlarm" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter RaZ</a>
                 <br/><br/>
                 <form class="form-horizontal">
-                <div id="div_razAlarm"></div>
+                    <div id="div_razAlarm"></div>
                 </form>
             </div>
-            
+
             <div class="tab-pane" id="tab_ping">
                 <a class='btn btn-success btn-xs pull-right' id="btn_addPingAction" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter action perte de ping</a>
                 <br/><br/>
                 <form class="form-horizontal">
-                <div id="div_actionsPing"></div>
+                    <div id="div_actionsPing"></div>
                 </form>
             </div>
         </div>

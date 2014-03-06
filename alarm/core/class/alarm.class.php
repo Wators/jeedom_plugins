@@ -50,6 +50,48 @@ class alarm extends eqLogic {
     /*     * *********************Methode d'instance************************* */
 
     public function postSave() {
+        if ($this->getConfiguration('cmd_armed_id') == '') {
+            $cmd = new alarmCmd();
+            $cmd->setName('Actif');
+            $cmd->setEqLogic_id($this->id);
+            $cmd->setType('info');
+            $cmd->setorder(1);
+            $cmd->setSubType('binary');
+            $cmd->setEventOnly(1);
+            $cmd->save();
+            $this->setConfiguration('cmd_armed_id', $cmd->getId());
+            $this->save();
+        }
+
+        if ($this->getConfiguration('cmd_state_id') == '') {
+            $cmd = new alarmCmd();
+            $cmd->setName('Status');
+            $cmd->setEqLogic_id($this->id);
+            $cmd->setType('info');
+            $cmd->setorder(2);
+            $cmd->setSubType('binary');
+            $cmd->setEventOnly(1);
+            $cmd->setDisplay('invertBinary', 1);
+            $cmd->save();
+            $this->setConfiguration('cmd_state_id', $cmd->getId());
+            $this->save();
+        }
+
+        if ($this->getConfiguration('cmd_immediatState_id') == '') {
+            $cmd = new alarmCmd();
+            $cmd->setName('Status immédiat');
+            $cmd->setEqLogic_id($this->id);
+            $cmd->setType('info');
+            $cmd->setorder(2);
+            $cmd->setSubType('binary');
+            $cmd->setIsVisible('binary');
+            $cmd->setEventOnly(1);
+            $cmd->setDisplay('invertBinary', 1);
+            $cmd->save();
+            $this->setConfiguration('cmd_immediatState_id', $cmd->getId());
+            $this->save();
+        }
+
         $existing_mode = array('Armer', 'Libérer');
         foreach ($this->getConfiguration('modes') as $key => $value) {
             $existing_mode[] = $value['name'];
@@ -105,32 +147,16 @@ class alarm extends eqLogic {
             $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
             $cmd_armed->event(1);
         }
+
+
+        $cmd_immediateState = cmd::byId($this->getConfiguration('cmd_immediatState_id'));
+        if (is_object($cmd_immediateState)) {
+            $cmd_immediateState->setIsVisible($this->getConfiguration('immediateState_visible', 1));
+            $cmd_immediateState->save();
+        }
     }
 
     public function postInsert() {
-        $cmd = new alarmCmd();
-        $cmd->setName('Actif');
-        $cmd->setEqLogic_id($this->id);
-        $cmd->setType('info');
-        $cmd->setorder(1);
-        $cmd->setSubType('binary');
-        $cmd->setEventOnly(1);
-        $cmd->save();
-        $this->setConfiguration('cmd_armed_id', $cmd->getId());
-        $this->save();
-
-        $cmd = new alarmCmd();
-        $cmd->setName('Status');
-        $cmd->setEqLogic_id($this->id);
-        $cmd->setType('info');
-        $cmd->setorder(2);
-        $cmd->setSubType('binary');
-        $cmd->setEventOnly(1);
-        $cmd->setDisplay('invertBinary', 1);
-        $cmd->save();
-        $this->setConfiguration('cmd_state_id', $cmd->getId());
-        $this->save();
-
         $cmd = new alarmCmd();
         $cmd->setName('Mode');
         $cmd->setEqLogic_id($this->id);
@@ -168,6 +194,10 @@ class alarm extends eqLogic {
             $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
             if ($cmd_state->execCmd() == '') {
                 $cmd_state->event(0);
+            }
+            $cmd_immediatState = cmd::byId($this->getConfiguration('cmd_immediatState_id'));
+            if ($cmd_immediatState->execCmd() == '') {
+                $cmd_immediatState->event(0);
             }
             $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
             if ($cmd_armed->execCmd() == '') {
@@ -253,6 +283,7 @@ class alarm extends eqLogic {
         log::add('alarm', 'debug', 'Lancement de l\'alarme : ' . $this->getHumanName());
         $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
         $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
+        $cmd_immediatState = cmd::byId($this->getConfiguration('cmd_immediatState_id'));
         if ($cmd_armed->execCmd() == 1 && $cmd_state->execCmd() != 1) {
             log::add('alarm', 'debug', 'Alarme en cours');
             if ($this->getConfiguration('cmd_mode_id') != '') {
@@ -269,19 +300,21 @@ class alarm extends eqLogic {
                                 foreach ($zone['triggers'] as $trigger) {
                                     if ($trigger['cmd'] == '#' . $_trigger_id . '#') {
                                         if ($_value == 1 || $_value) {
-
-                                            foreach ($zone['actionsImmediate'] as $action) {
-                                                $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
-                                                if (is_object($cmd)) {
-                                                    try {
-                                                        log::add('alarm', 'debug', 'Exécution immediate de la commande ' . $cmd->getHumanName());
-                                                        $options = array();
-                                                        if (isset($action['options'])) {
-                                                            $options = $action['options'];
+                                            if ($cmd_immediatState->execCmd() != 1) {
+                                                $cmd_immediatState->event(1);
+                                                foreach ($zone['actionsImmediate'] as $action) {
+                                                    $cmd = cmd::byId(str_replace('#', '', $action['cmd']));
+                                                    if (is_object($cmd)) {
+                                                        try {
+                                                            log::add('alarm', 'debug', 'Exécution immediate de la commande ' . $cmd->getHumanName());
+                                                            $options = array();
+                                                            if (isset($action['options'])) {
+                                                                $options = $action['options'];
+                                                            }
+                                                            $cmd->execCmd($options);
+                                                        } catch (Exception $e) {
+                                                            log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
                                                         }
-                                                        $cmd->execCmd($options);
-                                                    } catch (Exception $e) {
-                                                        log::add('alarm', 'error', 'Erreur lors de l\'éxecution de ' . $cmd->getHumanName() . '. Détails : ' . $e->getMessage());
                                                     }
                                                 }
                                             }
