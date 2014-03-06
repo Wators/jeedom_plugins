@@ -215,6 +215,9 @@ class alarm extends eqLogic {
     }
 
     public function ping() {
+        if ($this->getConfiguration('pingState', 1) != 1) {
+            return true;
+        }
         $eqLogicList = array();
         log::add('alarm', 'debug', 'Lancement du ping de l\'alarme : ' . $this->getHumanName());
         if ($this->getConfiguration('cmd_mode_id') != '') {
@@ -259,6 +262,8 @@ class alarm extends eqLogic {
         }
 
         if (!$pingOk) {
+            $this->setConfiguration('pingState', 0);
+            $this->save();
             log::add('alarm', 'debug', 'Alert perte ping éxecution des actions');
             $actionPings = $this->getConfiguration('actionPing');
             foreach ($actionPings as $action) {
@@ -401,6 +406,8 @@ class alarmCmd extends cmd {
                         }
                     }
                     $cmd_state->event(0);
+                    $eqLogic->setConfiguration('pingState', 1);
+                    $eqLogic->save();
                 }
                 $cmd_armed->event($this->getConfiguration('state'));
             }
