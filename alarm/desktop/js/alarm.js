@@ -85,7 +85,7 @@ $(function() {
         $(this).closest('.trigger').remove();
     });
 
-    $("#div_zones").delegate(".listEquipementInfo", 'click', function() {
+    $("#div_zones").delegate(".listCmdInfo", 'click', function() {
         var el = $(this).closest('.trigger').find('.triggerAttr[data-l1key=cmd]');
         cmd.getSelectModal({cmd: {type: 'info', subtype: 'binary'}}, function(result) {
             el.value(result.human);
@@ -114,7 +114,21 @@ $(function() {
         addAction({}, 'ping', 'Action');
     });
 
-    $("body").delegate(".listEquipementAction", 'click', function() {
+    $('#btn_addPingTest').on('click', function() {
+        addPingTest({});
+    });
+
+    $("body").delegate(".listEquipement", 'click', function() {
+        var type = $(this).attr('data-type');
+        var el = $(this).closest('.' + type).find('.expressionAttr[data-l1key=eqLogic]');
+        eqLogic.getSelectModal({}, function(result) {
+            console.log(result);
+            el.value(result.human);
+        });
+    });
+
+    /**************** Commun ***********/
+    $("body").delegate(".listCmdAction", 'click', function() {
         var type = $(this).attr('data-type');
         var el = $(this).closest('.' + type).find('.expressionAttr[data-l1key=cmd]');
         cmd.getSelectModal({cmd: {type: 'action'}}, function(result) {
@@ -192,6 +206,7 @@ function saveEqLogic(_eqLogic) {
     _eqLogic.configuration.raz = $('#div_raz .raz').getValues('.expressionAttr');
     _eqLogic.configuration.razImmediate = $('#div_razImmediat .razImmediate').getValues('.expressionAttr');
     _eqLogic.configuration.ping = $('#div_ping .ping').getValues('.expressionAttr');
+    _eqLogic.configuration.pingTest = $('#div_pingTest .pingTest').getValues('.expressionAttr');
     _eqLogic.configuration.activationOk = $('#div_activationOk .activationOk').getValues('.expressionAttr');
 
     return _eqLogic;
@@ -216,6 +231,9 @@ function printEqLogic(_eqLogic) {
     for (var i in _eqLogic.configuration.ping) {
         addAction(_eqLogic.configuration.ping[i], 'ping', 'Action');
     }
+    for (var i in _eqLogic.configuration.pingTest) {
+        addPingTest(_eqLogic.configuration.pingTest[i]);
+    }
 
     for (var i in _eqLogic.configuration.activationOk) {
         addAction(_eqLogic.configuration.activationOk[i], 'activationOk', 'Action');
@@ -233,7 +251,7 @@ function addAction(_action, _type, _name, _el) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-1 control-label">' + _name + '</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm listEquipementAction" data-type="' + _type + '"><i class="fa fa-list-alt"></i></a>';
+    div += '<a class="btn btn-default btn-sm listCmdAction" data-type="' + _type + '"><i class="fa fa-list-alt"></i></a>';
     div += '</div>';
     div += '<div class="col-lg-3">';
     div += '<input class="expressionAttr form-control input-sm cmdAction" data-l1key="cmd" data-type="' + _type + '" />';
@@ -254,6 +272,30 @@ function addAction(_action, _type, _name, _el) {
     }
 }
 
+function addPingTest(_pingTest) {
+    if (!isset(_pingTest)) {
+        _pingTest = {};
+    }
+    if (!isset(_pingTest.options)) {
+        _pingTest.options = {};
+    }
+    var div = '<div class="pingTest">';
+    div += '<div class="form-group">';
+    div += '<label class="col-lg-1 control-label">Equipement à tester</label>';
+    div += '<div class="col-lg-1">';
+    div += '<a class="btn btn-default btn-sm listEquipement" data-type="pingTest"><i class="fa fa-list-alt"></i></a>';
+    div += '</div>';
+    div += '<div class="col-lg-3">';
+    div += '<input class="expressionAttr form-control input-sm" data-l1key="eqLogic" data-type="pingTest" />';
+    div += '</div>';
+    div += '<div class="col-lg-1">';
+    div += '<i class="fa fa-minus-circle pull-right cursor bt_removeAction" data-type="pingTest"></i>';
+    div += '</div>';
+    div += '</div>';
+    $('#div_pingTest').append(div);
+    $('#div_pingTest .pingTest:last').setValues(_pingTest, '.expressionAttr');
+}
+
 function addTrigger(_el, _trigger) {
     if (!isset(_trigger)) {
         _trigger = {};
@@ -262,22 +304,18 @@ function addTrigger(_el, _trigger) {
     div += '<div class="form-group">';
     div += '<label class="col-lg-1 control-label">Déclencheur</label>';
     div += '<div class="col-lg-1">';
-    div += '<a class="btn btn-default btn-sm listEquipementInfo btn-success"><i class="fa fa-list-alt"></i></a>';
+    div += '<a class="btn btn-default btn-sm listCmdInfo btn-success"><i class="fa fa-list-alt"></i></a>';
     div += '</div>';
     div += '<div class="col-lg-3 has-success">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="cmd" />';
     div += '</div>';
-    div += '<label class="col-lg-1 control-label">Délai activation</label>';
+    div += '<label class="col-lg-2 control-label">Délai activation</label>';
     div += '<div class="col-lg-1 has-success">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="armedDelay" />';
     div += '</div>';
-    div += '<label class="col-lg-1 control-label">Délai déclenchement</label>';
+    div += '<label class="col-lg-2 control-label">Délai déclenchement</label>';
     div += '<div class="col-lg-1 has-success">';
     div += '<input class="triggerAttr form-control input-sm" data-l1key="waitDelay" />';
-    div += '</div>';
-    div += '<label class="col-lg-1 control-label">Ping</label>';
-    div += '<div class="col-lg-1 has-success">';
-    div += '<input type="checkbox" class="triggerAttr form-control input-sm" data-l1key="ping" />';
     div += '</div>';
     div += '<div class="col-lg-1">';
     div += '<i class="fa fa-minus-circle pull-right cursor bt_removeTrigger"></i>';

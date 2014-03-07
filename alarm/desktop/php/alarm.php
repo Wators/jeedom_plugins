@@ -125,9 +125,11 @@ sendVarToJS('eqType', 'alarm');
             </div>
 
             <div class="tab-pane" id="tab_ping">
-                <a class='btn btn-success btn-xs pull-right' id="btn_addPingAction" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter action perte de ping</a>
+                <a class='btn btn-warning btn-xs pull-right' id="btn_addPingAction" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter action perte de ping</a>
+                <a class='btn btn-success btn-xs pull-right' id="btn_addPingTest" style="margin-top: 5px;"><i class="fa fa-plus-circle"></i> Ajouter équipement à tester</a>
                 <br/><br/>
                 <form class="form-horizontal">
+                    <div id="div_pingTest"></div>
                     <div id="div_ping"></div>
                 </form>
             </div>
