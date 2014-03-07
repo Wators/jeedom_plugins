@@ -1,8 +1,0 @@
-{
-    "autoload": false,
-    "singleton": true,
-    "defaults": {
-        "launchWeekDay": 0,
-	"warningLevel": 20
-    }
-}

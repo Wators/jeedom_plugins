@@ -192,15 +192,15 @@ class alarm extends eqLogic {
     public function postUpdate() {
         if ($this->getIsEnable() == 1) {
             $cmd_state = cmd::byId($this->getConfiguration('cmd_state_id'));
-            if ($cmd_state->execCmd() == '') {
+            if (is_object($cmd_state) && $cmd_state->execCmd() == '') {
                 $cmd_state->event(0);
             }
             $cmd_immediatState = cmd::byId($this->getConfiguration('cmd_immediatState_id'));
-            if ($cmd_immediatState->execCmd() == '') {
+            if (is_object($cmd_immediatState) && $cmd_immediatState->execCmd() == '') {
                 $cmd_immediatState->event(0);
             }
             $cmd_armed = cmd::byId($this->getConfiguration('cmd_armed_id'));
-            if ($cmd_armed->execCmd() == '') {
+            if (is_object($cmd_armed) && $cmd_armed->execCmd() == '') {
                 $cmd_armed->event(0);
             }
         }
@@ -249,7 +249,7 @@ class alarm extends eqLogic {
         $pingOk = true;
         foreach ($eqLogicList as $eqLogic) {
             log::add('alarm', 'debug', 'Test ping sur : ' . $eqLogic->getHumanName());
-            if (method_exists($eqLogic, 'ping')) {
+            if ($eqLogic->getIsActive() == 1 && method_exists($eqLogic, 'ping')) {
                 if (!$eqLogic->ping()) {
                     log::add('alarm', 'debug', 'Ping NOK sur : ' . $eqLogic->getHumanName());
                     $pingOk = false;
