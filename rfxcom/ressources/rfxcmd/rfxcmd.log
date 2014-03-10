@@ -1,0 +1,8 @@
+2014-03-10 17:17:22,622 - ERROR - rfxcmd - Error: unrecognizable packet (0A 54 01 00 0A 01 00 6A 39 02 69)
+2014-03-10 17:17:22,623 - ERROR - rfxcmd - Error: string index out of range
+2014-03-10 17:28:57,263 - ERROR - rfxcmd - Error: Failed to connect on device /dev/ttyUSB2
+2014-03-10 17:32:28,741 - ERROR - rfxcmd - Device name missing
+2014-03-10 17:36:17,131 - ERROR - rfxcmd - Device name missing
+2014-03-10 18:32:15,107 - ERROR - rfxcmd - Device name missing
+2014-03-10 18:35:42,322 - ERROR - rfxcmd - Device name missing
+2014-03-10 18:42:00,890 - ERROR - rfxcmd - Device name missing
