@@ -23,8 +23,8 @@
 #	Version history can be found at 
 #	http://code.google.com/p/rfxcmd/wiki/VersionHistory
 #
-#	$Rev: 515 $
-#	$Date: 2013-05-18 14:17:08 +0200 (Sat, 18 May 2013) $
+#	$Rev: 593 $
+#	$Date: 2014-02-17 21:48:52 +0100 (Mon, 17 Feb 2014) $
 #
 #	NOTES
 #	
@@ -53,11 +53,11 @@
 __author__ = "Sebastian Sjoholm"
 __copyright__ = "Copyright 2012-2013, Sebastian Sjoholm"
 __license__ = "GPL"
-__version__ = "0.3 (" + filter(str.isdigit, "$Rev: 515 $") + ")"
+__version__ = "0.3 (" + filter(str.isdigit, "$Rev: 593 $") + ")"
 __maintainer__ = "Sebastian Sjoholm"
 __email__ = "sebastian.sjoholm@gmail.com"
 __status__ = "Development"
-__date__ = "$Date: 2013-05-18 14:17:08 +0200 (Sat, 18 May 2013) $"
+__date__ = "$Date: 2014-02-17 21:48:52 +0100 (Mon, 17 Feb 2014) $"
 
 # Default modules
 import pdb
@@ -76,6 +76,7 @@ import xml.dom.minidom as minidom
 from optparse import OptionParser
 import socket
 import select
+import inspect
 
 # RFXCMD modules
 try:
@@ -84,7 +85,6 @@ except ImportError:
 	print "Error: module lib/rfx_socket not found"
 	sys.exit(1)
 
-# RFXCMD modules
 try:
 	from lib.rfx_command import *
 except ImportError:
@@ -108,9 +108,15 @@ try:
 except ImportError:
 	print "Error: module lib/rfx_decode not found"
 	sys.exit(1)
-
+	
 try:
-	from lib import rfx_xplcom
+	from lib.rfx_rrd import *
+except ImportError:
+	print "Error: module lib/rfx_rrd not found"
+	sys.exit(1)
+	
+try:
+	from lib import rfx_xplcom as xpl
 except ImportError:
 	print "Error: module lib/rfx_xplcom not found"
 	pass
@@ -129,7 +135,13 @@ try:
 	import MySQLdb
 except ImportError:
 	pass
-	
+
+# PgSQL
+try:
+	import psycopg2
+except ImportError:
+	pass
+
 # Serial
 try:
 	import serial
@@ -142,7 +154,10 @@ except ImportError:
 
 class config_data:
 	def __init__(
-		self, 
+		self,
+		serial_device = None,
+		serial_rate = 38400,
+		serial_timeout = 9,
 		mysql_active = False,
 		mysql_server = '',
 		mysql_database = '',
@@ -155,6 +170,13 @@ class config_data:
 		sqlite_active = False,
 		sqlite_database = "",
 		sqlite_table = "",
+		pgsql_active = False,
+		pgsql_server = '',
+		pgsql_database = '',
+		pgsql_port = '',
+		pgsql_username = '',
+		pgsql_password = '',
+		pgsql_table = '',
 		loglevel = "info",
 		logfile = "rfxcmd.log",
 		graphite_active = False,
@@ -163,18 +185,37 @@ class config_data:
 		program_path = "",
 		xpl_active = False,
 		xpl_host = "",
+		xpl_sourcename = "rfxcmd-",
+		xpl_includehostname = True,
 		socketserver = False,
 		sockethost = "",
 		socketport = "",
 		whitelist_active = False,
-		whitelist_file = ""
+		whitelist_file = "",
+		daemon_active = False,
+		daemon_pidfile = "rfxcmd.pid",
+		process_rfxmsg = True,
+		weewx_active = False,
+		rrd_active = False,
+		rrd_path = "",
+		barometric = 0
 		):
-        
+
+		self.serial_device = serial_device
+		self.serial_rate = serial_rate
+		self.serial_timeout = serial_timeout
 		self.mysql_active = mysql_active
 		self.mysql_server = mysql_server
 		self.mysql_database = mysql_database
 		self.mysql_username = mysql_username
 		self.mysql_password = mysql_password
+		self.pgsql_active = pgsql_active
+		self.pgsql_server = pgsql_server
+		self.pgsql_database = pgsql_database
+		self.pgsql_port = pgsql_port
+		self.pgsql_username = pgsql_username
+		self.pgsql_password = pgsql_password
+		self.pgsql_table = pgsql_table
 		self.trigger_active = trigger_active
 		self.trigger_onematch = trigger_onematch
 		self.trigger_file = trigger_file
@@ -190,11 +231,20 @@ class config_data:
 		self.program_path = program_path
 		self.xpl_active = xpl_active
 		self.xpl_host = xpl_host
+		self.xpl_sourcename = xpl_sourcename
+		self.xpl_includehostname = xpl_includehostname
 		self.socketserver = socketserver
 		self.sockethost = sockethost
 		self.socketport = socketport
 		self.whitelist_active = whitelist_active
 		self.whitelist_file = whitelist_file
+		self.daemon_active = daemon_active
+		self.daemon_pidfile = daemon_pidfile
+		self.process_rfxmsg = process_rfxmsg
+		self.weewx_active = weewx_active
+		self.rrd_active = rrd_active
+		self.rrd_path = rrd_path
+		self.barometric = barometric
 
 class cmdarg_data:
 	def __init__(
@@ -279,7 +329,7 @@ def shutdown():
 	logger.debug("Exit 0")
 	sys.stdout.flush()
 	os._exit(0)
-    
+	
 def handler(signum=None, frame=None):
 	if type(signum) != type(None):
 		logger.debug("Signal %i caught, exiting..." % int(signum))
@@ -313,6 +363,15 @@ def daemonize():
 		pid = str(os.getpid())
 		logger.debug("Writing PID " + pid + " to " + str(cmdarg.pidfile))
 		file(cmdarg.pidfile, 'w').write("%s\n" % pid)
+
+# ----------------------------------------------------------------------------
+# C __LINE__ equivalent in Python by Elf Sternberg
+# http://www.elfsternberg.com/2008/09/23/c-__line__-equivalent-in-python/
+# ----------------------------------------------------------------------------
+
+def _line():
+	info = inspect.getframeinfo(inspect.currentframe().f_back)[0:3]
+	return '[%s:%d]' % (info[2], info[1])
 
 # ----------------------------------------------------------------------------
 
@@ -358,9 +417,39 @@ def readbytes(number):
 			byte = serial_param.port.read()
 		except IOError, e:
 			print "Error: %s" % e
+		except OSError, e:
+			print "Error: %s" % e
 		buf += byte
 
 	return buf
+
+# ----------------------------------------------------------------------------
+
+def insert_database(timestamp, unixtime, packettype, subtype, seqnbr, battery, signal, data1, data2, data3,
+        data4, data5, data6, data7, data8, data9, data10, data11, data12, data13):
+	"""
+	Choose in which database insert datas
+	"""
+	
+	logger.debug('insert_database')
+	
+	# MYSQL
+	if config.mysql_active:
+		logger.debug('-> MySQL')
+		insert_mysql(timestamp, unixtime, packettype, subtype, seqnbr, battery, signal, data1, data2, data3,
+		data4, data5, data6, data7, data8, data9, data10, data11, data12, data13)
+
+	# SQLITE
+	if config.sqlite_active:
+		logger.debug('-> SqLite')
+		insert_sqlite(timestamp, unixtime, packettype, subtype, seqnbr, battery, signal, data1, data2, data3,
+		data4, data5, data6, data7, data8, data9, data10, data11, data12, data13)
+
+	# PGSQL
+	if config.pgsql_active:
+		logger.debug('-> PGSql')
+		insert_pgsql(timestamp, unixtime, packettype, subtype, seqnbr, battery, signal, data1, data2, data3,
+		data4, data5, data6, data7, data8, data9, data10, data11, data12, data13)
 
 # ----------------------------------------------------------------------------
 
@@ -383,7 +472,7 @@ def insert_mysql(timestamp, unixtime, packettype, subtype, seqnbr, battery, sign
 			INSERT INTO rfxcmd (datetime, unixtime, packettype, subtype, seqnbr, battery, rssi, processed, data1, data2, data3, data4,
 				data5, data6, data7, data8, data9, data10, data11, data12, data13)
 			VALUES ('%s','%s','%s','%s','%s','%s','%s',0,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')
-			""" % (timestamp, unixtime, packettype, subtype, int(seqnbr,16), battery, signal, data1, data2, data3, data4, data5, data6, data7, 
+			""" % (timestamp, unixtime, packettype, subtype, seqnbr, battery, signal, data1, data2, data3, data4, data5, data6, data7, 
 				data8, data9, data10, data11, data12, data13)
 		
 		cursor.execute(sql)
@@ -391,6 +480,7 @@ def insert_mysql(timestamp, unixtime, packettype, subtype, seqnbr, battery, sign
 
 	except MySQLdb.Error, e:
 
+		logger.error("Line: " + _line())
 		logger.error("SqLite error: %d: %s" % (e.args[0], e.args[1]))
 		print "MySQL error %d: %s" % (e.args[0], e.args[1])
 		sys.exit(1)
@@ -417,7 +507,7 @@ def insert_sqlite(timestamp, unixtime, packettype, subtype, seqnbr, battery, sig
 			INSERT INTO '%s' (datetime, unixtime, packettype, subtype, seqnbr, battery, rssi, processed, data1, data2, data3, data4,
 				data5, data6, data7, data8, data9, data10, data11, data12, data13)
 			VALUES('%s','%s','%s','%s','%s','%s','%s',0,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')
-			""" % (config.sqlite_table, timestamp, unixtime, packettype, subtype, int(seqnbr,16), battery, signal, data1, data2, data3, 
+			""" % (config.sqlite_table, timestamp, unixtime, packettype, subtype, seqnbr, battery, signal, data1, data2, data3, 
 				data4, data5, data6, data7, data8, data9, data10, data11, data12, data13)
 
 		cu.executescript(sql)
@@ -428,6 +518,7 @@ def insert_sqlite(timestamp, unixtime, packettype, subtype, seqnbr, battery, sig
 		if cx:
 			cx.rollback()
 			
+		logger.error("Line: " + _line())
 		logger.error("SqLite error: %s" % e.args[0])
 		print "SqLite error: %s" % e.args[0]
 		sys.exit(1)
@@ -435,6 +526,47 @@ def insert_sqlite(timestamp, unixtime, packettype, subtype, seqnbr, battery, sig
 	finally:
 		if cx:
 			cx.close()
+
+# ----------------------------------------------------------------------------
+
+def insert_pgsql(timestamp, unixtime, packettype, subtype, seqnbr, battery, signal, data1, data2, data3,
+        data4, data5, data6, data7, data8, data9, data10, data11, data12, data13):
+	"""
+	Insert data to PgSQL
+	Credits: Pierre-Yves
+	"""
+
+	db = None
+
+	dsn = "dbname='%s' user='%s' host='%s' port=%s password=%s" \
+			% (config.pgsql_database, config.pgsql_username, config.pgsql_server, config.pgsql_port, config.pgsql_password)
+	
+	try:
+		if data13 == 0:
+			data13 = "NULL"
+
+		db = psycopg2.connect(dsn)
+		cursor = db.cursor()
+	
+		sql = """
+				INSERT INTO %s (datetime, unixtime, packettype, subtype, seqnbr, battery, rssi, processed, data1, data2, data3, data4,
+				data5, data6, data7, data8, data9, data10, data11, data12, data13)
+				VALUES ('%s','%s','%s','%s','%s','%s','%s',0,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s', %s)
+				""" % (config.pgsql_table, timestamp, unixtime, packettype, subtype, seqnbr, battery, signal, data1, data2, data3, data4, data5, data6, data7,
+				data8, data9, data10, data11, data12, data13)
+
+		cursor.execute(sql)
+		db.commit()
+		
+	except psycopg2.DatabaseError, e:
+		logger.error("Line: " + _line())
+		logger.error("PgSQL error: %s" % e)
+		print "Error : (PgSQL Query) : %s " % e
+		sys.exit(1)
+	
+	finally:
+		if db:
+			db.close() 
 
 # ----------------------------------------------------------------------------
 
@@ -451,11 +583,14 @@ def decodePacket(message):
 	
 	# Verify incoming message
 	if not test_rfx( ByteToHex(message) ):
-		logger.error("The incoming message is invalid (" + ByteToHex(message) + ")")
+		logger.error("The incoming message is invalid (" + ByteToHex(message) + ") Line: " + _line())
 		if cmdarg.printout_complete == True:
-			print "Error: The incoming message is invalid"
+			print "Error: The incoming message is invalid " + _line()
 			return
-			
+	
+	raw_message = ByteToHex(message)
+	raw_message = raw_message.replace(' ', '')
+	
 	packettype = ByteToHex(message[1])
 
 	if len(message) > 2:
@@ -472,7 +607,195 @@ def decodePacket(message):
 	
 	if cmdarg.printout_complete:
 		print "Packettype\t\t= " + rfx.rfx_packettype[packettype]
-
+	
+	# ---------------------------------------
+	# Verify correct length on packets
+	# ---------------------------------------
+	if packettype == '00' and len(message) <> 14:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '01' and len(message) <> 14:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '02' and len(message) <> 5:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '10' and len(message) <> 8:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '11' and len(message) <> 12:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '12' and len(message) <> 9:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '13' and len(message) <> 10:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '15' and len(message) <> 12:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '16' and len(message) <> 8:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '17' and len(message) <> 8:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '18' and len(message) <> 8:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '19' and len(message) <> 10:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '20' and len(message) <> 9:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '28' and len(message) <> 7:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '30' and len(message) <> 7:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '40' and len(message) <> 10:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '41' and len(message) <> 7:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '42' and len(message) <> 9:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '4E' and len(message) <> 11:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '4F' and len(message) <> 11:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '50' and len(message) <> 9:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '51' and len(message) <> 9:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '52' and len(message) <> 11:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '53' and len(message) <> 10:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '54' and len(message) <> 14:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '55' and len(message) <> 12:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '56' and len(message) <> 17:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '57' and len(message) <> 10:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '58' and len(message) <> 14:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '59' and len(message) <> 14:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '5A' and len(message) <> 18:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '5B' and len(message) <> 20:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '5C' and len(message) <> 16:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '5D' and len(message) <> 9:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '70' and len(message) <> 8:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '71' and len(message) <> 11:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
+	if packettype == '72' and len(message) <> 10:
+		logger.error("Packet has wrong length, discarding")
+		decoded = True
+		packettype = None
+	
 	# ---------------------------------------
 	# 0x0 - Interface Control
 	# ---------------------------------------
@@ -671,21 +994,14 @@ def decodePacket(message):
 			else:
 				sys.stdout.write("%s;%s;%s;%s;%s\n" % (timestamp, packettype, subtype, seqnbr, id1 ) )
 			sys.stdout.flush()
-			
-		# MYSQL
-		if config.mysql_active:
+		
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
 			if subtype == '00':
-				insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+				insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 			else:
-				insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, 255, str(id1), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
-		# SQLITE
-		if config.sqlite_active:
-			if subtype == '00':
-				insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-			else:
-				insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, 255, str(id1), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
+				insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, 255, str(id1), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+		
 	# ---------------------------------------
 	# 0x03 - Undecoded Message
 	# ---------------------------------------
@@ -722,6 +1038,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$message$", indata )
@@ -732,13 +1049,9 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, 255, indata, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, 255, indata, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, 255, indata, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 	# ---------------------------------------
 	# 0x10 Lighting1
@@ -777,6 +1090,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$housecode$", str(housecode) )
@@ -790,13 +1104,14 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, housecode, 0, command, unitcode, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, housecode, 0, command, unitcode, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, housecode, 0, command, unitcode, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+		# XPL
+		if config.xpl_active:
+			xpl.send(config.xpl_host, 'device=Lightning.'+housecode+str(unitcode)+'\ntype=command\ncurrent='+command+'\n', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Lightning.'+housecode+str(unitcode)+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 	# ---------------------------------------
 	# 0x11 Lighting2
@@ -837,6 +1152,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -850,13 +1166,14 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, sensor_id, 0, command, unitcode, int(dimlevel), 0, 0, 0, 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, sensor_id, 0, command, unitcode, int(dimlevel), 0, 0, 0, 0, 0, 0, 0, 0)
 
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, sensor_id, 0, command, unitcode, int(dimlevel), 0, 0, 0, 0, 0, 0, 0, 0)
+		# XPL
+		if config.xpl_active:
+			xpl.send(config.xpl_host, 'device=Lightning.'+sensor_id+'\ntype=command\ncurrent='+command+'\n', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Lightning.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 	# ---------------------------------------
 	# 0x12 Lighting3
@@ -920,6 +1237,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$system$", str(system) )
@@ -933,13 +1251,14 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, str(system), 0, command, str(channel), 0, 0, 0, 0, 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, str(system), 0, command, str(channel), 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, str(system), 0, command, str(channel), 0, 0, 0, 0, 0, 0, 0, 0, 0)
+		# XPL
+		if config.xpl_active:
+			xpl.send(config.xpl_host, 'device=Lightning.'+str(channel)+'\ntype=command\ncurrent='+command+'\n', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Lightning.'+str(channel)+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 	# ---------------------------------------
 	# 0x13 Lighting4
@@ -981,6 +1300,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$code$", code_bin )
@@ -992,6 +1312,10 @@ def decodePacket(message):
 					if config.trigger_onematch:
 						logger.debug("Trigger onematch active, exit trigger")
 						return
+
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, 0, 0, str(code_bin), pulse, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 	# ---------------------------------------
 	# 0x14 Lighting5
@@ -1010,6 +1334,12 @@ def decodePacket(message):
 			command = rfx.rfx_subtype_14_cmnd1[ByteToHex(message[8])]
 		elif subtype == '02':
 			command = rfx.rfx_subtype_14_cmnd2[ByteToHex(message[8])]
+		elif subtype == '03':
+			command = rfx.rfx_subtype_14_cmnd3[ByteToHex(message[8])]
+		elif subtype == '04':
+			command = rfx.rfx_subtype_14_cmnd4[ByteToHex(message[8])]
+		elif subtype == '05':
+			command = rfx.rfx_subtype_14_cmnd5[ByteToHex(message[8])]
 		else:
 			command = "Unknown"
 		
@@ -1025,7 +1355,13 @@ def decodePacket(message):
 			print "Subtype\t\t\t= " + rfx.rfx_subtype_14[subtype]
 			print "Seqnbr\t\t\t= " + seqnbr
 			print "Id\t\t\t= " + sensor_id
-			print "Unitcode\t\t= " + str(unitcode)
+			
+			if subtype <> '03' and subtype <> '05':
+				print "Unitcode\t\t= Not used"
+				unitcode = 0
+			else:
+				print "Unitcode\t\t= " + str(unitcode)
+			
 			print "Command\t\t\t= " + command
 			
 			if subtype == '00':
@@ -1051,6 +1387,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -1066,13 +1403,14 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 0, signal, sensor_id, 0, command, str(unitcode), level, 0, 0, 0, 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 0, signal, sensor_id, 0, command, str(unitcode), level, 0, 0, 0, 0, 0, 0, 0, 0)
 
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 0, signal, sensor_id, 0, command, str(unitcode), level, 0, 0, 0, 0, 0, 0, 0, 0)
+		# XPL
+		if config.xpl_active:
+			xpl.send(config.xpl_host, 'device=Lightning.'+sensor_id+'\ntype=command\ncurrent='+command+'\n', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Lightning.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 	# ---------------------------------------
 	# 0x15 Lighting6
@@ -1116,6 +1454,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -1130,13 +1469,14 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, sensor_id, groupcode, command, unitcode, command_seqnbr, 0, 0, 0, 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, sensor_id, groupcode, command, unitcode, command_seqnbr, 0, 0, 0, 0, 0, 0, 0, 0)
 
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, sensor_id, groupcode, command, unitcode, command_seqnbr, 0, 0, 0, 0, 0, 0, 0, 0)
+		# XPL
+		if config.xpl_active:
+			xpl.send(config.xpl_host, 'device=Lightning.'+sensor_id+'\ntype=command\ncurrent='+command+'\n', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Lightning.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 	# ---------------------------------------
 	# 0x18 Curtain1 (Transmitter only)
@@ -1161,6 +1501,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					logger.debug("Execute shell")
@@ -1169,6 +1510,10 @@ def decodePacket(message):
 					if config.trigger_onematch:
 						logger.debug("Trigger onematch active, exit trigger")
 						return
+
+		# DATABASE
+		#if config.mysql_active or config.sqlite_active or config.pgsql_active:
+		#	insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 	# ---------------------------------------
 	# 0x19 Blinds1
@@ -1201,6 +1546,10 @@ def decodePacket(message):
 					if config.trigger_onematch:
 						logger.debug("Trigger onematch active, exit trigger")
 						return
+
+		# DATABASE
+		#if config.mysql_active or config.sqlite_active or config.pgsql_active:
+		#	insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 	# ---------------------------------------
 	# 0x20 Security1
@@ -1240,6 +1589,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -1253,19 +1603,15 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 			
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, status, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, status, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, status, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+	
 	# ---------------------------------------
 	# 0x28 Camera1
 	# ---------------------------------------
 	if packettype == '28':
-
+	
 		decoded = True
 		
 		# PRINTOUT
@@ -1273,7 +1619,7 @@ def decodePacket(message):
 			print "Subtype\t\t\t= " + rfx.rfx_subtype_28[subtype]
 			print "Seqnbr\t\t\t= " + seqnbr
 			print "This sensor is not completed, please send printout to sebastian.sjoholm@gmail.com"
-
+		
 		# TRIGGER
 		if config.trigger_active:
 			for trigger in triggerlist.data:
@@ -1284,6 +1630,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					logger.debug("Execute shell")
@@ -1292,6 +1639,10 @@ def decodePacket(message):
 					if config.trigger_onematch:
 						logger.debug("Trigger onematch active, exit trigger")
 						return
+
+		# DATABASE
+		#if config.mysql_active or config.sqlite_active or config.pgsql_active:
+		#	insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 	# ---------------------------------------
 	# 0x30 Remote control and IR
@@ -1365,6 +1716,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", id1 )
@@ -1380,17 +1732,10 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
-		# MYSQL
-		if config.mysql_active:
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
 			if subtype == '00' or subtype == '02':
-				insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 0, signal, id1, 0, command, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-			elif subtype == '04' or subtype == '01' or subtype == '03':
-				command = "Not implemented in RFXCMD"
-
-		# SQLITE
-		if config.sqlite_active:
-			if subtype == '00' or subtype == '02':
-				insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 0, signal, id1, 0, command, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+				insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 0, signal, id1, 0, command, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 			elif subtype == '04' or subtype == '01' or subtype == '03':
 				command = "Not implemented in RFXCMD"
 
@@ -1440,6 +1785,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -1455,22 +1801,18 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, sensor_id, mode, status, 0, 0, 0, temperature_set, temperature, 0, 0, 0, 0, 0)
-
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, sensor_id, mode, status, 0, 0, 0, temperature_set, temperature, 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, sensor_id, mode, status, 0, 0, 0, temperature_set, temperature, 0, 0, 0, 0, 0)
 
 		# XPL
 		if config.xpl_active:
-			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=temperature\ncurrent='+temperature+'\nunits=C')
-			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=temperature_set\ncurrent='+temperature_set+'\nunits=C')
-			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=mode\ncurrent='+mode+'\n')
-			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=status\ncurrent='+mode+'\n')
-			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%')
+			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=temperature\ncurrent='+temperature+'\nunits=C', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=temperature_set\ncurrent='+temperature_set+'\nunits=C', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=mode\ncurrent='+mode+'\n', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=status\ncurrent='+mode+'\n', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Thermostat.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 	# ---------------------------------------
 	# 0x41 Thermostat2
@@ -1495,6 +1837,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					logger.debug("Execute shell")
@@ -1508,11 +1851,11 @@ def decodePacket(message):
 	# 0x42 Thermostat3
 	# ---------------------------------------
 	if packettype == '42':
-
+		
 		logger.debug("PacketType 0x42")
 		
 		decoded = True
-
+		
 		# DATA
 		if subtype == '00':
 			unitcode = ByteToHex(message[4])
@@ -1560,6 +1903,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$unitcode$", unitcode )
@@ -1572,18 +1916,14 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, unitcode, 0, command, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, unitcode, 0, command, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, unitcode, 0, command, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 		# XPL
 		if config.xpl_active:
-			xpl.send(config.xpl_host, 'device=Thermostat.'+unitcode+'\ntype=command\ncurrent='+command+'\nunits=C')
-			xpl.send(config.xpl_host, 'device=Thermostat.'+unitcode+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%')
+			xpl.send(config.xpl_host, 'device=Thermostat.'+unitcode+'\ntype=command\ncurrent='+command+'\nunits=C', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Thermostat.'+unitcode+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 		logger.debug("PacketType 0x42, done.")
 
@@ -1624,6 +1964,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -1636,20 +1977,26 @@ def decodePacket(message):
 					if config.trigger_onematch:
 						logger.debug("Trigger onematch active, exit trigger")
 						return
-		
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, 0, 0, 0, 0, float(temperature), 0, 0, 0, 0, 0)
 
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, 0, 0, 0, 0, float(temperature), 0, 0, 0, 0, 0)
+		# GRAPHITE
+		if config.graphite_active == True:
+			logger.debug("Send to Graphite")
+			now = int( time.time() )
+			linesg=[]
+			linesg.append("%s.%s.temperature %s %d" % ( 'rfxcmd', sensor_id, temperature,now))
+			linesg.append("%s.%s.battery %s %d" % ( 'rfxcmd', sensor_id, battery,now))
+			linesg.append("%s.%s.signal %s %d"% ( 'rfxcmd', sensor_id, signal,now))
+			send_graphite(config.graphite_server, config.graphite_port, linesg)
+
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, 0, 0, 0, 0, float(temperature), 0, 0, 0, 0, 0)
 
 		# XPL
 		if config.xpl_active:
-			xpl.send(config.xpl_host, 'device=Temp.'+sensor_id+'\ntype=temp\ncurrent='+temperature+'\nunits=C')
-			xpl.send(config.xpl_host, 'device=Temp.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=Temp.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%')
+			xpl.send(config.xpl_host, 'device=Temp.'+sensor_id+'\ntype=temp\ncurrent='+temperature+'\nunits=C', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Temp.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Temp.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 	# ---------------------------------------
 	# 0x51 - Humidity sensors
@@ -1692,6 +2039,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -1704,20 +2052,25 @@ def decodePacket(message):
 					if config.trigger_onematch:
 						logger.debug("Trigger onematch active, exit trigger")
 						return
-		
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, humidity_status, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, humidity_status, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+		# GRAPHITE
+		if config.graphite_active == True:
+			logger.debug("Send to Graphite")
+			now = int( time.time() )
+			linesg=[]
+			linesg.append("%s.%s.humidity %s %d" % ( 'rfxcmd', sensor_id, humidity,now))
+			linesg.append("%s.%s.battery %s %d" % ( 'rfxcmd', sensor_id, battery,now))
+			linesg.append("%s.%s.signal %s %d"% ( 'rfxcmd', sensor_id, signal,now))
+			send_graphite(config.graphite_server, config.graphite_port, linesg)
+	
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, humidity_status, humidity, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
 		# XPL
 		if config.xpl_active:
-			xpl.send(config.xpl_host, 'device=Hum.'+sensor_id+'\ntype=humidity\ncurrent='+str(humidity)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=Hum.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=Hum.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%')
+			xpl.send(config.xpl_host, 'device=Hum.'+sensor_id+'\ntype=humidity\ncurrent='+str(humidity)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Hum.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Hum.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 	# ---------------------------------------
 	# 0x52 - Temperature and humidity sensors
@@ -1766,6 +2119,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -1791,23 +2145,21 @@ def decodePacket(message):
 			linesg.append("%s.%s.signal %s %d"% ( 'rfxcmd', sensor_id, signal,now))
 			send_graphite(config.graphite_server, config.graphite_port, linesg)
 
-		# MYSQL
-		if config.mysql_active:
-			logger.debug("Send to MySQL")
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, humidity_status, humidity, 0, 0, 0, float(temperature), 0, 0, 0, 0, 0)
-
-		# SQLITE
-		if config.sqlite_active:
-			logger.debug("Send to Sqlite")
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, humidity_status, humidity, 0, 0, 0, float(temperature), 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, humidity_status, humidity, 0, 0, 0, float(temperature), 0, 0, 0, 0, 0)
 
 		# XPL
 		if config.xpl_active:
 			logger.debug("Send to xPL")
-			xpl.send(config.xpl_host, 'device=HumTemp.'+sensor_id+'\ntype=temp\ncurrent='+temperature+'\nunits=C')
-			xpl.send(config.xpl_host, 'device=HumTemp.'+sensor_id+'\ntype=humidity\ncurrent='+str(humidity)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=HumTemp.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=HumTemp.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%')
+			xpl.send(config.xpl_host, 'device=HumTemp.'+sensor_id+'\ntype=temp\ncurrent='+temperature+'\nunits=C', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=HumTemp.'+sensor_id+'\ntype=humidity\ncurrent='+str(humidity)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=HumTemp.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=HumTemp.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+		
+		# RRD
+		if config.rrd_active == True:
+			rrd2Metrics(packettype, sensor_id, temperature, humidity, config.rrd_path)
 
 	# ---------------------------------------
 	# 0x53 - Barometric
@@ -1850,6 +2202,9 @@ def decodePacket(message):
 		barometric_high = barometric_high << 8
 		barometric = ( barometric_high + int(barometric_low,16) )
 		
+		if config.barometric <> 0:
+			barometric = int(barometric) + int(config.barometric)
+		
 		# Forecast
 		forecast = rfx.rfx_subtype_54_forecast[ByteToHex(message[12])]
 		
@@ -1890,6 +2245,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -1905,22 +2261,40 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, forecast, humidity_status, humidity, barometric, 0, 0, float(temperature), 0, 0, 0, 0, 0)
+		# GRAPHITE
+		if config.graphite_active == True:
+			logger.debug("Send to Graphite")
+			now = int( time.time() )
+			linesg=[]
+			linesg.append("%s.%s.temperature %s %d" % ( 'rfxcmd', sensor_id, temperature,now))
+			linesg.append("%s.%s.humidity %s %d" % ( 'rfxcmd', sensor_id, humidity,now))
+			linesg.append("%s.%s.barometric %s %d" % ( 'rfxcmd', sensor_id, barometric,now))
+			linesg.append("%s.%s.battery %s %d" % ( 'rfxcmd', sensor_id, battery,now))
+			linesg.append("%s.%s.signal %s %d"% ( 'rfxcmd', sensor_id, signal,now))
+			send_graphite(config.graphite_server, config.graphite_port, linesg)
 
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, forecast, humidity_status, humidity, barometric, 0, 0, float(temperature), 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, forecast, humidity_status, humidity, barometric, 0, 0, float(temperature), 0, 0, 0, 0, 0)
 
 		# XPL
 		if config.xpl_active:
-			xpl.send(config.xpl_host, 'device=HumTempBaro.'+sensor_id+'\ntype=temp\ncurrent='+temperature+'\nunits=C')
-			xpl.send(config.xpl_host, 'device=HumTempBaro.'+sensor_id+'\ntype=humidity\ncurrent='+str(humidity)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=HumTempBaro.'+sensor_id+'\ntype=humidity\ncurrent='+str(barometric)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=HumTempBaro.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=HumTempBaro.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%')
+			xpl.send(config.xpl_host, 'device=HumTempBaro.'+sensor_id+'\ntype=temp\ncurrent='+temperature+'\nunits=C', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=HumTempBaro.'+sensor_id+'\ntype=humidity\ncurrent='+str(humidity)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=HumTempBaro.'+sensor_id+'\ntype=humidity\ncurrent='+str(barometric)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=HumTempBaro.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=HumTempBaro.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
+		# WEEWX
+		if config.weewx_active:
+			wwx.wwx_thb_t_in = temperature
+			wwx.wwx_thb_h_in = humidity
+			wwx.wwx_thb_hs_in = humidity_status
+			wwx.wwx_thb_b_in = barometric
+			wwx.wwx_thb_fs_in = forecast
+			wwx.wwx_thb_batt = battery
+			wwx.wwx_thb_sign = signal
+ 
 	# ---------------------------------------
 	# 0x55 - Rain sensors
 	# ---------------------------------------
@@ -1937,11 +2311,23 @@ def decodePacket(message):
 		# Rain rate
 		rainrate_high = ByteToHex(message[6])
 		rainrate_low = ByteToHex(message[7])
+		
+		if subtype == '01':
+			rainrate = int(rainrate_high,16) * 0x100 + int(rainrate_low,16)
+		elif subtype == '02':
+			rainrate = float( int(rainrate_high,16) * 0x100 + int(rainrate_low,16) ) / 100
+		else:
+			rainrate = 0
 
 		# Rain total
 		raintotal1 = ByteToHex(message[8])
 		raintotal2 = ByteToHex(message[9])
 		raintotal3 = ByteToHex(message[10])
+		
+		if subtype <> '06':
+			raintotal = float( (int(raintotal1, 16) * 0x1000) + (int(raintotal2, 16) * 0x100) + int(raintotal3, 16) ) / 10
+		else:
+			raintotal = 0
 		
 		# Battery & Signal	
 		signal = decodeSignal(message[11])
@@ -1953,24 +2339,22 @@ def decodePacket(message):
 			print "Seqnbr\t\t\t= " + seqnbr
 			print "Id\t\t\t= " + sensor_id
 			
-			if subtype == '1':
-				print "Rain rate\t\t= Not implemented in rfxcmd, need example"
-			elif subtype == '2':
-				print "Rain rate\t\t= Not implemented in rfxcmd, need example"
-			else:
-				print "Rain rate\t\t= Not supported"
+			if subtype == '01' or subtype == '02':
+				print "Rain rate\t\t= " + str(rainrate) + " mm/hr"
 
-			print "Raintotal:\t\t= " + str(int(raintotal1,16))
-			print "Raintotal:\t\t= " + str(int(raintotal2,16))
-			print "Raintotal:\t\t= " + str(int(raintotal3,16))
+			if subtype <> '06':
+				print "Raintotal:\t\t= " + str(raintotal) + " mm"
+			else:
+				print "Raintotal:\t\t= Not implemented in rfxcmd, need example data"
+			
 			print "Battery\t\t\t= " + str(battery)
 			print "Signal level\t\t= " + str(signal)
 		
 		# CSV		
 		if cmdarg.printout_csv == True:
-			sys.stdout.write("%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n" %
-							( timestamp, packettype, subtype, seqnbr, id1, id2,
-							str(int(rainrate_high,16)), str(int(raintotal1,16)), 
+			sys.stdout.write("%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n" %
+							( timestamp, unixtime_utc, packettype, subtype, seqnbr, id1, id2,
+							str(rainrate), str(int(raintotal1,16)), 
 							str(battery), str(signal) ) )
 			sys.stdout.flush()
 		
@@ -1984,9 +2368,12 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
+					action = action.replace("$rainrate$", str(rainrate) )
+					action = action.replace("$raintotal$", str(raintotal) )
 					action = action.replace("$battery$", str(battery) )
 					action = action.replace("$signal$", str(signal) )
 					logger.debug("Execute shell")
@@ -1996,18 +2383,22 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
-		"""			
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, 0, 0, 0, 0, float(temperature), av_speed, gust, direction, float(windchill), 0)
+		# GRAPHITE
+		if config.graphite_active == True:
+			logger.debug("Send to Graphite")
+			now = int( time.time() )
+			linesg=[]
+			linesg.append("%s.%s.rainrate %s %d" % ( 'rfxcmd', sensor_id, rainrate,now))
+			linesg.append("%s.%s.raintotal %s %d" % ( 'rfxcmd', sensor_id, raintotal,now))
+			linesg.append("%s.%s.battery %s %d" % ( 'rfxcmd', sensor_id, battery,now))
+			linesg.append("%s.%s.signal %s %d"% ( 'rfxcmd', sensor_id, signal,now))
+			send_graphite(config.graphite_server, config.graphite_port, linesg)
 
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, 0, 0, 0, 0, float(temperature), av_speed, gust, direction, float(windchill), 0)
-		"""
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, 0, 0, 0, 0, float(rainrate), float(raintotal), 0, 0, 0, 0)
 
 		logger.debug("Decode packetType 0x" + str(packettype) + " - Done")
-
 
 	# ---------------------------------------
 	# 0x56 - Wind sensors
@@ -2069,6 +2460,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -2088,28 +2480,40 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, 0, 0, 0, 0, float(temperature), av_speed, gust, direction, float(windchill), 0)
-
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, 0, 0, 0, 0, float(temperature), av_speed, gust, direction, float(windchill), 0)
+		# GRAPHITE
+		if config.graphite_active == True:
+			logger.debug("Send to Graphite")
+			now = int( time.time() )
+			linesg=[]
+			linesg.append("%s.%s.direction %s %d" % ( 'rfxcmd', sensor_id, direction,now))
+			if subtype <> "05":
+				linesg.append("%s.%s.average %s %d" % ( 'rfxcmd', sensor_id, av_speed,now))
+			if subtype == "04":
+				linesg.append("%s.%s.chill %s %d" % ( 'rfxcmd', sensor_id, windchill,now))
+				linesg.append("%s.%s.temperature %s %d" % ( 'rfxcmd', sensor_id, temperature,now))
+			linesg.append("%s.%s.gust %s %d" % ( 'rfxcmd', sensor_id, windgust,now))
+			linesg.append("%s.%s.battery %s %d" % ( 'rfxcmd', sensor_id, battery,now))
+			linesg.append("%s.%s.signal %s %d"% ( 'rfxcmd', sensor_id, signal,now))
+			send_graphite(config.graphite_server, config.graphite_port, linesg)
+		
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, 0, 0, 0, 0, float(temperature), av_speed, gust, direction, float(windchill), 0)
 
 		# xPL
 		if config.xpl_active:
-			xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=direction\ncurrent='+str(direction)+'\nunits=Degrees')
+			xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=direction\ncurrent='+str(direction)+'\nunits=Degrees', xpl_sourcename, xpl_includehostname)
 			
 			if subtype <> "05":
-				xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=Averagewind\ncurrent='+str(av_speed)+'\nunits=mtr/sec')
+				xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=Averagewind\ncurrent='+str(av_speed)+'\nunits=mtr/sec', xpl_sourcename, xpl_includehostname)
 			
 			if subtype == "04":
-				xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=temperature\ncurrent='+str(temperature)+'\nunits=C')
-				xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=windchill\ncurrent='+str(windchill)+'\nunits=C')
+				xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=temperature\ncurrent='+str(temperature)+'\nunits=C', xpl_sourcename, xpl_includehostname)
+				xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=windchill\ncurrent='+str(windchill)+'\nunits=C', xpl_sourcename, xpl_includehostname)
 			
-			xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=windgust\ncurrent='+str(gust)+'\nunits=mtr/sec')
-			xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%')
+			xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=windgust\ncurrent='+str(gust)+'\nunits=mtr/sec', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Wind.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 	# ---------------------------------------
 	# 0x57 UV Sensor
@@ -2155,12 +2559,13 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
-					action = action.replace("$uv$", str(temperature) )
+					action = action.replace("$uv$", str(uv) )
 					if subtype == '03':
-						action = action.replace("$temperature$", str(humidity) )
+						action = action.replace("$temperature$", str(temperature) )
 					action = action.replace("$battery$", str(battery) )
 					action = action.replace("$signal$", str(signal) )
 					logger.debug("Execute shell")
@@ -2170,28 +2575,36 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, str(uv), 0, 0, 0, float(temperature), 0, 0, 0, 0, 0)
-
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, str(uv), 0, 0, 0, float(temperature), 0, 0, 0, 0, 0)
-
+		# GRAPHITE
+		if config.graphite_active == True:
+			logger.debug("Send to Graphite")
+			now = int( time.time() )
+			linesg=[]
+			if subtype == "03":
+				linesg.append("%s.%s.temperature %s %d" % ( 'rfxcmd', sensor_id, temperature,now))
+			linesg.append("%s.%s.uv %s %d" % ( 'rfxcmd', sensor_id, uv,now))
+			linesg.append("%s.%s.battery %s %d" % ( 'rfxcmd', sensor_id, battery,now))
+			linesg.append("%s.%s.signal %s %d"% ( 'rfxcmd', sensor_id, signal,now))
+			send_graphite(config.graphite_server, config.graphite_port, linesg)
+		
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, str(uv), 0, 0, 0, float(temperature), 0, 0, 0, 0, 0)
+	
 		# xPL
 		if config.xpl_active:
-			xpl.send(config.xpl_host, 'device=UV.'+sensor_id+'\ntype=uv\ncurrent='+str(uv)+'\nunits=Index')
+			xpl.send(config.xpl_host, 'device=UV.'+sensor_id+'\ntype=uv\ncurrent='+str(uv)+'\nunits=Index', xpl_sourcename, xpl_includehostname)
 			if subtype == "03":
-				xpl.send(config.xpl_host, 'device=UV.'+sensor_id+'\ntype=Temperature\ncurrent='+str(temperature)+'\nunits=Celsius')
-
+				xpl.send(config.xpl_host, 'device=UV.'+sensor_id+'\ntype=Temperature\ncurrent='+str(temperature)+'\nunits=Celsius', xpl_sourcename, xpl_includehostname)
+	
 	# ---------------------------------------
 	# 0x59 Current Sensor
 	# ---------------------------------------
-
+	
 	if packettype == '59':
-
+	
 		decoded = True
-
+	
 		# DATA
 		sensor_id = id1 + id2
 		count = int(ByteToHex(message[6]),16)
@@ -2200,7 +2613,7 @@ def decodePacket(message):
 		channel3 = int(ByteToHex(message[11]),16) * 0x100 + int(ByteToHex(message[12]),16)
 		signal = decodeSignal(message[13])
 		battery = decodeBattery(message[13])
-
+	
 		# PRINTOUT
 		if cmdarg.printout_complete == True:
 			print "Subtype\t\t\t= " + rfx.rfx_subtype_5A[subtype]
@@ -2212,7 +2625,7 @@ def decodePacket(message):
 			print "Channel 3\t\t= " + str(channel3) + "A"
 			print "Battery\t\t\t= " + str(battery)
 			print "Signal level\t\t= " + str(signal)
-	
+		
 		# TRIGGER
 		if config.trigger_active:
 			for trigger in triggerlist.data:
@@ -2223,6 +2636,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
@@ -2241,37 +2655,39 @@ def decodePacket(message):
 		
 		# XPL
 		if config.xpl_active:
-			xpl.send(config.xpl_host, 'device=Current.'+sensor_id+'\ntype=channel1\ncurrent='+str(channel1)+'\nunits=A')
-			xpl.send(config.xpl_host, 'device=Current.'+sensor_id+'\ntype=channel2\ncurrent='+str(channel2)+'\nunits=A')
-			xpl.send(config.xpl_host, 'device=Current.'+sensor_id+'\ntype=channel3\ncurrent='+str(channel3)+'\nunits=A')
-			xpl.send(config.xpl_host, 'device=Current.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=Current.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%')
+			xpl.send(config.xpl_host, 'device=Current.'+sensor_id+'\ntype=channel1\ncurrent='+str(channel1)+'\nunits=A', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Current.'+sensor_id+'\ntype=channel2\ncurrent='+str(channel2)+'\nunits=A', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Current.'+sensor_id+'\ntype=channel3\ncurrent='+str(channel3)+'\nunits=A', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Current.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Current.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
 
 	# ---------------------------------------
 	# 0x5A Energy sensor
 	# Credit: Jean-Michel ROY
 	# ---------------------------------------
 	if packettype == '5A':
-
+		
 		decoded = True
-
+		
 		# DATA
 		sensor_id = id1 + id2
 		signal = decodeSignal(message[17])
+		count = int(ByteToHex(message[6]), 16)
 		battery = decodeBattery(message[17])
 		instant = int(ByteToHex(message[7]), 16) * 0x1000000 + int(ByteToHex(message[8]), 16) * 0x10000 + int(ByteToHex(message[9]), 16) * 0x100  + int(ByteToHex(message[10]), 16)
 		usage = int ((int(ByteToHex(message[11]), 16) * 0x10000000000 + int(ByteToHex(message[12]), 16) * 0x100000000 +int(ByteToHex(message[13]), 16) * 0x1000000 + int(ByteToHex(message[14]), 16) * 0x10000 + int(ByteToHex(message[15]), 16) * 0x100 + int(ByteToHex(message[16]), 16) ) / 223.666)
-
+		
 		# PRINTOUT
 		if cmdarg.printout_complete == True:
 			print "Subtype\t\t\t= " + rfx.rfx_subtype_5A[subtype]
 			print "Seqnbr\t\t\t= " + seqnbr
 			print "Id\t\t\t= " + sensor_id
+			print "Count\t\t\t= " + str(count)
 			print "Instant usage\t\t= " + str(instant) + " Watt"
 			print "Total usage\t\t= " + str(usage) + " Wh"
 			print "Battery\t\t\t= " + str(battery)
 			print "Signal level\t\t= " + str(signal)
-
+		
 		# CSV
 		if cmdarg.printout_csv == True:
 			sys.stdout.write("%s;%s;%s;%s;%s;%s;%s;%s;%s;%s\n" %
@@ -2289,9 +2705,11 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", str(sensor_id) )
+					action = action.replace("$count$", str(count) )
 					action = action.replace("$instant$", str(instant) )
 					action = action.replace("$total$", str(usage) )
 					action = action.replace("$battery$", str(battery) )
@@ -2303,21 +2721,29 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 		
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, battery, signal, sensor_id, 0, 0, count, 0, 0, 0, float(instant), 0, 0,float(usage), 0, 0)
+		
 		# XPL
 		if config.xpl_active:
-			xpl.send(config.xpl_host, 'device=Energy.'+sensor_id+'\ntype=instant_usage\ncurrent='+str(instant)+'\nunits=W')
-			xpl.send(config.xpl_host, 'device=Energy.'+sensor_id+'\ntype=total_usage\ncurrent='+str(usage)+'\nunits=Wh')
-			xpl.send(config.xpl_host, 'device=Energy.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%')
-			xpl.send(config.xpl_host, 'device=Energy.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%')
+			xpl.send(config.xpl_host, 'device=Energy.'+sensor_id+'\ntype=instant_usage\ncurrent='+str(instant)+'\nunits=W', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Energy.'+sensor_id+'\ntype=total_usage\ncurrent='+str(usage)+'\nunits=Wh', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Energy.'+sensor_id+'\ntype=battery\ncurrent='+str(battery*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+			xpl.send(config.xpl_host, 'device=Energy.'+sensor_id+'\ntype=signal\ncurrent='+str(signal*10)+'\nunits=%', xpl_sourcename, xpl_includehostname)
+		
+		# RRD
+		if config.rrd_active == True:
+			rrd1Metric(packettype, sensor_id, instant, config.rrd_path)
 
 	# ---------------------------------------
 	# 0x5B Current + Energy sensor
 	# ---------------------------------------
 	
 	if packettype == '58':
-
+	
 		decoded = True
-
+		
 		# DATA
 		sensor_id = id1 + id2
 		date_year = ByteToHex(message[6]);
@@ -2345,6 +2771,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					logger.debug("Execute shell")
@@ -2413,6 +2840,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", id1 )
@@ -2430,13 +2858,9 @@ def decodePacket(message):
 						logger.debug("Trigger onematch active, exit trigger")
 						return
 					
-		# MYSQL
-		if config.mysql_active:
-			insert_mysql(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, id1, ByteToHex(message[5]), ByteToHex(message[6]), 0, 0, 0, voltage, float(temperature), 0, 0, 0, 0, 0)
-
-		# SQLITE
-		if config.sqlite_active:
-			insert_sqlite(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, id1, ByteToHex(message[5]), ByteToHex(message[6]), 0, 0, 0, voltage, float(temperature), 0, 0, 0, 0, 0)
+		# DATABASE
+		if config.mysql_active or config.sqlite_active or config.pgsql_active:
+			insert_database(timestamp, unixtime_utc, packettype, subtype, seqnbr, 255, signal, id1, ByteToHex(message[5]), ByteToHex(message[6]), 0, 0, 0, voltage, float(temperature), 0, 0, 0, 0, 0)
 
 	# ---------------------------------------
 	# 0x71 RFXmeter
@@ -2464,6 +2888,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					action = action.replace("$id$", id1 )
@@ -2498,6 +2923,7 @@ def decodePacket(message):
 				if re.match(trigger_message, rawcmd):
 					logger.debug("Trigger match")
 					logger.debug("Message: " + trigger_message + ", Action: " + action)
+					action = action.replace("$raw$", raw_message )
 					action = action.replace("$packettype$", packettype )
 					action = action.replace("$subtype$", subtype )
 					logger.debug("Execute shell")
@@ -2513,7 +2939,7 @@ def decodePacket(message):
 	
 	# The packet is not decoded, then print it on the screen
 	if decoded == False:
-		logger.error("Message not decoded")
+		logger.error("Message not decoded. Line: " + _line())
 		logger.error("Message: " + ByteToHex(message))
 		print timestamp + " " + ByteToHex(message)
 		print "RFXCMD cannot decode message, see http://code.google.com/p/rfxcmd/wiki/ for more information."
@@ -2535,7 +2961,7 @@ def read_socket():
 	if not messageQueue.empty():
 		logger.debug("Message received in socket messageQueue")
 		message = stripped(messageQueue.get())
-
+		
 		if test_rfx( message ):
 		
 			# Flush buffer
@@ -2543,26 +2969,35 @@ def read_socket():
 			logger.debug("SerialPort flush output")
 			serial_param.port.flushInput()
 			logger.debug("SerialPort flush input")
-
-			timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
-			if cmdarg.printout_complete == True:
-				print "------------------------------------------------"
-				print "Incoming message from socket"
-				print "Send\t\t\t= " + ByteToHex( message.decode('hex') )
-				print "Date/Time\t\t= " + timestamp
-				print "Packet Length\t\t= " + ByteToHex( message.decode('hex')[0] )
-				try:
-					logger.debug("Decode message to screen")
-					decodePacket( message.decode('hex') )
-				except KeyError:
-					logger.error("Unrecognizable packet")
-					print "Error: unrecognizable packet"
 			
-			logger.debug("Write message to serial port")
-			serial_param.port.write( message.decode('hex') )
+			timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+			
+			if message == '0A1100FF001100FF001100':
+				logger.debug("Message from WEEWX")
+				if cmdarg.printout_complete == True:
+					print "------------------------------------------------"
+					print "Request received from WEEWX station-driver"
+					print "Request skipped here!"
+				
+			else:			
+				if cmdarg.printout_complete == True:
+					print "------------------------------------------------"
+					print "Incoming message from socket"
+					print "Send\t\t\t= " + ByteToHex( message.decode('hex') )
+					print "Date/Time\t\t= " + timestamp
+					print "Packet Length\t\t= " + ByteToHex( message.decode('hex')[0] )
+					try:
+						logger.debug("Decode message to screen")
+						decodePacket( message.decode('hex') )
+					except KeyError:
+						logger.error("Unrecognizable packet. Line: " + _line())
+						print "Error: unrecognizable packet"
+			
+				logger.debug("Write message to serial port")
+				serial_param.port.write( message.decode('hex') )
 			
 		else:
-			logger.error("Invalid message from socket")
+			logger.error("Invalid message from socket. Line: " + _line())
 			if cmdarg.printout_complete == True:
 				print "------------------------------------------------"
 				print "Invalid message from socket"
@@ -2574,6 +3009,8 @@ def test_rfx( message ):
 	Test, filter and verify that the incoming message is valid
 	Return true if valid, False if not
 	"""
+
+	logger.debug("Test message: " + message)
 		
 	# Remove all invalid characters
 	message = stripped(message)
@@ -2613,7 +3050,7 @@ def test_rfx( message ):
 		logger.debug("Error: Packet length is not valid")
 		return False
 
-	logger.debug("Test packet: " + message)
+	logger.debug("Message OK")
 
 	return True
 			
@@ -2621,9 +3058,9 @@ def test_rfx( message ):
 
 def send_rfx( message ):
 	"""
-	Decode and send raw message to RFXtrx
+	Decode and send raw message to RFX device
 	"""
-	timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+	timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 	
 	if cmdarg.printout_complete == True:
 		print "------------------------------------------------"
@@ -2634,7 +3071,7 @@ def send_rfx( message ):
 		try:
 			decodePacket( message )
 		except KeyError:
-			print "Error: unrecognizable packet"
+			print("Error: unrecognizable packet")
 	
 	serial_param.port.write( message )
 	time.sleep(1)
@@ -2652,27 +3089,27 @@ def read_rfx():
 		
 		try:
 			if serial_param.port.inWaiting() != 0:
-				timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
-				logger.debug('Timestamp: ' + timestamp)
+				timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+				logger.debug("Timestamp: " + timestamp)
 				logger.debug("SerWaiting: " + str(serial_param.port.inWaiting()))
 				byte = serial_param.port.read()
-				logger.debug('Byte: ' + str(ByteToHex(byte)))
-		except IOError, e:
-			print("Error: %s" % e)
-			logger.error("serial read error: %s" %e)
+				logger.debug("Byte: " + str(ByteToHex(byte)))
+		except IOError, err:
+			print("Error: " + str(err))
+			logger.error("Serial read error: " + str(err) + " Line: " +  + _line())
 		
 		if byte:
 			message = byte + readbytes( ord(byte) )
-			logger.debug('Message: ' + str(ByteToHex(message)))
+			logger.debug("Message: " + str(ByteToHex(message)))
 			
 			# First byte indicate length of message, must be other than 00
 			if ByteToHex(message[0]) <> "00":
 			
 				# Verify length
-				logger.debug('Verify length')
+				logger.debug("Verify length")
 				if (len(message) - 1) == ord(message[0]):
 				
-					logger.debug('Length OK')
+					logger.debug("Length OK")
 					
 					# Whitelist
 					if config.whitelist_active:
@@ -2696,46 +3133,46 @@ def read_rfx():
 							return rawcmd
 					
 					if cmdarg.printout_complete == True:
-						print "------------------------------------------------"
-						print "Received\t\t= " + ByteToHex( message )
-						print "Date/Time\t\t= " + timestamp
-						print "Packet Length\t\t= " + ByteToHex( message[0] )
+						print("------------------------------------------------")
+						print("Received\t\t= " + ByteToHex( message ))
+						print("Date/Time\t\t= " + timestamp)
+						print("Packet Length\t\t= " + ByteToHex( message[0] ))
 					
 					logger.debug('Decode packet')
 					try:
 						decodePacket( message )
 					except KeyError:
-						logger.error("Error: unrecognizable packet (" + ByteToHex(message) + ")")
+						logger.error("Error: unrecognizable packet (" + ByteToHex(message) + ") Line: " + _line())
 						if cmdarg.printout_complete == True:
-							print "Error: unrecognizable packet"
-
+							print("Error: unrecognizable packet")
+					
 					rawcmd = ByteToHex ( message )
 					rawcmd = rawcmd.replace(' ', '')
-
+					
 					return rawcmd
 				
 				else:
-					logger.error('Error: Incoming packet not valid length')
+					logger.error("Error: Incoming packet not valid length. Line: "  + _line())
 					if cmdarg.printout_complete == True:
-						print "------------------------------------------------"
-						print "Received\t\t= " + ByteToHex( message )
-						print "Incoming packet not valid, waiting for next..."
+						print("------------------------------------------------")
+						print("Received\t\t= " + ByteToHex( message ))
+						print("Incoming packet not valid, waiting for next...")
 				
 	except OSError, e:
-		logger.error('Error in message: ' + str(ByteToHex(message)))
-		logger.error('Traceback: ' + traceback.format_exc())
-		print "------------------------------------------------"
-		print "Received\t\t= " + ByteToHex( message )
+		logger.error("Error in message: " + str(ByteToHex(message)) + " Line: " + _line())
+		logger.error("Traceback: " + traceback.format_exc())
+		print("------------------------------------------------")
+		print("Received\t\t= " + ByteToHex( message ))
 		traceback.format_exc()
 
 # ----------------------------------------------------------------------------
 
 def read_config( configFile, configItem):
- 	"""
- 	Read item from the configuration file
- 	"""
- 	logger.debug('Open configuration file')
- 	logger.debug('File: ' + configFile)
+	"""
+	Read item from the configuration file
+	"""
+	logger.debug('Open configuration file')
+	logger.debug('File: ' + configFile)
 	
 	if os.path.exists( configFile ):
 
@@ -2767,7 +3204,7 @@ def read_config( configFile, configItem):
  		logger.debug('Return')
  		
  	else:
- 		logger.error('Error: Config file does not exists')
+ 		logger.error("Error: Config file does not exists. Line: " + _line())
  		
 	return xmlData
 
@@ -2844,7 +3281,7 @@ def option_simulate(indata):
 	try:
 		message = indata.decode("hex")
 	except:
-		logger.error("Error: the input data is not valid")
+		logger.error("Error: the input data is not valid. Line: " + _line())
 		print "Error: the input data is not valid"
 		sys.exit(1)
 	
@@ -2879,7 +3316,7 @@ def option_simulate(indata):
 	try:
 		hexval = int(indata, 16)
 	except:
-		logger.error("Error: the input data is invalid hex value")
+		logger.error("Error: the input data is invalid hex value. Line: " + _line())
 		print "Error: the input data is invalid hex value"
 		exit()
 				
@@ -2887,7 +3324,7 @@ def option_simulate(indata):
 	try:
 		decodePacket( message )
 	except Exception as err:
-		logger.error("Error: unrecognizable packet (" + ByteToHex(message) + ")")
+		logger.error("Error: unrecognizable packet (" + ByteToHex(message) + ") Line: " + _line())
 		logger.error("Error: %s" %err)
 		print "Error: unrecognizable packet"
 		
@@ -2900,48 +3337,58 @@ def option_listen():
 	"""
 	Listen to RFXtrx device and process data, exit with CTRL+C
 	"""
-	logger.debug('Action: Listen')
+	logger.debug("Start listening...")
+
+	logger.debug("Open serial port")
+	open_serialport()
 
 	if config.socketserver:
-		serversocket = RFXcmdSocketAdapter(config.sockethost,int(config.socketport))
+		try:
+			serversocket = RFXcmdSocketAdapter(config.sockethost,int(config.socketport))
+		except:
+			logger.error("Error starting socket server. Line: " + _line())
+			print("Error: can not start server socket, another instance already running?")
+			exit(1)
 		if serversocket.netAdapterRegistered:
 			logger.debug("Socket interface started")
 		else:
 			logger.debug("Cannot start socket interface")
 
 	# Flush buffer
-	logger.debug('Serialport flush output')
+	logger.debug("Serialport flush output")
 	serial_param.port.flushOutput()
-	logger.debug('Serialport flush input')
+	logger.debug("Serialport flush input")
 	serial_param.port.flushInput()
 
 	# Send RESET
-	logger.debug('Send rfxcmd_reset (' + rfxcmd.reset + ')')
+	logger.debug("Send rfxcmd_reset (" + rfxcmd.reset + ")")
 	serial_param.port.write( rfxcmd.reset.decode('hex') )
-	logger.debug('Sleep 1 sec')
+	logger.debug("Sleep 1 sec")
 	time.sleep(1)
 
 	# Flush buffer
-	logger.debug('Serialport flush output')
+	logger.debug("Serialport flush output")
 	serial_param.port.flushOutput()
-	logger.debug('Serialport flush input')
+	logger.debug("Serialport flush input")
 	serial_param.port.flushInput()
 
 	# Send STATUS
-	logger.debug('Send rfxcmd_status (' + rfxcmd.status + ')')
+	logger.debug("Send rfxcmd_status (" + rfxcmd.status + ")")
 	serial_param.port.write( rfxcmd.status.decode('hex') )
-	logger.debug('Sleep 1 sec')
+	logger.debug("Sleep 1 sec")
 	time.sleep(1)
 
 	try:
 		while 1:
-			# let it breath
+			# Let it breath
+			# Without this sleep it will cause 100% CPU in windows
 			time.sleep(0.01)
 			
 			# Read serial port
-			rawcmd = read_rfx()
-			if rawcmd:
-				logger.debug("Received: " + str(rawcmd))
+			if config.process_rfxmsg == True:
+				rawcmd = read_rfx()
+				if rawcmd:
+					logger.debug("Processed: " + str(rawcmd))
 			
 			# Read socket
 			if config.socketserver:
@@ -2949,7 +3396,10 @@ def option_listen():
 			
 	except KeyboardInterrupt:
 		logger.debug("Received keyboard interrupt")
+		logger.debug("Close server socket")
 		serversocket.netAdapter.shutdown()
+		logger.debug("Close serial port")
+		close_serialport()
 		print("\nExit...")
 		pass
 
@@ -2959,6 +3409,7 @@ def option_getstatus():
 	"""
 	Get status from RFXtrx device and print on screen
 	"""
+	
 	# Flush buffer
 	serial_param.port.flushOutput()
 	serial_param.port.flushInput()
@@ -2982,16 +3433,17 @@ def option_send():
 	"""
 	Send command to RFX device
 	
-	NOTE! Will be depricated in v0.3 and removed in v0.31
-	
 	"""
-	print "SEND action is DEPRICATED, will be removed in version v0.31"
-	
-	logger.debug('Action: send')
+
+	logger.debug("Send message to RFX device")
+
+	# Open serial port
+	logger.debug("Open serial port")
+	open_serialport()
 
 	# Remove any whitespaces	
 	cmdarg.rawcmd = cmdarg.rawcmd.replace(' ', '')
-	logger.debug('rawcmd: ' + cmdarg.rawcmd)
+	logger.debug("Message: " + cmdarg.rawcmd)
 
 	# Test the string if it is hex format
 	try:
@@ -3012,15 +3464,20 @@ def option_send():
 		sys.exit(1)
 
 	# Flush buffer
+	logger.debug("Serialport flush output")
 	serial_param.port.flushOutput()
+	logger.debug("Serialport flush input")
 	serial_param.port.flushInput()
 
 	# Send RESET
+	logger.debug("Send RFX reset")
 	serial_param.port.write( rfxcmd.reset.decode('hex') )
 	time.sleep(1)
 
 	# Flush buffer
+	logger.debug("Serialport flush output")
 	serial_param.port.flushOutput()
+	logger.debug("Serialport flush input")
 	serial_param.port.flushInput()
 
 	if cmdarg.rawcmd:
@@ -3035,9 +3492,14 @@ def option_send():
 			except KeyError:
 				print "Error: unrecognizable packet"
 
+		logger.debug("Send message")
 		serial_param.port.write( cmdarg.rawcmd.decode('hex') )
 		time.sleep(1)
+		logger.debug("Read response")
 		read_rfx()
+
+	logger.debug("Close serial port")
+	close_serialport()
 
 # ----------------------------------------------------------------------------
 
@@ -3088,6 +3550,24 @@ def read_configfile():
 	if os.path.exists( cmdarg.configfile ):
 
 		# ----------------------
+		# Serial device
+		config.serial_device = read_config( cmdarg.configfile, "serial_device")
+		config.serial_rate = read_config( cmdarg.configfile, "serial_rate")
+		config.serial_timeout = read_config( cmdarg.configfile, "serial_timeout")
+
+		logger.debug("Serial device: " + str(config.serial_device))
+		logger.debug("Serial rate: " + str(config.serial_rate))
+		logger.debug("Serial timeout: " + str(config.serial_timeout))
+
+		# ----------------------
+		# Process
+		if (read_config(cmdarg.configfile, "process_rfxmsg") == "yes"):
+			config.process_rfxmsg = True
+		else:
+			config.process_rfxmsg = False
+		logger.debug("Process RFXmsg: " + str(config.process_rfxmsg))
+		
+		# ----------------------
 		# MySQL
 		if (read_config(cmdarg.configfile, "mysql_active") == "yes"):
 			config.mysql_active = True
@@ -3121,7 +3601,20 @@ def read_configfile():
 			config.sqlite_active = False		
 		config.sqlite_database = read_config(cmdarg.configfile, "sqlite_database")
 		config.sqlite_table = read_config(cmdarg.configfile, "sqlite_table")
-	
+
+		# ----------------------
+		# PGSQL
+		if (read_config(cmdarg.configfile, "pgsql_active") == "yes"):
+			config.pgsql_active = True
+		else:
+			config.pgsql_active = False
+		config.pgsql_server = read_config(cmdarg.configfile, "pgsql_server")
+		config.pgsql_database = read_config(cmdarg.configfile, "pgsql_database")
+		config.pgsql_port = read_config(cmdarg.configfile, "pgsql_port")
+		config.pgsql_username = read_config(cmdarg.configfile, "pgsql_username")
+		config.pgsql_password = read_config(cmdarg.configfile, "pgsql_password")
+		config.pgsql_table = read_config(cmdarg.configfile, "pgsql_table")
+
 		# ----------------------
 		# GRAPHITE
 		if (read_config(cmdarg.configfile, "graphite_active") == "yes"):
@@ -3135,16 +3628,21 @@ def read_configfile():
 		# XPL
 		if (read_config(cmdarg.configfile, "xpl_active") == "yes"):
 			config.xpl_active = True
+			config.xpl_host = read_config(cmdarg.configfile, "xpl_host")
+			config.xpl_sourcename = read_config(cmdarg.configfile, "xpl_sourcename")
+			if (read_config(cmdarg.configfile, "xpl_includehostname") == "yes"):
+				config.xpl_includehostname = True
+			else:
+				config.xpl_includehostname = False
 		else:
 			config.xpl_active = False
-		config.xpl_host = read_config( cmdarg.configfile, "xpl_host")
 
 		# ----------------------
 		# SOCKET SERVER
 		if (read_config(cmdarg.configfile, "socketserver") == "yes"):
 			config.socketserver = True
 		else:
-			config.socketserver = False			
+			config.socketserver = False
 		config.sockethost = read_config( cmdarg.configfile, "sockethost")
 		config.socketport = read_config( cmdarg.configfile, "socketport")
 		logger.debug("SocketServer: " + str(config.socketserver))
@@ -3160,12 +3658,44 @@ def read_configfile():
 		config.whitelist_file = read_config( cmdarg.configfile, "whitelist_file")
 		logger.debug("Whitelist_active: " + str(config.whitelist_active))
 		logger.debug("Whitelist_file: " + str(config.whitelist_file))
+
+		# -----------------------
+		# DAEMON
+		if (read_config(cmdarg.configfile, "daemon_active") == "yes"):
+			config.daemon_active = True
+		else:
+			config.daemon_active = False
+		config.daemon_pidfile = read_config( cmdarg.configfile, "daemon_pidfile")
+		logger.debug("Daemon_active: " + str(config.daemon_active))
+		logger.debug("Daemon_pidfile: " + str(config.daemon_pidfile))
+		
+		# -----------------------
+		# WEEWX
+		if (read_config(cmdarg.configfile, "weewx_active") == "yes"):
+			config.weewx_active = True
+		else:
+			config.weewx_active = False
+		
+		# ------------------------
+		# RRD
+		if (read_config(cmdarg.configfile, "rrd_active") == "yes"):
+			config.rrd_active = True
+		else:
+			config.rrd_active = False
+		
+		# If RRD path is empty, then use the script path
+		config.rrd_path = read_config( cmdarg.configfile, "rrd_path")
+		if not config.rrd_path:
+			config.rrd_path = os.path.dirname(os.path.realpath(__file__))
+		
+		# ------------------------
+		# BAROMETRIC
+		config.barometric = read_config(cmdarg.configfile, "barometric")
 		
 	else:
-
 		# config file not found, set default values
 		print "Error: Configuration file not found (" + cmdarg.configfile + ")"
-		logger.error('Error: Configuration file not found (' + cmdarg.configfile + ')')
+		logger.error("Error: Configuration file not found (" + cmdarg.configfile + ") Line: " + _line())
 
 # ----------------------------------------------------------------------------
 
@@ -3187,7 +3717,7 @@ def open_serialport():
 	if config.device:
 		logger.debug("Device: " + config.device)
 	else:
-		logger.error('Device name missing')
+		logger.error("Device name missing. Line: " + _line())
 		print "Serial device is missing"
 		logger.debug("Exit 1")
 		sys.exit(1)
@@ -3197,7 +3727,7 @@ def open_serialport():
 	try:  
 		serial_param.port = serial.Serial(config.device, serial_param.rate, timeout=serial_param.timeout)
 	except serial.SerialException, e:
-		logger.error("Error: Failed to connect on device " + config.device)
+		logger.error("Error: Failed to connect on device " + config.device + " Line: " + _line())
 		print "Error: Failed to connect on device " + config.device
 		print "Error: " + str(e)
 		logger.debug("Exit 1")
@@ -3213,12 +3743,12 @@ def close_serialport():
 	Close serial port.
 	"""
 
-	logger.debug('Close serial port')
+	logger.debug("Close serial port")
 	try:
 		serial_param.port.close()
-		logger.debug('Serial port closed')
+		logger.debug("Serial port closed")
 	except:
-		logger.debug("Failed to close the serial port '" + device + "'")
+		logger.error("Failed to close the serial port (" + device + ") Line: " + _line())
 		print "Error: Failed to close the port " + device
 		logger.debug("Exit 1")
 		sys.exit(1)
@@ -3285,11 +3815,10 @@ def logger_init(configfile, name, debug):
 			handler.setFormatter(formatter)
 
 			logger = logging.getLogger(name)
-			logger.setLevel(loglevel)
+			logger.setLevel(logging.getLevelName(loglevel))
 			logger.addHandler(handler)
 			
 			return logger
-
 
 # ----------------------------------------------------------------------------
 
@@ -3302,27 +3831,31 @@ def main():
 
 	parser = OptionParser()
 	parser.add_option("-d", "--device", action="store", type="string", dest="device", help="The serial device of the RFXCOM, example /dev/ttyUSB0")
-	parser.add_option("-a", "--action", action="store", type="string", dest="action", help="Specify which action: LISTEN (default), STATUS, SEND, BSEND")
-	parser.add_option("-o", "--config", action="store", type="string", dest="config", help="Specify the configuration file")
+	parser.add_option("-l", "--listen", action="store_true", dest="listen", help="Listen for messages from RFX device")
 	parser.add_option("-x", "--simulate", action="store", type="string", dest="simulate", help="Simulate one incoming data message")
-	parser.add_option("-r", "--rawcmd", action="store", type="string", dest="rawcmd", help="Send raw message (need action SEND)")
-	parser.add_option("-c", "--csv", action="store_true", dest="csv", default=False, help="Output data in CSV format")
-	parser.add_option("-z", "--daemonize", action="store_true", dest="daemon", default=False, help="Daemonize RFXCMD")
-	parser.add_option("-p", "--pidfile", action="store", type="string", dest="pidfile", help="PID File location and name")
-	parser.add_option("-v", "--version", action="store_true", dest="version", help="Print rfxcmd version information")
+	parser.add_option("-s", "--sendmsg", action="store", type="string", dest="sendmsg", help="Send one message to RFX device")
+	parser.add_option("-f", "--rfxstatus", action="store_true", dest="rfxstatus", help="Get RFX device status")
+	parser.add_option("-o", "--config", action="store", type="string", dest="config", help="Specify the configuration file")
+	parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Output all messages to stdout")
+	parser.add_option("-c", "--csv", action="store_true", dest="csv", default=False, help="Output all messages to stdout in CSV format")
+	parser.add_option("-V", "--version", action="store_true", dest="version", help="Print rfxcmd version information")
 	parser.add_option("-D", "--debug", action="store_true", dest="debug", default=False, help="Debug printout on stdout")
 	(options, args) = parser.parse_args()
 
+	# ----------------------------------------------------------
+	# VERSION PRINT
 	if options.version:
 		print_version()
 
-	# Config file
+	# ----------------------------------------------------------
+	# CONFIG FILE
 	if options.config:
 		cmdarg.configfile = options.config
 	else:
 		cmdarg.configfile = os.path.join(config.program_path, "config.xml")
 
-	# Start loghandler
+	# ----------------------------------------------------------
+	# LOGHANDLER
 	if options.debug:
 		logger = logger_init(cmdarg.configfile,'rfxcmd', True)
 	else:
@@ -3332,80 +3865,109 @@ def main():
 	logger.debug("RFXCMD Version: " + __version__)
 	logger.debug(__date__.replace('$', ''))
 
+	# ----------------------------------------------------------
+	# PROCESS CONFIG.XML
 	logger.debug("Configfile: " + cmdarg.configfile)
 	logger.debug("Read configuration file")
 	read_configfile()
 
-	# Whitelist
+	# ----------------------------------------------------------
+	# VERBOSE OUTPUT
+	if options.verbose:
+		logger.debug("Verbose printout " + _line())
+		cmdarg.printout_complete = True
+		print "RFXCMD Version " + __version__
+	else:
+		cmdarg.printout_complete = False
+
+	# ----------------------------------------------------------
+	# CSV OUTPUT
+	if options.csv:
+		logger.debug("CSV printout")
+		cmdarg.printout_csv = True
+	else:
+		cmdarg.printout_csv = False
+	
+	# ----------------------------------------------------------
+	# WHITELIST
 	if config.whitelist_active:
 		logger.debug("Read whitelist file")
 		read_whitelistfile()
 
+	# ----------------------------------------------------------
 	# Triggerlist
 	if config.trigger_active:
 		logger.debug("Read triggerlist file")
 		read_triggerfile()
 
-	if options.csv:
-		logger.debug("Option: CSV chosen")
-		cmdarg.printout_complete = False
-		cmdarg.printout_csv = True
-
+	# ----------------------------------------------------------
 	# MYSQL
 	if config.mysql_active:
-		logger.debug("MySQL active")
-		cmdarg.printout_complete = False
-		cmdarg.printout_csv = False
-		logger.debug("Check MySQL")
+		logger.debug("MySQL active, Check MySQL")
 		try:
 			import MySQLdb
 		except ImportError:
 			print "Error: You need to install MySQL extension for Python"
-			logger.error("Error: Could not find MySQL extension for Python")
+			logger.error("Error: Could not find MySQL extension for Python. Line: " + _line())
 			logger.debug("Exit 1")
 			sys.exit(1)		
 
+	# ----------------------------------------------------------
 	# SQLITE
 	if config.sqlite_active:
-		logger.debug("SqLite active")
-		cmdarg.printout_complete = False
-		cmdarg.printout_csv = False
-		logger.debug("Check sqlite3")
+		logger.debug("SqLite active, Check sqlite3 version")
 		try:
 			logger.debug("SQLite3 version: " + sqlite3.sqlite_version)
 		except ImportError:
 			print "Error: You need to install SQLite extension for Python"
-			logger.error("Error: Could not find MySQL extension for Python")
+			logger.error("Error: Could not find MySQL extension for Python. " + _line())
 			logger.debug("Exit 1")
 			sys.exit(1)
 	
+	# ----------------------------------------------------------
+	# PGSQL
+	if config.pgsql_active:
+		logger.debug("pgSQL active, Check pgSQL")
+		try:
+			import psycopg2
+		except ImportError:
+			print "Error: You need to install pg extension for Python"
+			logger.error("Error: Could not find pgSQL extension for Python. Line: " + _line())
+			logger.debug("Exit 1")
+			sys.exit(1)
+
+	# ----------------------------------------------------------
 	# XPL
 	if config.xpl_active:
 		logger.debug("XPL active")
-		cmdarg.printout_complete = False
 
+	# ----------------------------------------------------------
 	# GRAPHITE
 	if config.graphite_active:
 		logger.debug("Graphite active")
-		cmdarg.printout_complete = False
 
-	if cmdarg.printout_complete == True:
-		if not options.daemon:
-			print "RFXCMD Version " + __version__
+	# ----------------------------------------------------------
+	# RRD
+	if config.rrd_active:
+		logger.debug("RRD active")
 
-	# Serial device
+	# ----------------------------------------------------------
+	# SERIAL
 	if options.device:
 		config.device = options.device
+	elif config.serial_device:
+		config.device = config.serial_device
 	else:
 		config.device = None
 
-	# Deamon
-	if options.daemon:
-		logger.debug("Option: Daemon chosen")
+	# ----------------------------------------------------------
+	# DAEMON
+	if config.daemon_active and options.listen:
+		logger.debug("Daemon")
 		logger.debug("Check PID file")
 		
-		if options.pidfile:
-			cmdarg.pidfile = options.pidfile
+		if config.daemon_pidfile:
+			cmdarg.pidfile = config.daemon_pidfile
 			cmdarg.createpid = True
 			logger.debug("PID file '" + cmdarg.pidfile + "'")
 		
@@ -3419,14 +3981,14 @@ def main():
 
 		else:
 			print("You need to set the --pidfile parameter at the startup")
-			logger.debug("Command argument --pidfile missing")
+			logger.error("Command argument --pidfile missing. Line: " + _line())
 			logger.debug("Exit 1")
 			sys.exit(1)
 
 		logger.debug("Check platform")
 		if sys.platform == 'win32':
 			print "Daemonize not supported under Windows. Exiting."
-			logger.debug("Daemonize not supported under Windows.")
+			logger.error("Daemonize not supported under Windows. Line: " + _line())
 			logger.debug("Exit 1")
 			sys.exit(1)
 		else:
@@ -3436,7 +3998,8 @@ def main():
 				logger.debug("Write PID file")
 				file(cmdarg.pidfile, 'w').write("pid\n")
 			except IOError, e:
-				logger.debug("Unable to write PID file: %s [%d]" % (e.strerror, e.errno))
+				logger.error("Line: " + _line())
+				logger.error("Unable to write PID file: %s [%d]" % (e.strerror, e.errno))
 				raise SystemExit("Unable to write PID file: %s [%d]" % (e.strerror, e.errno))
 
 			logger.debug("Deactivate screen printouts")
@@ -3445,48 +4008,28 @@ def main():
 			logger.debug("Start daemon")
 			daemonize()
 
-	# Action
-	if options.action:
-		cmdarg.action = options.action.lower()
-		if not (cmdarg.action == "listen" or cmdarg.action == "send" or
-			cmdarg.action == "bsend" or cmdarg.action == "status"):
-			logger.error("Error: Invalid action")
-			parser.error('Invalid action')
-	else:
-		cmdarg.action = "listen"
-
-	logger.debug("Action chosen: " + cmdarg.action)
-
-	# Rawcmd
-	if cmdarg.action == "send" or cmdarg.action == "bsend":
-		cmdarg.rawcmd = options.rawcmd
-		if not cmdarg.rawcmd:
-			print "Error: You need to specify message to send with -r <rawcmd>. Exiting."
-			logger.error("Error: You need to specify message to send with -r <rawcmd>")
-			logger.debug("Exit 1")
-			sys.exit(1)
-	
-		logger.debug("Rawcmd: " + cmdarg.rawcmd)
-
+	# ----------------------------------------------------------
+	# SIMULATE
 	if options.simulate:
-		option_simulate( options.simulate )
+		option_simulate(options.simulate)
 
-	open_serialport()
-
-	if cmdarg.action == "listen":
+	# ----------------------------------------------------------
+	# LISTEN
+	if options.listen:
 		option_listen()
 
-	if cmdarg.action == "status":
-		option_getstatus()
-
-	if cmdarg.action == "send":
+	# ----------------------------------------------------------
+	# SEND MESSAGE
+	if options.sendmsg:
+		cmdarg.rawcmd = options.sendmsg
 		option_send()
 
-	if cmdarg.action == "bsend":
-		option_bsend()
-
-	close_serialport()
-
+	# ----------------------------------------------------------
+	# GET RFX STATUS
+	if options.rfxstatus:
+		cmdarg.rawcmd = rfxcmd.status
+		option_send()
+	
 	logger.debug("Exit 0")
 	sys.exit(0)
 	

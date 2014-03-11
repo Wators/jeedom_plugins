@@ -28,11 +28,15 @@
 #
 # -----------------------------------------------------------------------------
 
+import sys
+import string
+import select
 import socket
+import datetime
 
 # -----------------------------------------------------------------------------
 
-def send(host, message):
+def send(host, message, sourcename = "rfxcmd-", hostname = True):
     """
     Send data to XPL network
     Credit: Jean-Louis Bergamo
@@ -55,14 +59,17 @@ def send(host, message):
     if sock is None:
         print 'could not open socket'
 
-    hostname = socket.gethostname()
-    message = 'xpl-stat\n{\nhop=1\nsource=rfxcmd.'+hostname+'\ntarget=*\n}\nsensor.basic\n{\n' + message + '\n}\n' 
+	if hostname:
+		sourcename = sourcename + socket.gethostname()
+    
+    #message = 'xpl-stat\n{\nhop=1\nsource=rfxcmd.'+hostname+'\ntarget=*\n}\nsensor.basic\n{\n' + message + '\n}\n' 
+    message = 'xpl-stat\n{\nhop=1\nsource='+sourcename+'\ntarget=*\n}\nsensor.basic\n{\n' + message + '\n}\n' 
     sock.sendto(message,addr)
     sock.close()
 
 # -----------------------------------------------------------------------------
 
-def SendHeartbeat():
+def SendHeartbeat(port):
     """
     Send heartbeat
     Based on John Bent xPL Monitor for Python
@@ -87,13 +94,18 @@ def SendHeartbeat():
 
 # -----------------------------------------------------------------------------
 
-def listen(port):
+def listen():
     """
     Listen to xPL messages and print them to stdout with timestamps
     Based on John Bent xPL Monitor for Python
     http://www.xplproject.org.uk/
     """
+    
+    # Define maximum xPL message size
+    buff = 1500
 
+    port = 3865
+    
     # Initialise the socket
     UDPSock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     addr = ("0.0.0.0",port)
@@ -113,7 +125,7 @@ def listen(port):
 
     print "xPLMon, bound to port " + str(port) + ", exit with ctrl+c"
 
-    SendHeartbeat()
+    SendHeartbeat(port)
 
     try:
         while 1==1:
@@ -130,4 +142,4 @@ def listen(port):
         pass
 
 if __name__ == '__main__':
-    listen(port)
+	listen()
