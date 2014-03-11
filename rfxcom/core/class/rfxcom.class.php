@@ -88,15 +88,16 @@ class rfxcom extends eqLogic {
         if ($port == '') {
             return;
         }
-        if (!file_exists($port)) {
-            log::add('rfxcom', 'error', 'Le port : ' . $port . ' n\'éxiste pas');
-            config::save('port', '', 'rfxcom');
-        }
         self::runDeamon();
     }
 
     public static function runDeamon() {
+        log::add('rfxcom', 'info', 'Lancement du démon RFXcom');
         $port = config::byKey('port', 'rfxcom');
+        if (!file_exists($port)) {
+            config::save('port', '', 'rfxcom');
+            throw new Exception('Le port : ' . $port . ' n\'éxiste pas');
+        }
         $rfxcom_path = realpath(dirname(__FILE__) . '/../../ressources/rfxcmd');
         $trigger = file_get_contents($rfxcom_path . '/trigger_tmpl.xml');
         $config = file_get_contents($rfxcom_path . '/config_tmpl.xml');
@@ -107,28 +108,44 @@ class rfxcom extends eqLogic {
         if (file_exists($rfxcom_path . '/config.xml')) {
             unlink($rfxcom_path . '/config.xml');
         }
-        file_put_contents($rfxcom_path . '/trigger.xml', str_replace('#path#', $rfxcom_path . '/core/php/jeeRfxcom.php', $trigger));
-        $config = str_replace('#trigger_path#', $rfxcom_path . '/trigger.xml', $config);
-        $config = str_replace('#log_path#', log::getPathToLog('rfxcmd'), $config);
+        file_put_contents($rfxcom_path . '/trigger.xml', str_replace('#path#', $rfxcom_path . '/../../core/php/jeeRfxcom.php', $trigger));
+        $config = str_replace('#log_path#', log::getPathToLog('rfxcmd'), str_replace('#trigger_path#', $rfxcom_path . '/trigger.xml', $config));
         file_put_contents($rfxcom_path . '/config.xml', $config);
         chmod($rfxcom_path . '/trigger.xml', 0777);
         chmod($rfxcom_path . '/config.xml', 0777);
 
         $cmd = '/usr/bin/python ' . $rfxcom_path . '/rfxcmd.py -z -d ' . $port;
         $cmd .= ' -o ' . $rfxcom_path . '/config.xml --pidfile=' . $pid_file;
-        log::add('rfxcom', 'info', $cmd);
+        $result = exec('nohup '.$cmd . ' >> /dev/null 2>&1 &');
         if (strpos(strtolower($result), 'error') !== false || strpos(strtolower($result), 'traceback') !== false) {
             log::add('rfxcom', 'error', $result);
+            return false;
         }
+        if (!self::deamonRunning()) {
+            sleep(20);
+            if (!self::deamonRunning()) {
+                log::add('rfxcom', 'info', 'Impossible de lancer le démon RFXcom');
+                return false;
+            }
+        }
+        log::add('rfxcom', 'info', 'Démon RFXcom lancé');
     }
 
     public static function deamonRunning() {
         $pid_file = realpath(dirname(__FILE__) . '/../../../../tmp/rfxcom.pid');
         if (!file_exists($pid_file)) {
+            $pid = jeedom::retrievePidThread('rfxcmd.py');
+            if ($pid != '' && is_numeric($pid)) {
+                exec('kill -9 ' . $pid);
+            }
             return false;
         }
         $pid = trim(file_get_contents($pid_file));
         if ($pid == '' || !is_numeric($pid)) {
+            $pid = jeedom::retrievePidThread('rfxcmd.py');
+            if ($pid != '' && is_numeric($pid)) {
+                exec('kill -9 ' . $pid);
+            }
             return false;
         }
         $result = exec('ps -p' . $pid . ' e | grep "rfxcmd" | wc -l');
