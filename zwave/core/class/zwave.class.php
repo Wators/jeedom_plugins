@@ -532,7 +532,7 @@ class zwave extends eqLogic {
         if ($this->getConfiguration('device') == '') {
             return true;
         }
-        $device = zwave::devicesParameters($this->getConfiguration('device'));
+        $device = self::devicesParameters($this->getConfiguration('device'));
         if (!is_array($device) || !isset($device['commands'])) {
             return true;
         }

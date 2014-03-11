@@ -51,7 +51,7 @@ class rfxcom extends eqLogic {
         $eqLogic->setIsVisible(1);
         $eqLogic->setConfiguration('device', $_def['packettype'] . '::' . $_def['subtype']);
         $eqLogic->save();
-        $eqLogic->applyModuleConfiguration($device['subtype'][$_def['subtype']]);
+        $eqLogic->applyModuleConfiguration();
     }
 
     public static function devicesParameters($_device = '') {
@@ -165,7 +165,32 @@ class rfxcom extends eqLogic {
 
     /*     * *********************Methode d'instance************************* */
 
-    public function applyModuleConfiguration($device) {
+    public function postSave() {
+        if ($this->getConfiguration('applyDevice') != $this->getConfiguration('device')) {
+            $this->applyModuleConfiguration();
+        }
+    }
+
+    public function applyModuleConfiguration() {
+        if ($this->getConfiguration('device') == '') {
+            return true;
+        }
+        $this->setConfiguration('applyDevice', $this->getConfiguration('device'));
+        $device_type = explode('::', $this->getConfiguration('device'));
+        $packettype = $device_type[0];
+        $subtype = $device_type[1];
+        $device = self::devicesParameters($packettype);
+        if (!is_array($device) || !isset($device['subtype'][$subtype])) {
+            return true;
+        } else {
+            $device = $device['subtype'][$subtype];
+        }
+        if (isset($device['configuration'])) {
+            foreach ($device['configuration'] as $key => $value) {
+                $this->setConfiguration($key, $value);
+            }
+        }
+
         $cmd_order = 0;
         foreach ($device['commands'] as $command) {
             $cmd = null;
@@ -190,6 +215,8 @@ class rfxcom extends eqLogic {
                 
             }
         }
+
+        $this->save();
     }
 
     /*     * **********************Getteur Setteur*************************** */
