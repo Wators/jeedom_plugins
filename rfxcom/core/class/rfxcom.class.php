@@ -92,21 +92,34 @@ class rfxcom extends eqLogic {
             log::add('rfxcom', 'error', 'Le port : ' . $port . ' n\'éxiste pas');
             config::save('port', '', 'rfxcom');
         }
-        $path = realpath(dirname(__FILE__) . '/../php/jeeRfxcom.php');
+        self::runDeamon();
+    }
+
+    public static function runDeamon() {
+        $port = config::byKey('port', 'rfxcom');
         $rfxcom_path = realpath(dirname(__FILE__) . '/../../ressources/rfxcmd');
         $trigger = file_get_contents($rfxcom_path . '/trigger_tmpl.xml');
+        $config = file_get_contents($rfxcom_path . '/config_tmpl.xml');
         $pid_file = realpath(dirname(__FILE__) . '/../../../../tmp') . '/rfxcom.pid';
         if (file_exists($rfxcom_path . '/trigger.xml')) {
             unlink($rfxcom_path . '/trigger.xml');
         }
-        file_put_contents($rfxcom_path . '/trigger.xml', str_replace('#path#', $path, $trigger));
+        if (file_exists($rfxcom_path . '/config.xml')) {
+            unlink($rfxcom_path . '/config.xml');
+        }
+        file_put_contents($rfxcom_path . '/trigger.xml', str_replace('#path#', $rfxcom_path . '/core/php/jeeRfxcom.php', $trigger));
+        $config = str_replace('#trigger_path#', $rfxcom_path . '/trigger.xml', $config);
+        $config = str_replace('#log_path#', log::getPathToLog('rfxcmd'), $config);
+        file_put_contents($rfxcom_path . '/config.xml', $config);
         chmod($rfxcom_path . '/trigger.xml', 0777);
-        log::add('rfxcom', 'info', '/usr/bin/python ' . $rfxcom_path . '/rfxcmd.py -z -d ' . $port . ' --pidfile=' . $pid_file);
-        $result = shell_exec('/usr/bin/python ' . $rfxcom_path . '/rfxcmd.py -z -d ' . $port . ' --pidfile=' . $pid_file);
-        if (strpos(strtolower($result), 'error') !== false) {
+        chmod($rfxcom_path . '/config.xml', 0777);
+
+        $cmd = '/usr/bin/python ' . $rfxcom_path . '/rfxcmd.py -z -d ' . $port;
+        $cmd .= ' -o ' . $rfxcom_path . '/config.xml --pidfile=' . $pid_file;
+        log::add('rfxcom', 'info', $cmd);
+        if (strpos(strtolower($result), 'error') !== false || strpos(strtolower($result), 'traceback') !== false) {
             log::add('rfxcom', 'error', $result);
         }
-        echo $result;
     }
 
     public static function deamonRunning() {
@@ -229,6 +242,27 @@ class rfxcomCmd extends cmd {
     /*     * ***********************Methode static*************************** */
 
     /*     * *********************Methode d'instance************************* */
+
+    public function execute($_options = null) {
+        $value = $this->getConfiguration('value');
+        switch ($this->getType()) {
+            case 'action' :
+                switch ($this->getSubType()) {
+                    case 'slider':
+                        $value = str_replace('#slider#', $_options['slider'], $value);
+                        break;
+                    case 'color':
+                        $value = str_replace('#color#', $_options['color'], $value);
+                        break;
+                }
+                break;
+        }
+        $rfxcom_path = realpath(dirname(__FILE__) . '/../../ressources/rfxcmd');
+        $result = shell_exec('cd ' . $rfxcom_path . ';/usr/bin/python rfxsend.py -s localhost -p 55000 -r ' . $rfxcom_path);
+        if (strpos(strtolower($result), 'error') !== false) {
+            throw new Exception('Erreur sur l\'éxecution de la commande : ' . $this->getHumanName() . ' : ' . $result);
+        }
+    }
 
     /*     * **********************Getteur Setteur*************************** */
 }
