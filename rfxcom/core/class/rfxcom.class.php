@@ -27,6 +27,58 @@ class rfxcom extends eqLogic {
 
     /*     * ***********************Methode static*************************** */
 
+    public static function createFromDef($_def) {
+        if (!isset($_def['packettype']) || !isset($_def['subtype']) || !isset($_def['id'])) {
+            log::add('rfxcom', 'error', 'Information manquante pour ajouter l\'équipement : ' . print_r($_def, true));
+            return;
+        }
+        $device = self::devicesParameters($_def['packettype']);
+        if (!isset($device[$_def['subtype']])) {
+            log::add('rfxcom', 'error', 'Sous-type non trouvé : ' . print_r($_def, true) . ' dans : ' . print_r($device, true));
+            return;
+        }
+        $rfxcom = rfxcom::byLogicalId($_def['id'], 'rfxcom');
+        if (count($rfxcom) > 0) {
+            $rfxcom = $rfxcom[0];
+        }
+        if (!is_object($rfxcom)) {
+            $eqLogic = new rfxcom();
+            $eqLogic->setName($_def['id']);
+        }
+        $eqLogic->setLogicalId($_def['id']);
+        $eqLogic->setEqType_name('rfxcom');
+        $eqLogic->setIsEnable(1);
+        $eqLogic->setIsVisible(1);
+        $eqLogic->save();
+        $eqLogic->applyModuleConfiguration($device[$_def['subtype']]);
+    }
+
+    public static function devicesParameters($_device = '') {
+        $path = dirname(__FILE__) . '/../config/devices';
+        if (isset($_device) && $_device != '') {
+            $files = ls($path, $_device . '.php', false, array('files', 'quiet'));
+            if (count($files) == 1) {
+                global $deviceConfiguration;
+                require_once($path . '/' . $files[0]);
+                return $deviceConfiguration[$_device];
+            }
+        }
+        $files = ls($path, '*.php', false, array('files', 'quiet'));
+        $return = array();
+        foreach ($files as $file) {
+            global $deviceConfiguration;
+            require_once($path . '/' . $file);
+            $return = array_merge($return, $deviceConfiguration);
+        }
+        if (isset($_device) && $_device != '') {
+            if (isset($return[$_device])) {
+                return $return[$_device];
+            }
+            return array();
+        }
+        return $return;
+    }
+
     public static function cron() {
         if (self::deamonRunning()) {
             return;
@@ -39,19 +91,25 @@ class rfxcom extends eqLogic {
             log::add('rfxcom', 'error', 'Le port : ' . $port . ' n\'éxiste pas');
             config::save('port', '', 'rfxcom');
         }
-        $path = dirname(__FILE__) . '/../php/jeeRfxcom.php';
-        $rfxcom_path = dirname(__FILE__) . '/../../ressources/rfxcmd';
+        $path = realpath(dirname(__FILE__) . '/../php/jeeRfxcom.php');
+        $rfxcom_path = realpath(dirname(__FILE__) . '/../../ressources/rfxcmd');
         $trigger = file_get_contents($rfxcom_path . '/trigger_tmpl.xml');
+        $pid_file = realpath(dirname(__FILE__) . '/../../../../tmp') . '/rfxcom.pid';
         if (file_exists($rfxcom_path . '/trigger.xml')) {
             unlink($rfxcom_path . '/trigger.xml');
         }
         file_put_contents($rfxcom_path . '/trigger.xml', str_replace('#path#', $path, $trigger));
-        log::add('rfxcom', 'info', $rfxcom_path . '/rfxcmd.py -z -d ' . $port . ' --pidfile=' . dirname(__FILE__) . '/../../../../tmp/rfxcom.pid');
-        shell_exec('python ' . $rfxcom_path . '/rfxcmd.py -z -d ' . $port . ' --pidfile=' . dirname(__FILE__) . '/../../../../tmp/rfxcom.pid');
+        chmod($rfxcom_path . '/trigger.xml', 0777);
+        log::add('rfxcom', 'info', '/usr/bin/python ' . $rfxcom_path . '/rfxcmd.py -z -d ' . $port . ' --pidfile=' . $pid_file);
+        $result = shell_exec('/usr/bin/python ' . $rfxcom_path . '/rfxcmd.py -z -d ' . $port . ' --pidfile=' . $pid_file);
+        if (strpos(strtolower($result), 'error') !== false) {
+            log::add('rfxcom', 'error', $result);
+        }
+        echo $result;
     }
 
     public static function deamonRunning() {
-        $pid_file = dirname(__FILE__) . '/../../../../tmp/rfxcom.pid';
+        $pid_file = realpath(dirname(__FILE__) . '/../../../../tmp/rfxcom.pid');
         if (!file_exists($pid_file)) {
             return false;
         }
@@ -104,6 +162,35 @@ class rfxcom extends eqLogic {
         return self::deamonRunning();
     }
 
+    /*     * *********************Methode d'instance************************* */
+
+    public function applyModuleConfiguration($device) {
+        $cmd_order = 0;
+        foreach ($device['commands'] as $command) {
+            $cmd = null;
+            foreach ($this->getCmd() as $liste_cmd) {
+                if ($liste_cmd->getConfiguration('logicalId', '') == $command['configuration']['logicalId']) {
+                    $cmd = $liste_cmd;
+                    break;
+                }
+            }
+            try {
+                if ($cmd == null || !is_object($cmd)) {
+                    $cmd = new rfxcomCmd();
+                    $cmd->setOrder($cmd_order);
+                    $cmd->setEqLogic_id($this->getId());
+                } else {
+                    $command['name'] = $cmd->getName();
+                }
+                utils::a2o($cmd, $command);
+                $cmd->save();
+                $cmd_order++;
+            } catch (Exception $exc) {
+                
+            }
+        }
+    }
+
     /*     * **********************Getteur Setteur*************************** */
 }
 
@@ -112,6 +199,8 @@ class rfxcomCmd extends cmd {
 
 
     /*     * ***********************Methode static*************************** */
+
+    /*     * *********************Methode d'instance************************* */
 
     /*     * **********************Getteur Setteur*************************** */
 }

@@ -561,7 +561,7 @@ class zwave extends eqLogic {
 
             try {
                 if ($cmd == null || !is_object($cmd)) {
-                    $cmd = new cmd();
+                    $cmd = new zwaveCmd();
                     $cmd->setOrder($cmd_order);
                     $cmd->setEqLogic_id($this->getId());
                 } else {

@@ -40,3 +40,29 @@ foreach ($_GET as $key => $value) {
     $message .= $key . '=>' . $value . ' ';
 }
 log::add('rfxcom', 'event', 'Evenement : ' . $message);
+
+if (!isset($_GET['id'])) {
+    return;
+}
+$rfxcom = rfxcom::byLogicalId($_GET['id'], 'rfxcom');
+if (count($rfxcom) > 0) {
+    $rfxcom = $rfxcom[0];
+}
+if (!is_object($rfxcom)) {
+    rfxcom::createFromDef($_GET);
+    $rfxcom = rfxcom::byLogicalId($_GET['id'], 'rfxcom');
+    if (count($rfxcom) > 0) {
+        $rfxcom = $rfxcom[0];
+    }
+    if (!is_object($rfxcom)) {
+        return;
+    }
+}
+
+
+foreach ($rfxcom->getCmd() as $cmd) {
+    $logicalId = $cmd->getConfiguration('logicalId');
+    if (isset($_GET[$logicalId])) {
+        $cmd->event($_GET[$logicalId]);
+    }
+}

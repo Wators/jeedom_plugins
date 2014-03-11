@@ -1,118 +1,118 @@
 <xml>
     <trigger>
         <message>..10..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ housecode=$housecode$ unitcode=$unitcode$ command=$command$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ housecode=$housecode$ unitcode=$unitcode$ command=$command$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..11..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ unitcode=$unitcode$ command=$command$ dimlevel=$dimlevel$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ unitcode=$unitcode$ command=$command$ dimlevel=$dimlevel$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..12..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ system=$system$ channel=$channel$ command=$command$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ system=$system$ channel=$channel$ command=$command$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..13..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ code=$code$ pulse=$pulse$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ code=$code$ pulse=$pulse$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..14..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ unitcode=$unitcode$ command=$command$ level=$level$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ unitcode=$unitcode$ command=$command$ level=$level$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..15..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ groupcode=$groupcode$ unitcode=$unitcode$ command=$command$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ groupcode=$groupcode$ unitcode=$unitcode$ command=$command$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..18..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$</action>
     </trigger>
     <trigger>
         <message>..19..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$</action>
     </trigger>
     <trigger>
         <message>..19..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$</action>
     </trigger>
     <trigger>
         <message>..20..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ status=$status$ battery=$battery$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ status=$status$ battery=$battery$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..28..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$</action>
     </trigger>
     <trigger>
         <message>..30..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ command=$command$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ command=$command$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..40..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ temperature=$temperature$ temperatureset=$temperatureset$ mode=$mode$ status=$status$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ temperature=$temperature$ temperatureset=$temperatureset$ mode=$mode$ status=$status$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..41..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$</action>
     </trigger>
     <trigger>
         <message>..42..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ unitcode=$unitcode$ command=$command$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ unitcode=$unitcode$ command=$command$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..50..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ temperature=$temperature$ battery=$battery$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ temperature=$temperature$ battery=$battery$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..51..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ humidity=$humidity$ battery=$battery$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ humidity=$humidity$ battery=$battery$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..52..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ temperature=$temperature$ battery=$battery$ signal=$signal$ humidity=$humidity$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ temperature=$temperature$ battery=$battery$ signal=$signal$ humidity=$humidity$</action>
     </trigger>
     <trigger>
         <message>..53..................</message>
-        <action>php #path# </action>
+        <action>/usr/bin/php #path# </action>
     </trigger>
     <trigger>
         <message>..54..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ temperature=$temperature$ humidity=$humidity$ barometric=$barometric$ battery=$battery$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ temperature=$temperature$ humidity=$humidity$ barometric=$barometric$ battery=$battery$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..55..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ battery=$battery$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ battery=$battery$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..56..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ direction=$direction$ average=$average$ temperature=$temperature$ windchill=$windchill$ windgust=$windgust$ battery=$battery$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ direction=$direction$ average=$average$ temperature=$temperature$ windchill=$windchill$ windgust=$windgust$ battery=$battery$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..57..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ uv=$uv$ temperature=$temperature$ battery=$battery$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ uv=$uv$ temperature=$temperature$ battery=$battery$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..59..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ counter=$counter$ channel1=$channel1$ channel2=$channel2$ channel3=$channel3$ battery=$battery$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ counter=$counter$ channel1=$channel1$ channel2=$channel2$ channel3=$channel3$ battery=$battery$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..5A..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ instant=$instant$ total=$total$ battery=$battery$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ instant=$instant$ total=$total$ battery=$battery$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..5B..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$</action>
     </trigger>
     <trigger>
         <message>..70..................</message>
-        <action>php #path# packettype=$packettype$, subtype=$subtype$, id=$id$, temperature=$temperature$ voltage=$voltage$ message=$message$ signal=$signal$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$, subtype=$subtype$, id=$id$, temperature=$temperature$ voltage=$voltage$ message=$message$ signal=$signal$</action>
     </trigger>
     <trigger>
         <message>..71..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$ id=$id$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$</action>
     </trigger>
     <trigger>
         <message>..72..................</message>
-        <action>php #path# packettype=$packettype$ subtype=$subtype$</action>
+        <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$</action>
     </trigger>
 </xml>
