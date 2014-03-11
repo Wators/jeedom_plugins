@@ -23,69 +23,100 @@ sendVarToJS('eqType', 'rfxcom');
     </div>
 
     <div class="col-lg-10 eqLogic" style="border-left: solid 1px #EEE; padding-left: 25px;display: none;">
-        <form class="form-horizontal">
-            <fieldset>
-                <legend>Général</legend>
-                <div class="form-group">
-                    <label class="col-lg-3 control-label">Nom de l'équipement RFXcom</label>
-                    <div class="col-lg-3">
-                        <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
-                        <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="Nom de l'équipement RFXcom"/>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-lg-3 control-label">ID</label>
-                    <div class="col-lg-3">
-                        <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" placeholder="Logical ID"/>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-lg-3 control-label">Activer</label>
-                    <div class="col-lg-1">
-                        <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isEnable" checked/>
-                    </div>
-                    <label class="col-lg-1 control-label">Visible</label>
-                    <div class="col-lg-1">
-                        <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isVisible" checked/>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-lg-3 control-label" >Objet parent</label>
-                    <div class="col-lg-3">
-                        <select class="eqLogicAttr form-control" data-l1key="object_id">
-                            <option value="">Aucun</option>
-                            <?php
-                            foreach (object::all() as $object) {
-                                echo '<option value="' . $object->getId() . '">' . $object->getName() . '</option>';
-                            }
-                            ?>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="col-lg-3 control-label">Catégorie</label>
-                    <div class="col-lg-3">
-                        <?php
-                        foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value) {
-                            echo '<label class="checkbox-inline">';
-                            echo '<input type="checkbox" class="eqLogicAttr" data-l1key="category" data-l2key="' . $key . '" />' . $value['name'];
-                            echo '</label>';
-                        }
-                        ?>
+        <div class="row">
+            <div class="col-lg-6">
+                <form class="form-horizontal">
+                    <fieldset>
+                        <legend>Général</legend>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Nom de l'équipement RFXcom</label>
+                            <div class="col-lg-4">
+                                <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
+                                <input type="text" class="eqLogicAttr form-control" data-l1key="name" placeholder="Nom de l'équipement RFXcom"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">ID</label>
+                            <div class="col-lg-4">
+                                <input type="text" class="eqLogicAttr form-control" data-l1key="logicalId" placeholder="Logical ID"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Activer</label>
+                            <div class="col-lg-1">
+                                <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isEnable" checked/>
+                            </div>
+                            <label class="col-lg-1 control-label">Visible</label>
+                            <div class="col-lg-1">
+                                <input type="checkbox" class="eqLogicAttr form-control" data-l1key="isVisible" checked/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label" >Objet parent</label>
+                            <div class="col-lg-4">
+                                <select class="eqLogicAttr form-control" data-l1key="object_id">
+                                    <option value="">Aucun</option>
+                                    <?php
+                                    foreach (object::all() as $object) {
+                                        echo '<option value="' . $object->getId() . '">' . $object->getName() . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Catégorie</label>
+                            <div class="col-lg-9">
+                                <?php
+                                foreach (jeedom::getConfiguration('eqLogic:category') as $key => $value) {
+                                    echo '<label class="checkbox-inline">';
+                                    echo '<input type="checkbox" class="eqLogicAttr" data-l1key="category" data-l2key="' . $key . '" />' . $value['name'];
+                                    echo '</label>';
+                                }
+                                ?>
 
-                    </div>
-                </div>
-            </fieldset> 
-        </form>
+                            </div>
+                        </div>
+                    </fieldset> 
+                </form>
+            </div>
+            <div class="col-lg-6">
+                <form class="form-horizontal">
+                    <fieldset>
+                        <legend>Informations</legend>
+                        <div class="form-group">
+                            <label class="col-lg-2 control-label">Equipement</label>
+                            <div class="col-lg-8">
+                                <select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="device">
+                                    <option value="">Aucun</option>
+                                    <?php
+                                    foreach (rfxcom::devicesParameters() as $packettype => $info) {
+                                        foreach ($info['subtype'] as $subtype => $subInfo) {
+                                            echo '<option value="' . $packettype . '::' . $subtype . '">' . $info['name'] . ' - ' . $subInfo['name'] . '</option>';
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                    </fieldset> 
+                </form>
+            </div>
+        </div>
 
         <legend>PushingBox</legend>
 
 
-        <a class="btn btn-success btn-sm cmdAction" data-action="add"><i class="fa fa-plus-circle"></i> Ajouter une commande pushingBox</a><br/><br/>
+        <a class="btn btn-success btn-sm cmdAction" data-action="add"><i class="fa fa-plus-circle"></i> Ajouter une commande</a><br/><br/>
         <table id="table_cmd" class="table table-bordered table-condensed">
             <thead>
                 <tr>
-                    <th>Nom</th><th>DevId</th><th></th>
+                    <th style="width: 300px;">Nom</th>
+                    <th style="width: 130px;" class="expertModeHidden">Type</th>
+                    <th class="expertModeHidden">Logical ID (info) ou Commande brute (action)</th>
+                    <th >Paramètres</th>
+                    <th style="width: 100px;">Options</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>

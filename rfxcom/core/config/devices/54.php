@@ -20,24 +20,26 @@ global $deviceConfiguration;
 $deviceConfiguration = array(
     '54' => array(
         'name' => 'Temperature, Humidité et Pression',
-        '01' => array(
-            'name' => 'Defaut',
-            'commands' => array(
-                array('name' => 'Température', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'temperature')
-                ),
-                array('name' => 'Humidité', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '%', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'humidity')
-                ),
-                array('name' => 'Pression', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'Pa', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'barometric')
-                ),
-                array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'battery')
-                ),
-                array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'signal')
-                ),
+        'subtype' => array(
+            '01' => array(
+                'name' => 'Defaut',
+                'commands' => array(
+                    array('name' => 'Température', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'temperature')
+                    ),
+                    array('name' => 'Humidité', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '%', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'humidity')
+                    ),
+                    array('name' => 'Pression', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'Pa', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'barometric')
+                    ),
+                    array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'battery')
+                    ),
+                    array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'signal')
+                    ),
+                )
             )
         )
     )

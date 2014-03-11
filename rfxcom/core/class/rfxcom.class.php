@@ -33,7 +33,7 @@ class rfxcom extends eqLogic {
             return;
         }
         $device = self::devicesParameters($_def['packettype']);
-        if (!isset($device[$_def['subtype']])) {
+        if (!isset($device['subtype'][$_def['subtype']])) {
             log::add('rfxcom', 'error', 'Sous-type non trouvé : ' . print_r($_def, true) . ' dans : ' . print_r($device, true));
             return;
         }
@@ -49,8 +49,9 @@ class rfxcom extends eqLogic {
         $eqLogic->setEqType_name('rfxcom');
         $eqLogic->setIsEnable(1);
         $eqLogic->setIsVisible(1);
+        $eqLogic->setConfiguration('device', $_def['packettype'] . '::' . $_def['subtype']);
         $eqLogic->save();
-        $eqLogic->applyModuleConfiguration($device[$_def['subtype']]);
+        $eqLogic->applyModuleConfiguration($device['subtype'][$_def['subtype']]);
     }
 
     public static function devicesParameters($_device = '') {
@@ -68,7 +69,7 @@ class rfxcom extends eqLogic {
         foreach ($files as $file) {
             global $deviceConfiguration;
             require_once($path . '/' . $file);
-            $return = array_merge($return, $deviceConfiguration);
+            $return = $return + $deviceConfiguration;
         }
         if (isset($_device) && $_device != '') {
             if (isset($return[$_device])) {

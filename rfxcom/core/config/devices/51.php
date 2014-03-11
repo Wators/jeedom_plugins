@@ -20,18 +20,20 @@ global $deviceConfiguration;
 $deviceConfiguration = array(
     '51' => array(
         'name' => 'Humidité',
-        '01' => array(
-            'name' => 'Defaut',
-            'commands' => array(
-                array('name' => 'Humidité', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '%', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'humidity')
-                ),
-                array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'battery')
-                ),
-                array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'signal')
-                ),
+        'subtype' => array(
+            '01' => array(
+                'name' => 'Defaut',
+                'commands' => array(
+                    array('name' => 'Humidité', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '%', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'humidity')
+                    ),
+                    array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'battery')
+                    ),
+                    array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'signal')
+                    ),
+                )
             )
         )
     )

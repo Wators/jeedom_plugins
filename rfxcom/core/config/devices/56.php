@@ -20,64 +20,66 @@ global $deviceConfiguration;
 $deviceConfiguration = array(
     '56' => array(
         'name' => 'Vent',
-        '01' => array(
-            'name' => 'Defaut',
-            'commands' => array(
-                array('name' => 'Moyenne', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'Km/h', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'average')
-                ),
-                array('name' => 'Rafales', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'Km/h', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'windgust')
-                ),
-                array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'battery')
-                ),
-                array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'signal')
-                ),
-            )
-        ),
-        '04' => array(
-            'name' => 'Avec température et refroidissement',
-            'commands' => array(
-                array('name' => 'Température', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'temperature')
-                ),
-                array('name' => 'Moyenne', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'km/h', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'average')
-                ),
-                array('name' => 'Refroidissement', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'windchill')
-                ),
-                array('name' => 'Rafales', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'Km/h', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'windgust')
-                ),
-                array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'battery')
-                ),
-                array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'signal')
-                ),
-            )
-        ),
-        '05' => array(
-            'name' => 'Sans moyenne',
-            'commands' => array(
-                array('name' => 'Température', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'temperature')
-                ),
-                array('name' => 'Refroidissement', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'windchill')
-                ),
-                array('name' => 'Rafales', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'Km/h', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'windgust')
-                ),
-                array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'battery')
-                ),
-                array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'signal')
-                ),
+        'subtype' => array(
+            '01' => array(
+                'name' => 'Defaut',
+                'commands' => array(
+                    array('name' => 'Moyenne', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'Km/h', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'average')
+                    ),
+                    array('name' => 'Rafales', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'Km/h', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'windgust')
+                    ),
+                    array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'battery')
+                    ),
+                    array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'signal')
+                    ),
+                )
+            ),
+            '04' => array(
+                'name' => 'Avec température et refroidissement',
+                'commands' => array(
+                    array('name' => 'Température', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'temperature')
+                    ),
+                    array('name' => 'Moyenne', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'km/h', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'average')
+                    ),
+                    array('name' => 'Refroidissement', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'windchill')
+                    ),
+                    array('name' => 'Rafales', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'Km/h', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'windgust')
+                    ),
+                    array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'battery')
+                    ),
+                    array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'signal')
+                    ),
+                )
+            ),
+            '05' => array(
+                'name' => 'Sans moyenne',
+                'commands' => array(
+                    array('name' => 'Température', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'temperature')
+                    ),
+                    array('name' => 'Refroidissement', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'windchill')
+                    ),
+                    array('name' => 'Rafales', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => 'Km/h', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'windgust')
+                    ),
+                    array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'battery')
+                    ),
+                    array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'signal')
+                    ),
+                )
             )
         )
     )

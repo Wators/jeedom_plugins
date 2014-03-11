@@ -20,35 +20,37 @@ global $deviceConfiguration;
 $deviceConfiguration = array(
     '57' => array(
         'name' => 'UV',
-        '01' => array(
-            'name' => 'Defaut',
-            'commands' => array(
-                array('name' => 'UV', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'uv')
-                ),
-                array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'battery')
-                ),
-                array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'signal')
-                ),
-            )
-        ),
-        '03' => array(
-            'name' => 'Defaut',
-            'commands' => array(
-                array('name' => 'UV', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'uv')
-                ),
-                array('name' => 'Température', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'temperature')
-                ),
-                array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'battery')
-                ),
-                array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                    'configuration' => array('logicalId' => 'signal')
-                ),
+        'subtype' => array(
+            '01' => array(
+                'name' => 'Defaut',
+                'commands' => array(
+                    array('name' => 'UV', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'uv')
+                    ),
+                    array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'battery')
+                    ),
+                    array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'signal')
+                    ),
+                )
+            ),
+            '03' => array(
+                'name' => 'Avec température',
+                'commands' => array(
+                    array('name' => 'UV', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'uv')
+                    ),
+                    array('name' => 'Température', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'temperature')
+                    ),
+                    array('name' => 'Batterie', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'battery')
+                    ),
+                    array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
+                        'configuration' => array('logicalId' => 'signal')
+                    ),
+                )
             )
         )
     )
