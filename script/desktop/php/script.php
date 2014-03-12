@@ -2,7 +2,6 @@
 if (!isConnect('admin')) {
     throw new Exception('Error 401 Unauthorized');
 }
-global $listScript;
 include_file('core', 'script', 'config', 'script');
 include_file('3rdparty', 'jquery.fileTree/jqueryFileTree', 'css');
 include_file('3rdparty', 'codemirror/lib/codemirror', 'js');

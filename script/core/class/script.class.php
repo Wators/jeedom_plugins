@@ -83,7 +83,7 @@ class scriptCmd extends cmd {
     }
 
     public function execute($_options = null) {
-        $request = str_replace('#API', config::byKey('api'), $this->getConfiguration('request'));
+        $request = str_replace('#API#', config::byKey('api'), $this->getConfiguration('request'));
 
         if ($_options != null) {
             switch ($this->getType()) {
@@ -111,7 +111,7 @@ class scriptCmd extends cmd {
         switch ($this->getConfiguration('requestType')) {
             case 'http' :
                 $request_http = new com_http($request);
-                log::add('script', 'info', 'Execution http de "' . $request_http->getCmd() . '"');
+                log::add('script', 'info', 'Execution http de "' . $request . '"');
                 return $request_http->exec();
                 break;
             case 'script' :
@@ -133,7 +133,7 @@ class scriptCmd extends cmd {
                         $request_shell = new com_shell($request);
                         break;
                 }
-                log::add('script', 'info', 'Execution shell de "' . $request_shell->getCmd() . '"');
+                log::add('script', 'info', 'Execution shell de "' . $request . '"');
                 return $request_shell->exec();
                 break;
         }

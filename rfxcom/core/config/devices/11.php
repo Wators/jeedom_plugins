@@ -21,15 +21,10 @@ $deviceConfiguration = array(
     '11' => array(
         'name' => 'Télécommande',
         'subtype' => array(
-            '01' => array(
+            '00' => array(
                 'name' => 'Defaut',
                 'commands' => array(
-                    array('name' => 'Température', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 1, 'isHistorized' => 1, 'unite' => '°C', 'eventOnly' => 1,
-                        'configuration' => array('logicalId' => 'temperature')
-                    ),
-                    array('name' => 'Signal', 'type' => 'info', 'subtype' => 'numeric', 'isVisible' => 0, 'isHistorized' => 0, 'unite' => '', 'eventOnly' => 1,
-                        'configuration' => array('logicalId' => 'signal')
-                    ),
+                    
                 )
             )
         )
