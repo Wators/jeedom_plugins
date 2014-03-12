@@ -34,7 +34,7 @@ class rfxcom extends eqLogic {
         }
         $device = self::devicesParameters($_def['packettype']);
         if (!isset($device['subtype'][$_def['subtype']])) {
-            log::add('rfxcom', 'error', 'Sous-type non trouvé : ' . print_r($_def, true) . ' dans : ' . print_r($device, true));
+            log::add('rfxcom', 'info', 'Sous-type non trouvé : ' . print_r($_def, true) . ' dans : ' . print_r($device, true));
             return;
         }
         $rfxcom = rfxcom::byLogicalId($_def['id'], 'rfxcom');
@@ -116,7 +116,7 @@ class rfxcom extends eqLogic {
 
         $cmd = '/usr/bin/python ' . $rfxcom_path . '/rfxcmd.py -z -d ' . $port;
         $cmd .= ' -o ' . $rfxcom_path . '/config.xml --pidfile=' . $pid_file;
-        $result = exec('nohup '.$cmd . ' >> /dev/null 2>&1 &');
+        $result = exec('nohup ' . $cmd . ' >> /dev/null 2>&1 &');
         if (strpos(strtolower($result), 'error') !== false || strpos(strtolower($result), 'traceback') !== false) {
             log::add('rfxcom', 'error', $result);
             return false;
@@ -206,11 +206,13 @@ class rfxcom extends eqLogic {
             return true;
         }
         $this->setConfiguration('applyDevice', $this->getConfiguration('device'));
+        $this->save();
         $device_type = explode('::', $this->getConfiguration('device'));
         $packettype = $device_type[0];
         $subtype = $device_type[1];
         $device = self::devicesParameters($packettype);
         if (!is_array($device) || !isset($device['subtype'][$subtype])) {
+
             return true;
         } else {
             $device = $device['subtype'][$subtype];
@@ -220,7 +222,6 @@ class rfxcom extends eqLogic {
                 $this->setConfiguration($key, $value);
             }
         }
-
         $cmd_order = 0;
         foreach ($device['commands'] as $command) {
             $cmd = null;
@@ -245,7 +246,6 @@ class rfxcom extends eqLogic {
                 
             }
         }
-
         $this->save();
     }
 

@@ -59,6 +59,22 @@ if (!is_object($rfxcom)) {
     }
 }
 
+if ($_GET['packettype'] == 11) {
+    $logicalId = 'bt';
+    if ($_GET['command'] == 'Group') {
+        $logicalId = 'gr';
+    }
+    $logicalId .= $_GET['unitcode'];
+    if (isset($_GET['dimlevel'])) {
+        $_GET[$logicalId] = $_GET['dimlevel'];
+    } else {
+        $_GET[$logicalId] = 0;
+        if ($_GET['command'] == 'On') {
+            $_GET[$logicalId] = 1;
+        }
+    }
+}
+
 
 foreach ($rfxcom->getCmd() as $cmd) {
     $logicalId = $cmd->getConfiguration('logicalId');
@@ -66,3 +82,5 @@ foreach ($rfxcom->getCmd() as $cmd) {
         $cmd->event($_GET[$logicalId]);
     }
 }
+
+
