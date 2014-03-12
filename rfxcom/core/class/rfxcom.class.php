@@ -275,8 +275,8 @@ class rfxcomCmd extends cmd {
                 break;
         }
         $rfxcom_path = realpath(dirname(__FILE__) . '/../../ressources/rfxcmd');
-        $result = shell_exec('cd ' . $rfxcom_path . ';/usr/bin/python rfxsend.py -s localhost -p 55000 -r ' . $rfxcom_path);
-        if (strpos(strtolower($result), 'error') !== false) {
+        $result = shell_exec('/usr/bin/python ' . $rfxcom_path . '/rfxsend.py -s localhost -p 55000 -r ' . $rfxcom_path.' 2>&1');
+        if (strpos(strtolower($result), 'error') !== false || strpos(strtolower($result), 'traceback') !== false) {
             throw new Exception('Erreur sur l\'éxecution de la commande : ' . $this->getHumanName() . ' : ' . $result);
         }
     }
