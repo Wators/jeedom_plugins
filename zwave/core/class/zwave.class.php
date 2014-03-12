@@ -198,41 +198,8 @@ class zwave extends eqLogic {
                 if (isset($info['state']) && $info['state'] == 'Réveillé') {
                     continue;
                 }
-                if (isset($info['battery'])) {
-                    if ($info['battery']['value'] >= 20) {
-                        foreach (message::byPluginLogicalId('zwave', 'lowBattery' . $eqLogic->getId()) as $message) {
-                            $message->remove();
-                        }
-                        foreach (message::byPluginLogicalId('zwave', 'noBattery' . $eqLogic->getId()) as $message) {
-                            $message->remove();
-                        }
-                    }
-                    if ($info['battery']['value'] < 20 && $info['battery']['value'] > 0) {
-                        $logicalId = 'lowBattery' . $eqLogic->getId();
-                        if (count(message::byPluginLogicalId('zwave', $logicalId)) == 0) {
-                            $message = 'Le plugin zwave ';
-                            $object = $eqLogic->getObject();
-                            if (is_object($object)) {
-                                $message .= '[' . $object->getName() . ']';
-                            }
-                            $message .= $eqLogic->getName() . ' à moins de 20% de batterie';
-                            message::add('zwave', $message, '', $logicalId);
-                        }
-                    }
-                    if ($info['battery']['value'] <= 0) {
-                        foreach (message::byPluginLogicalId('zwave', 'lowBattery' . $eqLogic->getId()) as $message) {
-                            $message->remove();
-                        }
-                        $logicalId = 'noBattery' . $eqLogic->getId();
-                        $message = 'Le plugin zwave ';
-                        $object = $eqLogic->getObject();
-                        if (is_object($object)) {
-                            $message .= '[' . $object->getName() . ']';
-                        }
-                        $message .= $eqLogic->getName() . ' a été désactivé car il n\'a plus de batterie';
-                        $action = '<a class="bt_changeIsEnable cursor" data-eqLogic_id="' . $eqLogic->getId() . '" data-isEnable="1">Ré-activer</a>';
-                        message::add('zwave', $message, $action, $logicalId);
-                    }
+                if (isset($info['battery']) && $info['battery'] !== '') {
+                    $eqLogic->batteryStatus($info['battery']['value']);
                 }
             }
         }

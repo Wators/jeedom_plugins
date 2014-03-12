@@ -81,14 +81,24 @@ class rfxcom extends eqLogic {
     }
 
     public static function cron() {
-        if (self::deamonRunning()) {
-            return;
+        if (date('H:i') == '00:00') {
+            foreach (self::byType('rfxcom') as $eqLogic) {
+                foreach ($eqLogic->getCmd() as $cmd) {
+                    if ($cmd->getConfiguration('logicalId') == 'battery') {
+                        $battery = $cmd->execCmd();
+                        if (is_numeric($battery) && $battery !== '') {
+                            $eqLogic->batteryStatus($battery * 10);
+                        }
+                    }
+                }
+            }
         }
-        $port = config::byKey('port', 'rfxcom');
-        if ($port == '') {
-            return;
+        if (!self::deamonRunning()) {
+            $port = config::byKey('port', 'rfxcom');
+            if ($port != '') {
+                self::runDeamon();
+            }
         }
-        self::runDeamon();
     }
 
     public static function runDeamon() {
@@ -275,7 +285,7 @@ class rfxcomCmd extends cmd {
                 break;
         }
         $rfxcom_path = realpath(dirname(__FILE__) . '/../../ressources/rfxcmd');
-        $result = shell_exec('/usr/bin/python ' . $rfxcom_path . '/rfxsend.py -s localhost -p 55000 -r ' . $rfxcom_path.' 2>&1');
+        $result = shell_exec('/usr/bin/python ' . $rfxcom_path . '/rfxsend.py -s localhost -p 55000 -r ' . $rfxcom_path . ' 2>&1');
         if (strpos(strtolower($result), 'error') !== false || strpos(strtolower($result), 'traceback') !== false) {
             throw new Exception('Erreur sur l\'éxecution de la commande : ' . $this->getHumanName() . ' : ' . $result);
         }
