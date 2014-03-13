@@ -34,9 +34,9 @@ if ($port == '' || !file_exists($port)) {
             <ul id="ul_eqLogic" class="nav nav-list bs-sidenav fixnav">
                 <?php
                 if (rfxcom::deamonRunning()) {
-                    echo "<a class='btn btn-success btn-sm tooltips' id='bt_stopRFXcomDemon' title=\"Forcer l'arret du démon RFXcom\" style='display: inline-block;'><i class='fa fa-stop'></i></a>";
+                    echo "<a class='btn btn-success btn-sm tooltips' id='bt_stopRFXcomDemon' title=\"Le démon est démarrer. Forcer l'arret du démon RFXcom\" style='display: inline-block;'><i class='fa fa-stop'></i></a>";
                 } else {
-                    echo "<a class='btn btn-danger btn-sm tooltips' id='bt_stopRFXcomDemon' title=\"Forcer l'arret du démon RFXcom\" style='display: inline-block;'><i class='fa fa-stop'></i></a>";
+                    echo "<a class='btn btn-danger btn-sm tooltips' id='bt_stopRFXcomDemon' title=\"Le démon semble arrêter. Forcer l'arret du démon RFXcom\" style='display: inline-block;'><i class='fa fa-stop'></i></a>";
                 }
                 ?>
                 <li class="nav-header">Liste équipements RFXcom
