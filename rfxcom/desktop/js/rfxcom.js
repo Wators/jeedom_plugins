@@ -16,8 +16,31 @@
  */
 
 $(function() {
-    
+    $('#bt_stopRFXcomDemon').on('click', function() {
+        stopRFXcomDeamon();
+    });
 });
+
+function stopRFXcomDeamon() {
+    $.ajax({// fonction permettant de faire de l'ajax
+        type: "POST", // methode de transmission des données au fichier php
+        url: "plugins/rfxcom/core/ajax/rfxcom.ajax.php", // url du fichier php
+        data: {
+            action: "stopDeamon",
+        },
+        dataType: 'json',
+        error: function(request, status, error) {
+            handleAjaxError(request, status, error);
+        },
+        success: function(data) { // si l'appel a bien fonctionné
+            if (data.state != 'ok') {
+                $('#div_alert').showAlert({message: data.result, level: 'danger'});
+                return;
+            }
+             $('#div_alert').showAlert({message: 'Le démon a été correctement arreté il se relancera automatiquement dans 1 minute', level: 'success'});
+        }
+    });
+}
 
 
 function addCmdToTable(_cmd) {

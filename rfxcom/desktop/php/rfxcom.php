@@ -9,6 +9,13 @@ sendVarToJS('eqType', 'rfxcom');
     <div class="col-lg-2">
         <div class="bs-sidebar affix">
             <ul id="ul_eqLogic" class="nav nav-list bs-sidenav fixnav">
+                <?php
+                if (rfxcom::deamonRunning()) {
+                    echo "<a class='btn btn-success btn-sm tooltips' id='bt_stopRFXcomDemon' title=\"Forcer l'arret du démon RFXcom\" style='display: inline-block;'><i class='fa fa-stop'></i></a>";
+                } else {
+                    echo "<a class='btn btn-danger btn-sm tooltips' id='bt_stopRFXcomDemon' title=\"Forcer l'arret du démon RFXcom\" style='display: inline-block;'><i class='fa fa-stop'></i></a>";
+                }
+                ?>
                 <li class="nav-header">Liste équipements RFXcom
                     <i class="fa fa-plus-circle pull-right cursor eqLogicAction" data-action="add" style="font-size: 1.5em;margin-bottom: 5px;"></i>
                 </li>
@@ -23,6 +30,16 @@ sendVarToJS('eqType', 'rfxcom');
     </div>
 
     <div class="col-lg-10 eqLogic" style="border-left: solid 1px #EEE; padding-left: 25px;display: none;">
+        <?php
+        $port = config::byKey('port', 'rfxcom');
+        if ($port == '' || !file_exists($port)) {
+            echo '<div class="alert alert-danger">Le port du RFXcom est vide ou n\'éxiste pas</div>';
+        } else {
+            if (!rfxcom::deamonRunning()) {
+                echo '<div class="alert alert-danger">Le démon RFXcom ne tourne pas vérifier le port (si vous venez de l\'arreter il redemarrera automatiquement dans 1 minute</div>';
+            }
+        }
+        ?>
         <div class="row">
             <div class="col-lg-6">
                 <form class="form-horizontal">
