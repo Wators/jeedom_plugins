@@ -32,11 +32,11 @@ if (!is_object($widget)) {
 
 
 include_file('3rdparty', 'font-awesome/css/font-awesome.min', 'css');
-include_file('3rdparty', 'highstock/highstock', 'js');
-include_file('3rdparty', 'highstock/highcharts-more', 'js');
 include_file('3rdparty', 'php.js/php.min', 'js');
 include_file('3rdparty', 'jquery/jquery.min', 'js');
 include_file('3rdparty', 'jquery.include/jquery.include', 'js');
+include_file('3rdparty', 'highstock/highstock', 'js');
+include_file('3rdparty', 'highstock/highcharts-more', 'js');
 
 if ($widget->getVersion() == 'mobile') {
     include_file('3rdparty', 'jquery.mobile/jquery.mobile', 'css');
