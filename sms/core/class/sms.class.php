@@ -46,38 +46,46 @@ class sms extends eqLogic {
 
     public static function pull() {
         foreach (sms::byType('sms') as $eqLogic) {
-            $cmds = $eqLogic->getCmd();
-            foreach ($eqLogic->readInbox() as $message) {
-                $eqLogic->deleteSms($message['id']);
-                $autorized = false;
-                foreach ($cmds as $cmd) {
-                    $formatedPhoneNumber = '+33' . substr($cmd->getConfiguration('phonenumber'), 1);
-                    if ($cmd->getConfiguration('phonenumber') == $message['phonenumber'] || $formatedPhoneNumber == $message['phonenumber']) {
-                        $autorized = true;
-                        break;
+            try {
+                if ($eqLogic->getIsEnable() == 1) {
+                    $cmds = $eqLogic->getCmd();
+                    foreach ($eqLogic->readInbox() as $message) {
+                        $eqLogic->deleteSms($message['id']);
+                        $autorized = false;
+                        foreach ($cmds as $cmd) {
+                            $formatedPhoneNumber = '+33' . substr($cmd->getConfiguration('phonenumber'), 1);
+                            if ($cmd->getConfiguration('phonenumber') == $message['phonenumber'] || $formatedPhoneNumber == $message['phonenumber']) {
+                                $autorized = true;
+                                break;
+                            }
+                        }
+                        $reply = '';
+                        if ($autorized) {
+                            $reply = interactQuery::tryToReply(trim($message['message']), array());
+                            if (trim($reply) != '') {
+                                $eqLogic->sendSMS($message['phonenumber'], self::cleanSMS($reply));
+                            }
+                        }
+                        log::add('sms', 'info', 'Message venant de ' . $formatedPhoneNumber . ' : ' . trim($message['message']) . "\nRéponse : " . $reply);
                     }
                 }
-                $reply = '';
-                if ($autorized) {
-                    $reply = interactQuery::tryToReply(trim($message['message']), array());
-                    if (trim($reply) != '') {
-                        $eqLogic->sendSMS($message['phonenumber'], self::cleanSMS($reply));
-                    }
-                }
-                log::add('sms', 'info', 'Message venant de ' . $formatedPhoneNumber . ' : ' . trim($message['message']) . "\nRéponse : " . $reply);
+            } catch (Exception $e) {
+                $eqLogic->setIsEnable(0);
+                $eqLogic->save();
+                throw $e;
             }
         }
     }
 
     /*     * *********************Methode d'instance************************* */
-    
-    public function preSave(){
-        if($this->getConfiguration('port') == ''){
+
+    public function preSave() {
+        if ($this->getConfiguration('port') == '') {
             throw new Exception("Le port ne peut etre vide");
         }
     }
 
-    public function getSerial() {        
+    public function getSerial() {
         if (!isset(self::$_serial)) {
             $this->displayDebug('Création de l\'interface série sur le port : ' . $this->getConfiguration('port'));
             $serial = new phpSerial();
