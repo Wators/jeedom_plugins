@@ -42,7 +42,14 @@ sendVarToJS('dontRemoveCmd', '1');
                 <div class="form-group">
                     <label class="col-lg-2 control-label" >Port du périphérique</label>
                     <div class="col-lg-2">
-                        <input class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port" placeholder=" ex : /dev/ttyUSB0"/>
+                        <select class="eqLogicAttr form-control" data-l1key="configuration" data-l2key="port">
+                            <option value="">Aucun</option>
+                            <?php
+                            foreach (ls('/dev/', 'ttyUSB*') as $tty) {
+                                echo '<option value="/dev/' . $tty . '">/dev/' . $tty . '</option>';
+                            }
+                            ?>
+                        </select>
                     </div>
                 </div><div class="form-group">
                     <label class="col-lg-2 control-label" >Code pin</label>

@@ -29,7 +29,14 @@ if (!isConnect()) {
         <div class="form-group">
             <label class="col-lg-2 control-label">Port RFXcom</label>
             <div class="col-lg-2">
-                <input class="configKey form-control" data-l1key="port" />
+                <select class="configKey form-control" data-l1key="port">
+                    <option value="">Aucun</option>
+                    <?php
+                    foreach (ls('/dev/','ttyUSB*') as $tty) {
+                        echo '<option value="/dev/' . $tty . '">/dev/' . $tty . '</option>';
+                    }
+                    ?>
+                </select>
             </div>
         </div>
     </fieldset>
