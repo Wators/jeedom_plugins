@@ -25,7 +25,6 @@ function install() {
     $sql = file_get_contents(dirname(__FILE__) . '/install.sql');
     DB::Prepare($sql, array(), DB::FETCH_TYPE_ROW);
     $energy = new energy();
-    $energy->setCategory('Générale');
     $energy->setEqLogic_id(-1);
     $energy->save();
 }

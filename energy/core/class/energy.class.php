@@ -22,6 +22,7 @@ require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 class energy {
     /*     * *************************Attributs****************************** */
 
+    private $id;
     private $eqLogic_id;
     private $category = '';
     private $consumption = '';
@@ -30,12 +31,30 @@ class energy {
 
     /*     * ***********************Methode static*************************** */
 
+    public static function byId($_id) {
+        $values = array(
+            'id' => $_id
+        );
+        $sql = 'SELECT ' . DB::buildField(__CLASS__) . '
+                FROM energy
+                WHERE id=:id';
+        return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
+    }
+
+    public static function byEqLogic_id($_eqLogic_id) {
+        $values = array(
+            'eqLogic_id' => $_eqLogic_id
+        );
+        $sql = 'SELECT ' . DB::buildField(__CLASS__) . '
+                FROM energy
+                WHERE eqLogic_id=:eqLogic_id';
+        return DB::Prepare($sql, $values, DB::FETCH_TYPE_ROW, PDO::FETCH_CLASS, __CLASS__);
+    }
+
     /*     * *********************Methode d'instance************************* */
 
     public function preSave() {
-        if ($this->getEqLogic_id() == -1) {
-            $this->setCategory('Générale');
-        }
+        
     }
 
     public function save() {
@@ -58,10 +77,6 @@ class energy {
         return $this->eqLogic_id;
     }
 
-    public function getCategory() {
-        return $this->category;
-    }
-
     public function getConsumption() {
         return $this->consumption;
     }
@@ -70,28 +85,40 @@ class energy {
         return $this->power;
     }
 
-    public function getOptions() {
-        return $this->options;
-    }
-
     public function setEqLogic_id($eqLogic_id) {
         $this->eqLogic_id = $eqLogic_id;
     }
 
-    public function setCategory($category) {
-        $this->category = $category;
+    public function getCategory($_key = '', $_default = '') {
+        return utils::getJsonAttr($this->category, $_key, $_default);
+    }
+
+    public function setCategory($_key, $_value) {
+        $this->category = utils::setJsonAttr($this->category, $_key, $_value);
     }
 
     public function setConsumption($consumption) {
         $this->consumption = $consumption;
     }
 
+    public function getOptions($_key = '', $_default = '') {
+        return utils::getJsonAttr($this->options, $_key, $_default);
+    }
+
+    public function setOptions($_key, $_value) {
+        $this->options = utils::setJsonAttr($this->options, $_key, $_value);
+    }
+
     public function setPower($power) {
         $this->power = $power;
     }
 
-    public function setOptions($options) {
-        $this->options = $options;
+    public function getId() {
+        return $this->id;
+    }
+
+    public function setId($id) {
+        $this->id = $id;
     }
 
 }
