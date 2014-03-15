@@ -25,6 +25,7 @@ if (!isConnect('admin')) {
                     <label class="col-lg-2 control-label">Nom de l'équipement</label>
                     <div class="col-lg-3">
                         <input type="text" class="eqLogicAttr form-control" data-l1key="id" style="display : none;" />
+                        <input type="text" class="eqLogicAttr form-control" data-l1key="object_id" style="display : none;" />
                         <input type="text" class="energyAttr form-control" data-l1key="eqLogic_id" style="display : none;" />
                         <input type="text" class="energyAttr form-control" data-l1key="id" style="display : none;" />
                         <input type="text" class="eqLogicAttr form-control input-sm" data-l1key="name" disabled />
@@ -49,8 +50,8 @@ if (!isConnect('admin')) {
                         </label>
                     </div>
                 </div>
-                
-                 <div class="form-group">
+
+                <div class="form-group">
                     <label class="col-lg-2 control-label">Position par raport à l'objet parent</label>
                     <div class="col-lg-3">
                         <select class="energyAttr form-control input-sm" data-l1key="options" data-l2key="positionRelative">
@@ -60,10 +61,28 @@ if (!isConnect('admin')) {
                     </div>
                 </div>
 
-
                 <legend>Puissance</legend>
+                <div class='alert alert-warning'>La/les donnée(s) utilisée(s) pour le calcul doivent être historisée(s)</div>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label">Formule</label>
+                    <div class="col-lg-5">
+                        <input type="text" class="energyAttr form-control input-sm" data-l1key="power" />
+                    </div>
+                    <div class="col-lg-1">
+                        <a class="btn btn-default btn-sm listCmdInfo" data-type="power"><i class="fa fa-list-alt"></i></a>
+                    </div>
+                </div>
 
                 <legend>Consommation</legend>
+                <div class="form-group">
+                    <label class="col-lg-2 control-label">Formule</label>
+                    <div class="col-lg-5">
+                        <input type="text" class="energyAttr form-control input-sm" data-l1key="consumption" />
+                    </div>
+                    <div class="col-lg-1">
+                        <a class="btn btn-default btn-sm listCmdInfo" data-type="consumption"><i class="fa fa-list-alt"></i></a>
+                    </div>
+                </div>
 
             </fieldset> 
         </form>

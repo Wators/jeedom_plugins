@@ -31,6 +31,12 @@ $(function() {
         save();
     });
 
+    $(".listCmdInfo").on('click', function() {
+        var el = $(this).closest('.form-group').find('input.energyAttr[data-l1key=' + $(this).attr('data-type') + ']');
+        cmd.getSelectModal({cmd: {type: 'info'}, object: {id: $('.eqLogicAttr[data-l1key=object_id]').value()}, eqLogic: {id: $('.eqLogicAttr[data-l1key=id]').value()}}, function(result) {
+            el.value(el.value() + result.human);
+        });
+    });
 
     if (is_numeric(getUrlVars('id'))) {
         if ($('#ul_eqLogic .li_eqLogic[data-eqLogic_id=' + getUrlVars('id') + ']').length != 0) {

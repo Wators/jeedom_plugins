@@ -32,7 +32,7 @@ try {
         }
         $return['eqLogic'] = utils::o2a($eqLogic);
         $energy = energy::byEqLogic_id($eqLogic->getId());
-        $return['energy'] = (is_object($energy)) ? utils::o2a($energy) : array('eqLogic_id' => $eqLogic->getId(),'id' => '');
+        $return['energy'] = (is_object($energy)) ? jeedom::toHumanReadable(utils::o2a($energy)) : array('eqLogic_id' => $eqLogic->getId(),'id' => '');
         ajax::success($return);
     }
 
@@ -42,7 +42,7 @@ try {
         if (!is_object($energy)) {
             $energy = new energy();
         }
-        utils::a2o($energy, $energy_json);
+        utils::a2o($energy, jeedom::fromHumanReadable($energy_json));
         $energy->save();
         ajax::success();
     }
