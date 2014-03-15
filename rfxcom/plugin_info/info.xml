@@ -3,7 +3,7 @@
     <id>rfxcom</id>
     <name>RFXcom</name>
     <description>Plugin pour utiliser le RFXcom USB</description>
-    <icon>fa fa-bolt</icon>
+    <icon>fa fa-magic</icon>
     <licence>AGPL</licence>
     <author>Loïc Gevrey</author>
     <installation>Aucune</installation>

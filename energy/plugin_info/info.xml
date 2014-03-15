@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<info>
+    <id>energy</id>
+    <name>Energie</name>
+    <description>Plugin pour gerer sa consommation énergetique</description>
+    <icon>fa fa-bolt</icon>
+    <licence>AGPL</licence>
+    <author>Loïc Gevrey</author>
+    <installation>Aucune</installation>
+    <require>1.45</require>
+    <version>1.0</version>
+    <category>Energie</category>
+    <display>panel</display>
+</info>
+
