@@ -22,8 +22,8 @@
 #	
 #	Website: http://code.google.com/p/rfxcmd/
 #
-#	$Rev: 566 $
-#	$Date: 2013-11-22 21:43:41 +0100 (Fri, 22 Nov 2013) $
+#	$Rev: 514 $
+#	$Date: 2013-05-18 14:16:50 +0200 (Sat, 18 May 2013) $
 #
 #	NOTES
 #	
@@ -52,11 +52,11 @@
 __author__ = "Sebastian Sjoholm"
 __copyright__ = "Copyright 2012-2013, Sebastian Sjoholm"
 __license__ = "GPL"
-__version__ = "0.1 (" + filter(str.isdigit, "$Rev: 566 $") + ")"
+__version__ = "0.1 (" + filter(str.isdigit, "$Rev: 514 $") + ")"
 __maintainer__ = "Sebastian Sjoholm"
 __email__ = "sebastian.sjoholm@gmail.com"
 __status__ = "Development"
-__date__ = "$Date: 2013-11-22 21:43:41 +0100 (Fri, 22 Nov 2013) $"
+__date__ = "$Date: 2013-05-18 14:16:50 +0200 (Sat, 18 May 2013) $"
 
 # Default modules
 import sys
@@ -164,8 +164,7 @@ if __name__ == '__main__':
 	parser = optparse.OptionParser()
 	parser.add_option("-s", "--server", action="store", type="string", dest="server", help="IP address of the RFXCMD server (default: localhost)")
 	parser.add_option("-p", "--port", action="store", type="string", dest="port", help="Port of the RFXCMD server (default: 55000)")
-	parser.add_option("-r", "--rawcmd", action="store", type="string", dest="rawcmd", help="The raw message to be sent, multiple messages separated with comma")
-	parser.add_option("-i", "--simulate", action="store_true", dest="simulate", help="Simulate send, nothing will be sent, instead printed on STDOUT")
+	parser.add_option("-r", "--rawcmd", action="store", type="string", dest="rawcmd", help="The raw message to be sent")
 	parser.add_option("-v", "--version", action="store_true", dest="version", help="Print rfxcmd version information")
 
 	(options, args) = parser.parse_args()
@@ -183,33 +182,21 @@ if __name__ == '__main__':
 	else:
 		socket_port = 55000
 	
-	if options.simulate:
-		simulate = True
-	else:
-		simulate = False
-	
 	if options.rawcmd:
 		message = options.rawcmd
-		
-		# check for multiple messages
-		buf = message.split(',')
-		
 	else:
 		print "Error: rawcmd message is missing"
 		sys.exit(1)
 	
-	for msg in buf:
-		if test_message(msg):
-			try:
-				if simulate == False:
-					send_message(socket_server, socket_port, msg)
-				else:
-					print("Message to send, Server: " + str(socket_server) + ":" + str(socket_port) + ", Message: " + msg);
-			except socket.error as err:
-				print "Error: Could not send message: %s " % err
-		else:
-			print "Command not sent, invalid format"
-		
+	if test_message(options.rawcmd):
+		try:
+			send_message(socket_server, socket_port, message)
+		except socket.error as err:
+			print "Error: Could not send message: %s " % err
+			
+	else:
+		print "Command not sent, invalid format"
+	
 	sys.exit(0)
 
 # ------------------------------------------------------------------------------

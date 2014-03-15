@@ -126,13 +126,14 @@ class rfxcom extends eqLogic {
 
         $cmd = '/usr/bin/python ' . $rfxcom_path . '/rfxcmd.py -z -d ' . $port;
         $cmd .= ' -o ' . $rfxcom_path . '/config.xml --pidfile=' . $pid_file;
-        $result = exec('nohup ' . $cmd . ' >> /dev/null 2>&1 &');
+        log::add('rfxcmd', 'info', 'Lancement démon rfxcmd : ' . $cmd);
+        $result = exec('nohup ' . $cmd . ' >> ' . log::getPathToLog('rfxcmd') . ' 2>&1 &');
         if (strpos(strtolower($result), 'error') !== false || strpos(strtolower($result), 'traceback') !== false) {
             log::add('rfxcom', 'error', $result);
             return false;
         }
         if (!self::deamonRunning()) {
-            sleep(20);
+            sleep(10);
             if (!self::deamonRunning()) {
                 log::add('rfxcom', 'info', 'Impossible de lancer le démon RFXcom');
                 return false;
@@ -271,7 +272,9 @@ class rfxcomCmd extends cmd {
     /*     * *********************Methode d'instance************************* */
 
     public function execute($_options = null) {
-        $value = $this->getConfiguration('value');
+        $value = $this->getConfiguration('logicalId');
+        $logicalId = $this->getEqlogic()->getLogicalId();
+        $value = str_replace("#ID#", $logicalId, $value);
         switch ($this->getType()) {
             case 'action' :
                 switch ($this->getSubType()) {
@@ -285,7 +288,7 @@ class rfxcomCmd extends cmd {
                 break;
         }
         $rfxcom_path = realpath(dirname(__FILE__) . '/../../ressources/rfxcmd');
-        $result = shell_exec('/usr/bin/python ' . $rfxcom_path . '/rfxsend.py -s localhost -p 55000 -r ' . $rfxcom_path . ' 2>&1');
+        $result = shell_exec('/usr/bin/python ' . $rfxcom_path . '/rfxsend.py -s localhost -p 55000 -r ' . $value . ' 2>&1');
         if (strpos(strtolower($result), 'error') !== false || strpos(strtolower($result), 'traceback') !== false) {
             throw new Exception('Erreur sur l\'éxecution de la commande : ' . $this->getHumanName() . ' : ' . $result);
         }
