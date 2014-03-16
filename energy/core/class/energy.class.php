@@ -145,15 +145,18 @@ class energy {
             return $return;
         }
         return $datas;
-        print_r($datas);
     }
 
     public static function convertForHightCharts($datas) {
         $datas['history']['consumption'] = self::convertDataForHightCharts($datas['history']['consumption']);
         $datas['history']['power'] = self::convertDataForHightCharts($datas['history']['power']);
         foreach ($datas['details'] as &$details) {
-            $details['data']['history']['consumption'] = self::convertDataForHightCharts($details['data']['history']['consumption']);
-            $details['data']['history']['power'] = self::convertDataForHightCharts($details['data']['history']['power']);
+            if (isset($details['data']['history']['consumption'])) {
+                $details['data']['history']['consumption'] = self::convertDataForHightCharts($details['data']['history']['consumption']);
+            }
+            if (isset($details['data']['history']['power'])) {
+                $details['data']['history']['power'] = self::convertDataForHightCharts($details['data']['history']['power']);
+            }
         }
         return $datas;
     }
@@ -238,9 +241,11 @@ class energy {
                 $result = floatval($test->Evaluer($calcul));
                 if ($this->getConsumption() == '' && count($return['history']['power']) > 0) {
                     $last_datetime = end(array_keys($return['history']['power']));
-                    $last_value = end($return['history']['power']);
-                    $return['history']['consumption'][$datetime] = (($last_value * (($datetime - $last_datetime) / 1000)) / 3600) / 1000;
-                    $return['real']['consumption'] += $return['history']['consumption'][$datetime];
+                    if (($datetime - $last_datetime) > 0) {
+                        $last_value = end($return['history']['power']);
+                        $return['history']['consumption'][$datetime] = (($last_value * (($datetime - $last_datetime) / 1000)) / 3600) / 1000;
+                        $return['real']['consumption'] += $return['history']['consumption'][$datetime];
+                    }
                 }
                 $return['history']['power'][$datetime] = $result;
                 if ($return['stats']['minPower'] === null || $return['stats']['minPower'] > $result) {
@@ -258,8 +263,10 @@ class energy {
             $datetime = floatval(strtotime(date('Y-m-d H:i:s'))) * 1000;
             $last_datetime = end(array_keys($return['history']['power']));
             $last_value = end($return['history']['power']);
-            $return['history']['consumption'][$datetime] = (($last_value * (($datetime - $last_datetime) / 1000)) / 3600) / 1000;
-            $return['real']['consumption'] += $return['history']['consumption'][$datetime];
+            if (($datetime - $last_datetime) > 0) {
+                $return['history']['consumption'][$datetime] = (($last_value * (($datetime - $last_datetime) / 1000)) / 3600) / 1000;
+                $return['real']['consumption'] += $return['history']['consumption'][$datetime];
+            }
         }
 
         $calcul = cmd::cmdToValue($this->getPower());

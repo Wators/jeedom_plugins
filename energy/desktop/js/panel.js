@@ -40,13 +40,14 @@ $(function() {
     }
 });
 
-function drawPieChart(_el, _data,_title) {
+function drawPieChart(_el, _data, _title) {
     new Highcharts.Chart({
         chart: {
             renderTo: _el,
             plotBackgroundColor: null,
             plotBorderWidth: null,
-            plotShadow: false
+            plotShadow: false,
+            height: 300
         },
         title: {
             text: ''
@@ -106,7 +107,8 @@ function drawStackGraph(_el, _data) {
     new Highcharts.StockChart({
         chart: {
             zoomType: 'x',
-            renderTo: _el
+            renderTo: _el,
+            height: 300
         },
         plotOptions: {
             series: {
@@ -223,7 +225,8 @@ function drawSimpleGraph(_el, _data, _name) {
     new Highcharts.StockChart({
         chart: {
             zoomType: 'x',
-            renderTo: _el
+            renderTo: _el,
+            height: 300
         },
         plotOptions: {
             series: {
