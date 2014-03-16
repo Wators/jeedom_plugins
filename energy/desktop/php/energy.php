@@ -62,7 +62,7 @@ if (!isConnect('admin')) {
                 </div>
 
                 <legend>Puissance</legend>
-                <div class='alert alert-warning'>La/les donnée(s) utilisée(s) pour le calcul doivent être historisée(s)</div>
+                <div class='alert alert-warning'>La/les donnée(s) utilisée(s) pour le calcul seront automatiquement historisée(s)</div>
                 <div class="form-group">
                     <label class="col-lg-2 control-label">Formule</label>
                     <div class="col-lg-5">
@@ -75,6 +75,7 @@ if (!isConnect('admin')) {
 
                 <legend>Consommation</legend>
                 <div class="form-group">
+                    <div class='alert alert-warning'>La/les donnée(s) utilisée(s) pour le calcul seront automatiquement historisée(s). Laissez le champs vide pour que Jeedom le calcul directement a partir de la puissance.</div>
                     <label class="col-lg-2 control-label">Formule</label>
                     <div class="col-lg-5">
                         <input type="text" class="energyAttr form-control input-sm" data-l1key="consumption" />
