@@ -67,6 +67,8 @@ class energy {
             ),
             'details' => array()
         );
+
+        $first = true;
         foreach ($object->getEqLogic() as $eqLogic) {
             $energy = self::byEqLogic_id($eqLogic->getId());
             if (is_object($energy)) {
@@ -78,27 +80,36 @@ class energy {
                     'eqLogic' => utils::o2a($eqLogic)
                 );
                 foreach ($datas['history']['power'] as $datetime => $power) {
-                    if (!isset($return['history']['power'][$datetime])) {
+                    if ($first) {
                         $return['history']['power'][$datetime] = $power;
                     } else {
+                        if (!isset($return['history']['power'][$datetime])) {
+                            $return['history']['power'][$datetime] = self::searchPrevisous($return['history']['power'], $datetime);
+                        }
                         $return['history']['power'][$datetime] += $power;
                     }
                 }
+
                 if (is_array($datas['history']['consumption'])) {
                     foreach ($datas['history']['consumption'] as $datetime => $consumption) {
-                        if (!isset($return['history']['consumption'][$datetime])) {
-                            $return['history']['consumption'][$datetime] = $consumption;
+                        if ($first) {
+                            $return['history']['consumption'][$datetime] = $power;
                         } else {
-                            $return['history']['consumption'][$datetime] += $consumption;
+                            if (!isset($return['history']['consumption'][$datetime])) {
+                                $return['history']['consumption'][$datetime] = self::searchPrevisous($return['history']['consumption'], $datetime);
+                            }
+                            $return['history']['consumption'][$datetime] += $power;
                         }
                     }
                 }
                 $return['details'][] = $details;
                 $return['real']['power'] += $datas['real']['power'];
                 $return['real']['consumption'] += $datas['real']['consumption'];
+                $first = false;
             }
         }
 
+  
         foreach ($object->getChilds() as $child) {
             $datas = self::getObjectData($child->getId(), $_startDate, $_endDate);
             $details = array(
@@ -130,6 +141,25 @@ class energy {
         }
 
         return $return;
+    }
+
+    private static function searchPrevisous($_datas, $_datetime) {
+        $prevValue = 0;
+        $prevDatetime = null;
+        foreach ($_datas as $datetime => $value) {
+            if ($prevDatetime == null) {
+                $prevDatetime = $datetime;
+                $prevValue = $value;
+            } else {
+                if ($datetime > $_datetime && $prevDatetime < $_datetime) {
+                    return $value;
+                }
+            }
+        }
+        if ($_datetime > $datetime) {
+            return $value;
+        }
+        return 0;
     }
 
     private static function convertDataForHightCharts($datas) {
@@ -201,6 +231,7 @@ class energy {
     }
 
     public function getData($_startDate = null, $_endDate = null) {
+        $nowtime = floatval(strtotime(date('Y-m-d H:i:s') . " UTC")) * 1000;
         $return = array(
             'history' => array(
                 'power' => array(),
@@ -260,11 +291,10 @@ class energy {
         }
 
         if ($this->getConsumption() == '' && count($return['history']['power']) > 0) {
-            $datetime = floatval(strtotime(date('Y-m-d H:i:s'))) * 1000;
             $last_datetime = end(array_keys($return['history']['power']));
             $last_value = end($return['history']['power']);
             if (($datetime - $last_datetime) > 0) {
-                $return['history']['consumption'][$datetime] = (($last_value * (($datetime - $last_datetime) / 1000)) / 3600) / 1000;
+                $return['history']['consumption'][$datetime] = (($last_value * (($nowtime - $last_datetime) / 1000)) / 3600) / 1000;
                 $return['real']['consumption'] += $return['history']['consumption'][$datetime];
             }
         }
@@ -274,6 +304,7 @@ class energy {
             $test = new evaluate();
             $result = floatval($test->Evaluer($calcul));
             $return['real']['power'] = $result;
+            $return['history']['power'][$nowtime] = $result;
         } catch (Exception $e) {
             
         }
@@ -298,12 +329,11 @@ class energy {
             }
 
             foreach ($cmd_histories as $datetime => $cmd_history) {
-                $datetime = floatval(strtotime(date('Y-m-d H:i:s'))) * 1000;
+                $datetime = floatval(strtotime($datetime . " UTC")) * 1000;
                 $calcul = template_replace($cmd_history, $this->getConsumption());
                 try {
                     $test = new evaluate();
                     $result = floatval($test->Evaluer($calcul));
-                    $return['history']['consumption'][$datetime] = $result;
                 } catch (Exception $e) {
                     
                 }
@@ -314,6 +344,7 @@ class energy {
                 $test = new evaluate();
                 $result = floatval($test->Evaluer($calcul));
                 $return['real']['consumption'] = $result;
+                $return['history']['consumption'][$nowtime] = $result;
             } catch (Exception $e) {
                 
             }

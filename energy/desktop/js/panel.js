@@ -55,6 +55,10 @@ function drawPieChart(_el, _data, _title) {
         tooltip: {
             pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
         },
+        credits: {
+            text: 'Copyright Jeedom',
+            href: '',
+        },
         plotOptions: {
             pie: {
                 allowPointSelect: true,
@@ -80,7 +84,7 @@ function drawStackGraph(_el, _data) {
     for (var i in _data) {
         if (isset(_data[i].data.history.power) && _data[i].data.history.power.length > 0) {
             var serie = {
-                type: 'area',
+                type: 'column',
                 name: _data[i].name,
                 data: _data[i].data.history.power,
                 tooltip: {
@@ -106,14 +110,11 @@ function drawStackGraph(_el, _data) {
 
     new Highcharts.StockChart({
         chart: {
-            zoomType: 'x',
+            type: 'column',
             renderTo: _el,
-            height: 300
         },
-        plotOptions: {
-            series: {
-                stacking: 'normal'
-            }
+        title: {
+            text: ''
         },
         credits: {
             text: 'Copyright Jeedom',
@@ -155,10 +156,20 @@ function drawStackGraph(_el, _data) {
             selected: 6,
             inputEnabled: false
         },
-        legend: legend,
-        tooltip: {
-            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
-            valueDecimals: 2,
+        xAxis: {
+            type: 'datetime',
+            ordinal: false,
+        },
+        scrollbar: {
+            barBackgroundColor: 'gray',
+            barBorderRadius: 7,
+            barBorderWidth: 0,
+            buttonBackgroundColor: 'gray',
+            buttonBorderWidth: 0,
+            buttonBorderRadius: 7,
+            trackBackgroundColor: 'none', trackBorderWidth: 1,
+            trackBorderRadius: 8,
+            trackBorderColor: '#CCC'
         },
         yAxis: [{
                 format: '{value}',
@@ -178,20 +189,15 @@ function drawStackGraph(_el, _data) {
                     x: -5
                 }
             }],
-        xAxis: {
-            type: 'datetime',
-            ordinal: false,
+        legend: legend,
+        tooltip: {
+            pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
+            valueDecimals: 2,
         },
-        scrollbar: {
-            barBackgroundColor: 'gray',
-            barBorderRadius: 7,
-            barBorderWidth: 0,
-            buttonBackgroundColor: 'gray',
-            buttonBorderWidth: 0,
-            buttonBorderRadius: 7,
-            trackBackgroundColor: 'none', trackBorderWidth: 1,
-            trackBorderRadius: 8,
-            trackBorderColor: '#CCC'
+        plotOptions: {
+            column: {
+                stacking: 'normal',
+            }
         },
         series: series
     });

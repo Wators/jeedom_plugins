@@ -21,7 +21,7 @@ if ($port == '' || !file_exists($port)) {
         echo '<div class="row">';
         echo '<div class="col-lg-2"></div>';
         echo '<div class="col-lg-10">';
-        echo '<div class="alert alert-danger">Le démon RFXcom ne tourne pas vérifier le port (si vous venez de l\'arreter il redemarrera automatiquement dans 1 minute</div>';
+        echo '<div class="alert alert-danger">Le démon RFXcom ne tourne pas vérifier le port (si vous venez de l\'arreter il redemarrera automatiquement dans 1 minute)</div>';
         echo '</div>';
         echo '</div>';
     }

@@ -52,7 +52,7 @@ if (!isConnect('admin')) {
                 </div>
 
                 <div class="form-group">
-                    <label class="col-lg-2 control-label">Position par raport à l'objet parent</label>
+                    <label class="col-lg-2 control-label">Position par rapport à l'objet parent</label>
                     <div class="col-lg-3">
                         <select class="energyAttr form-control input-sm" data-l1key="options" data-l2key="positionRelative">
                             <option value='partial'>Partiel</option>
@@ -75,7 +75,7 @@ if (!isConnect('admin')) {
 
                 <legend>Consommation</legend>
                 <div class="form-group">
-                    <div class='alert alert-warning'>La/les donnée(s) utilisée(s) pour le calcul seront automatiquement historisée(s). Laissez le champs vide pour que Jeedom le calcul directement a partir de la puissance.</div>
+                    <div class='alert alert-warning'>La/les donnée(s) utilisée(s) pour le calcul seront automatiquement historisée(s). Laissez le champs vide pour que Jeedom le calcul directement à partir de la puissance.</div>
                     <label class="col-lg-2 control-label">Formule</label>
                     <div class="col-lg-5">
                         <input type="text" class="energyAttr form-control input-sm" data-l1key="consumption" />

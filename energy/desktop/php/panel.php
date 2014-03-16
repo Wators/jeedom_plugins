@@ -71,7 +71,7 @@ sendVarToJs('datas', energy::convertForHightCharts($energy));
                 <div id='div_graphGlobalPower'></div>
             </div>
         </div>
-        <legend>Details</legend>
+        <legend>Détails</legend>
         <div class="row">
             <div class="col-lg-6">
                 <legend>Consommation par objet</legend>
@@ -84,11 +84,11 @@ sendVarToJs('datas', energy::convertForHightCharts($energy));
         </div>
         <div class="row">
             <div class="col-lg-6">
-                <legend>Consommation par categorie</legend>
+                <legend>Consommation par catégorie</legend>
                 <div id='div_graphDetailConsumptionByCategorie'></div>
             </div>
             <div class="col-lg-6">
-                <legend>Puissance par categorie</legend>
+                <legend>Puissance par catégorie</legend>
                 <div id='div_graphDetailPowerByCategorie'></div>
             </div>
         </div>

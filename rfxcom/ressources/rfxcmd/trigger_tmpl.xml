@@ -60,7 +60,7 @@
         <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ unitcode=$unitcode$ command=$command$ signal=$signal$</action>
     </trigger>
     <trigger>
-        <message>..50..................</message>
+        <message>..50..............</message>
         <action>/usr/bin/php #path# packettype=$packettype$ subtype=$subtype$ id=$id$ temperature=$temperature$ battery=$battery$ signal=$signal$</action>
     </trigger>
     <trigger>
