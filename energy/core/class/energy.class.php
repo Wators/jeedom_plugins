@@ -56,6 +56,7 @@ class energy {
         if (!is_object($object)) {
             throw new Exception('Objet non trouvé vérifiez l\'id : ' . $_object_id);
         }
+        $intervals = array();
         $return = array(
             'real' => array(
                 'power' => 0,
@@ -67,114 +68,130 @@ class energy {
             ),
             'details' => array()
         );
-
-        $first = true;
-        foreach ($object->getEqLogic() as $eqLogic) {
-            $energy = self::byEqLogic_id($eqLogic->getId());
-            if (is_object($energy)) {
-                $datas = $energy->getData($_startDate, $_endDate);
+        $childs = array_merge($object->getEqLogic(), $object->getChilds());
+        foreach ($childs as $child) {
+            $datas = null;
+            if (get_class($child) == 'object') {
+                $datas = self::getObjectData($child->getId(), $_startDate, $_endDate);
+            } else {
+                $energy = self::byEqLogic_id($child->getId());
+                if (is_object($energy)) {
+                    $datas = $energy->getData($_startDate, $_endDate);
+                }
+            }
+            if (is_array($datas)) {
                 $details = array(
                     'data' => $datas,
-                    'name' => $eqLogic->getHumanName(),
-                    'type' => 'eqLogic',
-                    'eqLogic' => utils::o2a($eqLogic)
+                    'name' => $child->getHumanName(),
+                    get_class($child) => utils::o2a($child)
                 );
-                foreach ($datas['history']['power'] as $datetime => $power) {
-                    if ($first) {
-                        $return['history']['power'][$datetime] = array($datetime * 1000, $power[1]);
-                    } else {
+
+                if (is_array($return['history']['power'])) {
+                    foreach ($datas['history']['power'] as $datetime => $power) {
                         if (!isset($return['history']['power'][$datetime])) {
-                            $return['history']['power'][$datetime] = array($datetime * 1000, self::searchPrevisous($return['history']['power'], $datetime));
+                            $prevValue = self::searchPrevisous($return['history']['power'], $datetime);
+                            if (count($prevValue) == 2) {
+                                if (isset($datas['history']['power'][$prevValue[0] / 1000][1])) {
+                                    $result = $prevValue[1] - $datas['history']['power'][$prevValue[0] / 1000][1];
+                                    $return['history']['power'][$datetime] = array($datetime * 1000, ($result >= 0) ? $result : $prevValue[1]);
+                                } else {
+                                    $return['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1]);
+                                }
+                            } else {
+                                $return['history']['power'][$datetime] = array($datetime * 1000, 0);
+                            }
                         }
                         $return['history']['power'][$datetime][1] += $power[1];
+                        $intervals[$datetime] = $datetime;
                     }
                 }
 
                 if (is_array($datas['history']['consumption'])) {
                     foreach ($datas['history']['consumption'] as $datetime => $consumption) {
-                        if ($first) {
-                            $return['history']['consumption'][$datetime] = array($datetime * 1000, $consumption[1]);
-                        } else {
-                            if (!isset($return['history']['consumption'][$datetime])) {
-                                $return['history']['consumption'][$datetime] = array($datetime * 1000, self::searchPrevisous($return['history']['consumption'], $datetime));
+                        if (!isset($return['history']['consumption'][$datetime])) {
+                            $prevValue = self::searchPrevisous($return['history']['consumption'], $datetime);
+                            if (count($prevValue) == 2) {
+                                if (isset($datas['history']['consumption'][$prevValue[0] / 1000])) {
+                                    $prevValue[1] = $prevValue[1] - $datas['history']['consumption'][$prevValue[0] / 1000][1];
+                                }
+                                $return['history']['consumption'][$datetime] = array($datetime * 1000, ($prevValue[1] > 0) ? $prevValue[1] : 0);
+                            } else {
+                                $return['history']['consumption'][$datetime] = array($datetime * 1000, 0);
                             }
-                            $return['history']['consumption'][$datetime][1] += $consumption[1];
                         }
+                        $return['history']['consumption'][$datetime][1] += $consumption[1];
                     }
+                    $intervals[$datetime] = $datetime;
                 }
                 $return['details'][] = $details;
                 $return['real']['power'] += $datas['real']['power'];
                 $return['real']['consumption'] += $datas['real']['consumption'];
-                $first = false;
             }
         }
 
-
-        foreach ($object->getChilds() as $child) {
-            $datas = self::getObjectData($child->getId(), $_startDate, $_endDate);
-            $details = array(
-                'data' => $datas,
-                'name' => $child->getName(),
-                'type' => 'object',
-                'object' => utils::o2a($child)
-            );
-            foreach ($datas['history']['power'] as $datetime => $power) {
-                if (!isset($return['history']['power'][$datetime])) {
-                    $return['history']['power'][$datetime] = array($datetime * 1000, $power[1]);
-                } else {
-                    $return['history']['power'][$datetime][1] += $power[1];
-                }
-            }
-
-            if (is_array($datas['history']['consumption'])) {
-                foreach ($datas['history']['consumption'] as $datetime => $consumption) {
-                    if (!isset($return['history']['consumption'][$datetime])) {
-                        $return['history']['consumption'][$datetime] = array($datetime * 1000, $consumption[1]);
-                    } else {
-                        $return['history']['consumption'][$datetime][1] += $consumption[1];
-                    }
-                }
-            }
-            $return['details'][] = $details;
-            $return['real']['power'] += $datas['real']['power'];
-            $return['real']['consumption'] += $datas['real']['consumption'];
-        }
-
-        ksort($return['history']['consumption']);
-        $return['history']['consumption'] = array_values($return['history']['consumption']);
-        ksort($return['history']['power']);
-        $return['history']['power'] = array_values($return['history']['power']);
         foreach ($return['details'] as &$details) {
             if (isset($details['data']['history']['consumption'])) {
                 ksort($details['data']['history']['consumption']);
-                $details['data']['history']['consumption'] = array_values($details['data']['history']['consumption']);
+                $details['data']['history']['consumption'] = self::fillHoles($intervals, $details['data']['history']['consumption']);
             }
             if (isset($details['data']['history']['power'])) {
                 ksort($details['data']['history']['power']);
+                $details['data']['history']['power'] = self::fillHoles($intervals, $details['data']['history']['power']);
+            }
+        }
+        ksort($return['history']['consumption']);
+        ksort($return['history']['power']);
+        return $return;
+    }
+
+    private static function fillHoles($_intervals, $_datas) {
+        $min = reset(array_keys($_datas));
+        $max = end(array_keys($_datas));
+        foreach ($_intervals as $interval) {
+            if ($min < $_intervals && $max > $interval && !isset($_datas[$interval])) {
+                $prevValue = self::searchPrevisous($_datas, $interval);
+                if (count($prevValue) == 2) {
+                    $_datas[$interval] = array($interval * 1000, $prevValue[1]);
+                }
+            }
+        }
+        return $_datas;
+    }
+
+    public static function sanitizeForChart($return) {
+
+        $return['history']['consumption'] = array_values($return['history']['consumption']);
+
+        $return['history']['power'] = array_values($return['history']['power']);
+        foreach ($return['details'] as &$details) {
+            if (isset($details['data']['history']['consumption'])) {
+                $details['data']['history']['consumption'] = array_values($details['data']['history']['consumption']);
+            }
+            if (isset($details['data']['history']['power'])) {
                 $details['data']['history']['power'] = array_values($details['data']['history']['power']);
             }
         }
-
         return $return;
     }
 
     private static function searchPrevisous($_datas, $_datetime) {
-        $prevValue = 0;
+        $prevValue = array();
         $prevDatetime = null;
         foreach ($_datas as $datetime => $value) {
             if ($prevDatetime == null) {
                 $prevDatetime = $datetime;
                 $prevValue = $value;
             } else {
-                if ($datetime > $_datetime && $prevDatetime < $_datetime) {
-                    return $value[1];
+                if ($_datetime < $datetime && $_datetime > $prevDatetime) {
+                    return $value;
                 }
+                $prevDatetime = $datetime;
             }
         }
-        if ($_datetime > $datetime) {
-            return $value[1];
+        if (isset($value) && $_datetime > $datetime) {
+            return $value;
         }
-        return 0;
+        return array();
     }
 
     /*     * *********************Methode d'instance************************* */
@@ -336,6 +353,13 @@ class energy {
                 
             }
         }
+
+        if (is_array($return['history']['consumption'])) {
+            ksort($return['history']['consumption']);
+        }
+        if (is_array($return['history']['power'])) {
+            ksort($return['history']['power']);
+        }
         return $return;
     }
 
@@ -357,12 +381,12 @@ class energy {
         $this->eqLogic_id = $eqLogic_id;
     }
 
-    public function getCategory($_key = '', $_default = '') {
-        return utils::getJsonAttr($this->category, $_key, $_default);
+    public function getCategory() {
+        return $this->category;
     }
 
-    public function setCategory($_key, $_value) {
-        $this->category = utils::setJsonAttr($this->category, $_key, $_value);
+    public function setCategory($category) {
+        $this->category = $category;
     }
 
     public function setConsumption($consumption) {

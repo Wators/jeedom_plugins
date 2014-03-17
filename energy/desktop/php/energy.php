@@ -35,19 +35,13 @@ if (!isConnect('admin')) {
 
                 <div class="form-group">
                     <label class="col-lg-2 control-label">Catégorie énergétique</label>
-                    <div class="col-lg-8">
-                        <label class="checkbox-inline">
-                            <input type="checkbox" class="energyAttr" data-l1key="category" data-l2key="hifi" /> Hifi son vidéo
-                        </label>
-                        <label class="checkbox-inline">
-                            <input type="checkbox" class="energyAttr" data-l1key="category" data-l2key="heating" /> Chauffage
-                        </label>
-                        <label class="checkbox-inline">
-                            <input type="checkbox" class="energyAttr" data-l1key="category" data-l2key="appliances" /> Électroménager
-                        </label>
-                        <label class="checkbox-inline">
-                            <input type="checkbox" class="energyAttr" data-l1key="category" data-l2key="light" /> Lumière
-                        </label>
+                    <div class="col-lg-3">
+                        <select class="energyAttr form-control input-sm" data-l1key="category">
+                            <option value="hifi">Hifi son vidéo</option>
+                            <option value="heating">Chauffage</option>
+                            <option value="appliances">Électroménager</option>
+                            <option value="light">Lumière</option>
+                        </select>
                     </div>
                 </div>
 
@@ -74,8 +68,8 @@ if (!isConnect('admin')) {
                 </div>
 
                 <legend>Consommation</legend>
+                <div class='alert alert-warning'>La/les donnée(s) utilisée(s) pour le calcul seront automatiquement historisée(s). Laissez le champs vide pour que Jeedom le calcul directement à partir de la puissance.</div>
                 <div class="form-group">
-                    <div class='alert alert-warning'>La/les donnée(s) utilisée(s) pour le calcul seront automatiquement historisée(s). Laissez le champs vide pour que Jeedom le calcul directement à partir de la puissance.</div>
                     <label class="col-lg-2 control-label">Formule</label>
                     <div class="col-lg-5">
                         <input type="text" class="energyAttr form-control input-sm" data-l1key="consumption" />

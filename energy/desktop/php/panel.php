@@ -15,7 +15,7 @@ if (!is_object($object)) {
 $energy = energy::getObjectData($object->getId());
 
 
-sendVarToJs('datas', $energy);
+sendVarToJs('datas',energy::sanitizeForChart($energy));
 ?>
 
 <div class="row">
@@ -30,12 +30,13 @@ sendVarToJs('datas', $energy);
                 } else {
                     echo '<li class="cursor li_object"><a href="index.php?v=d&m=energy&p=panel&object_id=global">Global</a></li>';
                 }
-                $allObject = object::all();
+                 $allObject = object::buildTree();
                 foreach ($allObject as $object_li) {
+                    $margin = 15 * $object_li->parentNumber();
                     if ($object_li->getId() == init('object_id')) {
-                        echo '<li class="cursor li_object active"><a href="index.php?v=d&m=energy&p=panel&object_id=' . $object_li->getId() . '">' . $object_li->getName() . '</a></li>';
+                        echo '<li class="cursor li_object active" ><a href="index.php?v=d&m=energy&p=panel&object_id=' . $object_li->getId() . '" style="position:relative;left:' . $margin . 'px;">' . $object_li->getName() . '</a></li>';
                     } else {
-                        echo '<li class="cursor li_object"><a href="index.php?v=d&m=energy&p=panel&object_id=' . $object_li->getId() . '">' . $object_li->getName() . '</a></li>';
+                        echo '<li class="cursor li_object" ><a href="index.php?v=d&m=energy&p=panel&object_id=' . $object_li->getId() . '" style="position:relative;left:' . $margin . 'px;">' . $object_li->getName() . '</a></li>';
                     }
                 }
                 ?>
