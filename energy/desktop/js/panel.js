@@ -80,9 +80,11 @@ function drawPieChart(_el, _data, _title) {
 }
 
 function drawStackGraph(_el, _data) {
+   
     var series = [];
     for (var i in _data) {
         if (isset(_data[i].data.history.power) && _data[i].data.history.power.length > 0) {
+            
             var serie = {
                 type: 'column',
                 name: _data[i].name,

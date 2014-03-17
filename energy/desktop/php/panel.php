@@ -15,7 +15,7 @@ if (!is_object($object)) {
 $energy = energy::getObjectData($object->getId());
 
 
-sendVarToJs('datas', energy::convertForHightCharts($energy));
+sendVarToJs('datas', $energy);
 ?>
 
 <div class="row">
