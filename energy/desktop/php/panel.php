@@ -14,7 +14,6 @@ if (!is_object($object)) {
 }
 $energy = energy::getObjectData($object->getId());
 
-
 sendVarToJs('datas',energy::sanitizeForChart($energy));
 ?>
 
@@ -45,7 +44,6 @@ sendVarToJs('datas',energy::sanitizeForChart($energy));
     </div>
 
     <div class="col-lg-10">
-
         <legend><?php echo $object->getName() ?></legend>
         <div class="row">
             <div class="col-lg-6">

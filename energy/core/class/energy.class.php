@@ -66,6 +66,7 @@ class energy {
                 'power' => array(),
                 'consumption' => array(),
             ),
+            'category' => array(),
             'details' => array()
         );
         $childs = array_merge($object->getEqLogic(), $object->getChilds());
@@ -106,6 +107,7 @@ class energy {
                     }
                 }
 
+
                 if (is_array($datas['history']['consumption'])) {
                     foreach ($datas['history']['consumption'] as $datetime => $consumption) {
                         if (!isset($return['history']['consumption'][$datetime])) {
@@ -126,6 +128,87 @@ class energy {
                 $return['details'][] = $details;
                 $return['real']['power'] += $datas['real']['power'];
                 $return['real']['consumption'] += $datas['real']['consumption'];
+
+                /*                 * *******************Calcul sur les categorie******************************* */
+                if (isset($datas['category'])) {
+                    foreach ($datas['category'] as $name => $category) {
+                        if (!isset($return['category'][$name])) {
+                            $return['category'][$name] = array(
+                                'data' => array(
+                                    'history' => array(
+                                        'power' => array(),
+                                        'consumption' => array(),
+                                    ),
+                                    'real' => array(
+                                        'power' => 0,
+                                        'consumption' => 0,
+                                    ),
+                                ),
+                                'name' => $name,
+                            );
+                        }
+                        if (is_array($category['data']['history']['power'])) {
+                            foreach ($category['data']['history']['power'] as $datetime => $power) {
+                                if (!isset($return['category'][$name]['data']['history']['power'][$datetime])) {
+                                    $prevValue = self::searchPrevisous($category['data']['history']['power'], $datetime);
+                                    if (count($prevValue) == 2) {
+                                        if (isset($datas['history']['power'][$prevValue[0] / 1000][1])) {
+                                            $result = $prevValue[1] - $datas['history']['power'][$prevValue[0] / 1000][1];
+                                            $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, ($result >= 0) ? $result : $prevValue[1]);
+                                        } else {
+                                            $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1]);
+                                        }
+                                    } else {
+                                        $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, 0);
+                                    }
+                                }
+                                $return['category'][$name]['data']['history']['power'][$datetime][1] += $power[1];
+                                $intervals[$datetime] = $datetime;
+                            }
+                        }
+                        $return['category'][$name]['data']['real']['power'] += $category['data']['real']['power'];
+                        $return['category'][$name]['data']['real']['consumption'] += $category['data']['real']['consumption'];
+                    }
+                }
+
+                if (is_object($energy)) {
+                    $name = $energy->getCategory();
+                    if (!isset($return['category'][$name])) {
+                        $return['category'][$name] = array(
+                            'data' => array(
+                                'history' => array(
+                                    'power' => array(),
+                                    'consumption' => array(),
+                                ),
+                                'real' => array(
+                                    'power' => 0,
+                                    'consumption' => 0,
+                                ),
+                            ),
+                            'name' => $name,
+                        );
+                    }
+
+                    foreach ($datas['history']['power'] as $datetime => $power) {
+                        if (!isset($return['category'][$name]['data']['history']['power'][$datetime])) {
+                            $prevValue = self::searchPrevisous($return['history']['power'], $datetime);
+                            if (count($prevValue) == 2) {
+                                if (isset($datas['history']['power'][$prevValue[0] / 1000][1])) {
+                                    $result = $prevValue[1] - $datas['history']['power'][$prevValue[0] / 1000][1];
+                                    $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, ($result >= 0) ? $result : $prevValue[1]);
+                                } else {
+                                    $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1]);
+                                }
+                            } else {
+                                $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, 0);
+                            }
+                        }
+                        $return['category'][$name]['data']['history']['power'][$datetime][1] += $power[1];
+                        $intervals[$datetime] = $datetime;
+                    }
+                    $return['category'][$name]['data']['real']['power'] += $datas['real']['power'];
+                    $return['category'][$name]['data']['real']['consumption'] += $datas['real']['consumption'];
+                }
             }
         }
 
@@ -139,6 +222,18 @@ class energy {
                 $details['data']['history']['power'] = self::fillHoles($intervals, $details['data']['history']['power']);
             }
         }
+
+        foreach ($return['category'] as &$category) {
+            if (isset($category['data']['history']['consumption'])) {
+                ksort($category['data']['history']['consumption']);
+                $category['data']['history']['consumption'] = self::fillHoles($intervals, $category['data']['history']['consumption']);
+            }
+            if (isset($category['data']['history']['power'])) {
+                ksort($category['data']['history']['power']);
+                $category['data']['history']['power'] = self::fillHoles($intervals, $category['data']['history']['power']);
+            }
+        }
+
         ksort($return['history']['consumption']);
         ksort($return['history']['power']);
         return $return;
@@ -148,7 +243,7 @@ class energy {
         $min = reset(array_keys($_datas));
         $max = end(array_keys($_datas));
         foreach ($_intervals as $interval) {
-            if ($min < $_intervals && $max > $interval && !isset($_datas[$interval])) {
+            if ($min < $interval && $max > $interval && !isset($_datas[$interval])) {
                 $prevValue = self::searchPrevisous($_datas, $interval);
                 if (count($prevValue) == 2) {
                     $_datas[$interval] = array($interval * 1000, $prevValue[1]);
@@ -159,9 +254,7 @@ class energy {
     }
 
     public static function sanitizeForChart($return) {
-
         $return['history']['consumption'] = array_values($return['history']['consumption']);
-
         $return['history']['power'] = array_values($return['history']['power']);
         foreach ($return['details'] as &$details) {
             if (isset($details['data']['history']['consumption'])) {
@@ -171,22 +264,28 @@ class energy {
                 $details['data']['history']['power'] = array_values($details['data']['history']['power']);
             }
         }
+        foreach ($return['category'] as &$category) {
+            if (isset($category['data']['history']['consumption'])) {
+                $category['data']['history']['consumption'] = array_values($category['data']['history']['consumption']);
+            }
+            if (isset($category['data']['history']['power'])) {
+                $category['data']['history']['power'] = array_values($category['data']['history']['power']);
+            }
+        }
         return $return;
     }
 
     private static function searchPrevisous($_datas, $_datetime) {
-        $prevValue = array();
         $prevDatetime = null;
         foreach ($_datas as $datetime => $value) {
             if ($prevDatetime == null) {
                 $prevDatetime = $datetime;
-                $prevValue = $value;
             } else {
                 if ($_datetime < $datetime && $_datetime > $prevDatetime) {
                     return $value;
                 }
-                $prevDatetime = $datetime;
             }
+            $prevDatetime = $datetime;
         }
         if (isset($value) && $_datetime > $datetime) {
             return $value;

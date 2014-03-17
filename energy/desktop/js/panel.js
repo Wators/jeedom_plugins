@@ -19,7 +19,7 @@ $(function() {
     if (isset(datas)) {
         if (isset(datas.history)) {
             if (isset(datas.history.power)) {
-                console.log(datas.history.power);
+
                 drawSimpleGraph('div_graphGlobalPower', datas.history.power, 'Puissance');
             }
         }
@@ -36,6 +36,20 @@ $(function() {
                 }
             }
             drawPieChart('div_graphDetailConsumptionByObject', pourcentage);
+        }
+        if (isset(datas.category)) {
+            drawStackGraph('div_graphDetailPowerByCategorie', datas.category);
+            var pourcentage = [];
+            for (var i in datas.category) {
+                var value = (datas.category[i].data.real.consumption / datas.real.consumption) * 100;
+                if (value != 0) {
+                    var info = [];
+                    info.push(datas.category[i].name);
+                    info.push(value);
+                    pourcentage.push(info);
+                }
+            }
+            drawPieChart('div_graphDetailConsumptionByCategorie', pourcentage);
         }
 
     }
@@ -58,7 +72,7 @@ function drawPieChart(_el, _data, _title) {
         },
         credits: {
             text: 'Copyright Jeedom',
-            href: '',
+            href: 'http://jeedom.fr',
         },
         plotOptions: {
             pie: {
@@ -87,12 +101,8 @@ function drawStackGraph(_el, _data) {
         if (isset(_data[i].data.history.power) && _data[i].data.history.power.length > 0) {
 
             var serie = {
-                type: 'area',
                 name: _data[i].name,
                 data: _data[i].data.history.power,
-                tooltip: {
-                    valueDecimals: 2
-                }
             };
             series.push(serie);
         }
@@ -109,16 +119,15 @@ function drawStackGraph(_el, _data) {
         var legend = {};
     }
 
-
-
     new Highcharts.StockChart({
         chart: {
             zoomType: 'x',
+            type: 'column',
             renderTo: _el,
             height: 300
         },
         plotOptions: {
-            area: {
+            column: {
                 stacking: 'normal',
                 lineColor: '#666666',
                 lineWidth: 1,
@@ -126,11 +135,16 @@ function drawStackGraph(_el, _data) {
                     lineWidth: 1,
                     lineColor: '#666666'
                 }
+            },
+            series: {
+                dataGrouping: {
+                    enable: false
+                }
             }
         },
         credits: {
             text: 'Copyright Jeedom',
-            href: '',
+            href: 'http://jeedom.fr',
         },
         navigator: {
             enabled: false
@@ -173,24 +187,16 @@ function drawStackGraph(_el, _data) {
             pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
             valueDecimals: 2,
         },
-        yAxis: [{
-                format: '{value}',
-                showEmpty: false,
-                showLastLabel: true,
-                labels: {
-                    align: 'right',
-                    x: -5
-                }
-            }, {
-                opposite: true,
-                format: '{value}',
-                showEmpty: false,
-                gridLineWidth: 0,
-                labels: {
-                    align: 'left',
-                    x: -5
-                }
-            }],
+        yAxis: {
+            format: '{value}',
+            showEmpty: false,
+            showLastLabel: true,
+            min: 0,
+            labels: {
+                align: 'right',
+                x: -5
+            }
+        },
         xAxis: {
             type: 'datetime',
             ordinal: false,
@@ -247,7 +253,7 @@ function drawSimpleGraph(_el, _data, _name) {
         },
         credits: {
             text: 'Copyright Jeedom',
-            href: '',
+            href: 'http://jeedom.fr',
         },
         navigator: {
             enabled: false
@@ -290,24 +296,15 @@ function drawSimpleGraph(_el, _data, _name) {
             pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b><br/>',
             valueDecimals: 2,
         },
-        yAxis: [{
-                format: '{value}',
-                showEmpty: false,
-                showLastLabel: true,
-                labels: {
-                    align: 'right',
-                    x: -5
-                }
-            }, {
-                opposite: true,
-                format: '{value}',
-                showEmpty: false,
-                gridLineWidth: 0,
-                labels: {
-                    align: 'left',
-                    x: -5
-                }
-            }],
+        yAxis: {
+            format: '{value}',
+            showEmpty: false,
+            showLastLabel: true,
+            labels: {
+                align: 'right',
+                x: -5
+            }
+        },
         xAxis: {
             type: 'datetime',
             ordinal: false,
