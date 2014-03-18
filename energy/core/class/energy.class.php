@@ -407,6 +407,8 @@ class energy {
 
     public function getData($_startDate = null, $_endDate = null) {
         $nowtime = floatval(strtotime(date('Y-m-d H:i:s') . " UTC"));
+        $now = strtotime(date('Y-m-d H:i:s'));
+        $archiveTime = config::byKey('historyArchiveTime') * 3600;
         $return = array(
             'history' => array(
                 'power' => array(),
@@ -435,19 +437,21 @@ class energy {
                         }
                         if (!isset($cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'])) {
                             if ($prevDatetime != null) {
-                                if ((strtotime(date('Y-m-d H:i:s')) - strtotime($history->getDatetime())) < (config::byKey('historyArchiveTime') * 3600)) {
-                                    if ((strtotime(date('Y-m-d H:i:s')) - strtotime($prevDatetime)) > (config::byKey('historyArchiveTime') * 3600)) {
-                                        $prevDatetime = date('Y-m-d H:00:00', strtotime(date('Y-m-d H:i:s')) - (config::byKey('historyArchiveTime') * 3600));
+                                $datetime = strtotime($history->getDatetime());
+                                while (($datetime - strtotime($prevDatetime)) > $archiveTime && (strtotime(date('Y-m-d H:i:s')) - strtotime($prevDatetime)) > $archiveTime) {
+                                    $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + $archiveTime);
+                                    $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
+                                }
+                                if (($now - strtotime($history->getDatetime())) < $archiveTime) {
+                                    if (($now - $datetime) > $archiveTime) {
+                                        $prevDatetime = date('Y-m-d H:00:00', $now - $archiveTime);
                                     }
-                                    while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > 300) {
+                                    while (($datetime - strtotime($prevDatetime)) > 300) {
                                         $prevDatetime = date('Y-m-d H:i:00', strtotime($prevDatetime) + 300);
                                         $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = $prevValue;
                                     }
                                 } else {
-                                    while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > 3600) {
-                                        $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + 3600);
-                                        $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
-                                    }
+                                    
                                 }
                             }
                             $cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'] = $history->getValue();
@@ -518,18 +522,18 @@ class energy {
                             }
                             if (!isset($cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'])) {
                                 if ($prevDatetime != null) {
-                                    if ((strtotime(date('Y-m-d H:i:s')) - strtotime($history->getDatetime())) < (config::byKey('historyArchiveTime') * 3600)) {
-                                        if ((strtotime(date('Y-m-d H:i:s')) - strtotime($prevDatetime)) > (config::byKey('historyArchiveTime') * 3600)) {
-                                            $prevDatetime = date('Y-m-d H:00:00', strtotime(date('Y-m-d H:i:s')) - (config::byKey('historyArchiveTime') * 3600));
+                                    $datetime = strtotime($history->getDatetime());
+                                    while (($datetime - strtotime($prevDatetime)) > $archiveTime && (strtotime(date('Y-m-d H:i:s')) - strtotime($prevDatetime)) > $archiveTime) {
+                                        $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + $archiveTime);
+                                        $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
+                                    }
+                                    if (($now - strtotime($history->getDatetime())) < $archiveTime) {
+                                        if (($now - $datetime) > $archiveTime) {
+                                            $prevDatetime = date('Y-m-d H:00:00', $now - $archiveTime);
                                         }
-                                        while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > 300) {
+                                        while (($datetime - strtotime($prevDatetime)) > 300) {
                                             $prevDatetime = date('Y-m-d H:i:00', strtotime($prevDatetime) + 300);
                                             $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = $prevValue;
-                                        }
-                                    } else {
-                                        while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > (config::byKey('historyArchivePackage') * 3600)) {
-                                            $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + (config::byKey('historyArchivePackage') * 3600));
-                                            $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
                                         }
                                     }
                                 }
