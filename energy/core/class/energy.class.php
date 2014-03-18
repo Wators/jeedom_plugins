@@ -88,16 +88,16 @@ class energy {
                         if (!isset($return['category'][$energy->getCategory()])) {
                             $return['category'][$energy->getCategory()] = array(
                                 'data' => array(
-                                    'history' => array(
-                                        'power' => array(),
-                                        'consumption' => array(),
-                                    ),
+                                    'name' => $energy->getCategory(),
                                     'real' => array(
                                         'power' => 0,
                                         'consumption' => 0,
                                     ),
+                                    'history' => array(
+                                        'power' => array(),
+                                        'consumption' => array(),
+                                    ),
                                 ),
-                                'name' => $energy->getCategory(),
                             );
                         }
                         $return['category'][$energy->getCategory()]['data']['real']['power'] += $datas['real']['power'];
@@ -107,9 +107,9 @@ class energy {
             }
             if (is_array($datas)) {
                 $details = array(
-                    'data' => $datas,
                     'name' => $child->getHumanName(),
-                    get_class($child) => utils::o2a($child)
+                    get_class($child) => utils::o2a($child),
+                    'data' => $datas,
                 );
 
 
@@ -118,15 +118,20 @@ class energy {
                         ksort($datas['history']['power']);
                         $alreadyAdd = array();
                         foreach ($datas['history']['power'] as $datetime => $power) {
+
                             if (!isset($return['history']['power'][$datetime])) {
+
                                 $prevValue = self::searchPrevisous($return['history']['power'], $datetime);
                                 if (count($prevValue) == 2) {
+
                                     if (isset($alreadyAdd[$prevValue[0] / 1000])) {
                                         $return['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1] - $datas['history']['power'][$prevValue[0] / 1000][1]);
                                     } else {
+
                                         $return['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1]);
                                     }
                                 } else {
+
                                     $return['history']['power'][$datetime] = array($datetime * 1000, 0);
                                 }
                             }
@@ -187,6 +192,7 @@ class energy {
                     foreach ($datas['category'] as $name => $category) {
                         if (!isset($return['category'][$name])) {
                             $return['category'][$name] = array(
+                                'name' => $name,
                                 'data' => array(
                                     'history' => array(
                                         'power' => array(),
@@ -197,7 +203,6 @@ class energy {
                                         'consumption' => 0,
                                     ),
                                 ),
-                                'name' => $name,
                             );
                         }
                         if (is_array($category['data']['history']['power'])) {
@@ -407,8 +412,9 @@ class energy {
 
     public function getData($_startDate = null, $_endDate = null) {
         $nowtime = floatval(strtotime(date('Y-m-d H:i:s') . " UTC"));
-        $archiveTime = config::byKey('historyArchiveTime') * 3600;
         $now = strtotime(date('Y-m-d H:i:s'));
+        $archiveTime = (config::byKey('historyArchiveTime') + 1) * 3600;
+        $packetTime = (config::byKey('historyArchivePackage')) * 3600;
         $return = array(
             'history' => array(
                 'power' => array(),
@@ -438,18 +444,13 @@ class energy {
                         if (!isset($cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'])) {
                             if ($prevDatetime != null) {
                                 $datetime = strtotime($history->getDatetime());
-                                while (($datetime - strtotime($prevDatetime)) > $archiveTime && ($now - strtotime($prevDatetime)) > $archiveTime) {
-                                    $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + $archiveTime);
+                                while (($now - strtotime($prevDatetime) > ($archiveTime)) && strtotime($prevDatetime) < $datetime) {
+                                    $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + $packetTime);
                                     $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
                                 }
-                                if (($now - $datetime) < $archiveTime) {
-                                    if (($now - strtotime($prevDatetime)) > $archiveTime) {
-                                        $prevDatetime = date('Y-m-d H:00:00', $now - $archiveTime);
-                                    }
-                                    while (($datetime - strtotime($prevDatetime)) > 300) {
-                                        $prevDatetime = date('Y-m-d H:i:00', strtotime($prevDatetime) + 300);
-                                        $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = $prevValue;
-                                    }
+                                while (($now - strtotime($prevDatetime)) > 300 && strtotime($prevDatetime) < $datetime) {
+                                    $prevDatetime = date('Y-m-d H:i:00', strtotime($prevDatetime) + 300);
+                                    $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = $prevValue;
                                 }
                             }
                             $cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'] = $history->getValue();
@@ -521,18 +522,13 @@ class energy {
                             if (!isset($cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'])) {
                                 if ($prevDatetime != null) {
                                     $datetime = strtotime($history->getDatetime());
-                                    while (($datetime - strtotime($prevDatetime)) > $archiveTime && ($now - strtotime($prevDatetime)) > $archiveTime) {
-                                        $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + $archiveTime);
+                                    while (($now - strtotime($prevDatetime) > $archiveTime) && strtotime($prevDatetime) < $datetime) {
+                                        $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + $packetTime);
                                         $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
                                     }
-                                    if (($now - $datetime) < $archiveTime) {
-                                        if (($now - strtotime($prevDatetime)) > $archiveTime) {
-                                            $prevDatetime = date('Y-m-d H:00:00', $now - $archiveTime);
-                                        }
-                                        while (($datetime - strtotime($prevDatetime)) > 300) {
-                                            $prevDatetime = date('Y-m-d H:i:00', strtotime($prevDatetime) + 300);
-                                            $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = $prevValue;
-                                        }
+                                    while (($now - strtotime($prevDatetime)) < 300 && strtotime($prevDatetime) < $datetime) {
+                                        $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + 300);
+                                        $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = $prevValue;
                                     }
                                 }
                                 $cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'] = $history->getValue();
