@@ -62,7 +62,7 @@ function drawPieChart(_el, _data, _title) {
             plotBackgroundColor: null,
             plotBorderWidth: null,
             plotShadow: false,
-            height: 300
+            height: 225
         },
         title: {
             text: ''
@@ -122,12 +122,12 @@ function drawStackGraph(_el, _data) {
     new Highcharts.StockChart({
         chart: {
             zoomType: 'x',
-            type: 'column',
+            type: 'area',
             renderTo: _el,
-            height: 300
+            height: 225
         },
         plotOptions: {
-            column: {
+            area: {
                 stacking: 'normal',
                 lineColor: '#666666',
                 lineWidth: 1,
@@ -244,7 +244,7 @@ function drawSimpleGraph(_el, _data, _name) {
         chart: {
             zoomType: 'x',
             renderTo: _el,
-            height: 300
+            height: 200
         },
         plotOptions: {
             series: {

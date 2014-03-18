@@ -72,6 +72,7 @@ class energy {
         $childs = array_merge($object->getEqLogic(), $object->getChilds());
         foreach ($childs as $child) {
             $datas = null;
+            $energy = null;
             if (get_class($child) == 'object') {
                 $datas = self::getObjectData($child->getId(), $_startDate, $_endDate);
             } else {
@@ -116,14 +117,14 @@ class energy {
                                 if (isset($datas['history']['consumption'][$prevValue[0] / 1000])) {
                                     $prevValue[1] = $prevValue[1] - $datas['history']['consumption'][$prevValue[0] / 1000][1];
                                 }
-                                $return['history']['consumption'][$datetime] = array($datetime * 1000, ($prevValue[1] > 0) ? $prevValue[1] : 0);
+                                $return['history']['consumption'][$datetime] = array($datetime * 1000, ($prevValue[1] >= 0) ? $prevValue[1] : 0);
                             } else {
                                 $return['history']['consumption'][$datetime] = array($datetime * 1000, 0);
                             }
                         }
                         $return['history']['consumption'][$datetime][1] += $consumption[1];
+                        $intervals[$datetime] = $datetime;
                     }
-                    $intervals[$datetime] = $datetime;
                 }
                 $return['details'][] = $details;
                 $return['real']['power'] += $datas['real']['power'];
@@ -150,10 +151,10 @@ class energy {
                         if (is_array($category['data']['history']['power'])) {
                             foreach ($category['data']['history']['power'] as $datetime => $power) {
                                 if (!isset($return['category'][$name]['data']['history']['power'][$datetime])) {
-                                    $prevValue = self::searchPrevisous($category['data']['history']['power'], $datetime);
+                                    $prevValue = self::searchPrevisous($return['category'][$name]['data']['history']['power'], $datetime);
                                     if (count($prevValue) == 2) {
-                                        if (isset($datas['history']['power'][$prevValue[0] / 1000][1])) {
-                                            $result = $prevValue[1] - $datas['history']['power'][$prevValue[0] / 1000][1];
+                                        if (isset($category['data']['history']['power'][$prevValue[0] / 1000])) {
+                                            $result = $prevValue[1] - $category['data']['history']['power'][$prevValue[0] / 1000][1];
                                             $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, ($result >= 0) ? $result : $prevValue[1]);
                                         } else {
                                             $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1]);
@@ -189,22 +190,24 @@ class energy {
                         );
                     }
 
-                    foreach ($datas['history']['power'] as $datetime => $power) {
-                        if (!isset($return['category'][$name]['data']['history']['power'][$datetime])) {
-                            $prevValue = self::searchPrevisous($return['history']['power'], $datetime);
-                            if (count($prevValue) == 2) {
-                                if (isset($datas['history']['power'][$prevValue[0] / 1000][1])) {
-                                    $result = $prevValue[1] - $datas['history']['power'][$prevValue[0] / 1000][1];
-                                    $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, ($result >= 0) ? $result : $prevValue[1]);
+                    if (is_array($return['category'][$name]['data']['history']['power'])) {
+                        foreach ($datas['history']['power'] as $datetime => $power) {
+                            if (!isset($return['category'][$name]['data']['history']['power'][$datetime])) {
+                                $prevValue = self::searchPrevisous($return['category'][$name]['data']['history']['power'], $datetime);
+                                if (count($prevValue) == 2) {
+                                    if (isset($datas['history']['power'][$prevValue[0] / 1000][1])) {
+                                        $result = $prevValue[1] - $datas['history']['power'][$prevValue[0] / 1000][1];
+                                        $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, ($result >= 0) ? $result : $prevValue[1]);
+                                    } else {
+                                        $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1]);
+                                    }
                                 } else {
-                                    $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1]);
+                                    $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, 0);
                                 }
-                            } else {
-                                $return['category'][$name]['data']['history']['power'][$datetime] = array($datetime * 1000, 0);
                             }
+                            $return['category'][$name]['data']['history']['power'][$datetime][1] += $power[1];
+                            $intervals[$datetime] = $datetime;
                         }
-                        $return['category'][$name]['data']['history']['power'][$datetime][1] += $power[1];
-                        $intervals[$datetime] = $datetime;
                     }
                     $return['category'][$name]['data']['real']['power'] += $datas['real']['power'];
                     $return['category'][$name]['data']['real']['consumption'] += $datas['real']['consumption'];
@@ -243,7 +246,7 @@ class energy {
         $min = reset(array_keys($_datas));
         $max = end(array_keys($_datas));
         foreach ($_intervals as $interval) {
-            if ($min < $interval && $max > $interval && !isset($_datas[$interval])) {
+            if ($min <= $interval && $max >= $interval && !isset($_datas[$interval])) {
                 $prevValue = self::searchPrevisous($_datas, $interval);
                 if (count($prevValue) == 2) {
                     $_datas[$interval] = array($interval * 1000, $prevValue[1]);
@@ -251,6 +254,24 @@ class energy {
             }
         }
         return $_datas;
+    }
+
+    private static function searchPrevisous($_datas, $_datetime) {
+        $prevDatetime = null;
+        foreach ($_datas as $datetime => $value) {
+            if ($prevDatetime == null) {
+                $prevDatetime = $datetime;
+            } else {
+                if ($_datetime < $datetime && $_datetime > $prevDatetime) {
+                    return $value;
+                }
+            }
+            $prevDatetime = $datetime;
+        }
+        if (isset($value) && $_datetime > $datetime) {
+            return $value;
+        }
+        return array();
     }
 
     public static function sanitizeForChart($return) {
@@ -273,24 +294,6 @@ class energy {
             }
         }
         return $return;
-    }
-
-    private static function searchPrevisous($_datas, $_datetime) {
-        $prevDatetime = null;
-        foreach ($_datas as $datetime => $value) {
-            if ($prevDatetime == null) {
-                $prevDatetime = $datetime;
-            } else {
-                if ($_datetime < $datetime && $_datetime > $prevDatetime) {
-                    return $value;
-                }
-            }
-            $prevDatetime = $datetime;
-        }
-        if (isset($value) && $_datetime > $datetime) {
-            return $value;
-        }
-        return array();
     }
 
     /*     * *********************Methode d'instance************************* */
@@ -354,13 +357,21 @@ class energy {
             if (is_numeric($cmd_id)) {
                 $cmd = cmd::byId($cmd_id);
                 if (is_object($cmd) && $cmd->getIsHistorized() == 1) {
+                    $prevDatetime = null;
                     foreach ($cmd->getHistory($_startDate, $_endDate) as $history) {
                         if (!isset($cmd_histories[$history->getDatetime()])) {
                             $cmd_histories[$history->getDatetime()] = array();
                         }
                         if (!isset($cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'])) {
+                            if ($prevDatetime != null) {
+                                while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > 3600) {
+                                    $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + 3600);
+                                    $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
+                                }
+                            }
                             $cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'] = $history->getValue();
                         }
+                        $prevDatetime = $history->getDatetime();
                     }
                 }
             }
@@ -418,13 +429,21 @@ class energy {
                 if (is_numeric($cmd_id)) {
                     $cmd = cmd::byId($cmd_id);
                     if (is_object($cmd) && $cmd->getIsHistorized() == 1) {
+                        $prevDatetime = null;
                         foreach ($cmd->getHistory($_startDate, $_endDate) as $history) {
                             if (!isset($cmd_histories[$history->getDatetime()])) {
                                 $cmd_histories[$history->getDatetime()] = array();
                             }
                             if (!isset($cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'])) {
+                                if ($prevDatetime != null) {
+                                    while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > 3600) {
+                                        $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + 3600);
+                                        $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
+                                    }
+                                }
                                 $cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'] = $history->getValue();
                             }
+                            $prevDatetime = $history->getDatetime();
                         }
                     }
                 }

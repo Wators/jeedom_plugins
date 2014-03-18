@@ -14,7 +14,7 @@ if (!is_object($object)) {
 }
 $energy = energy::getObjectData($object->getId());
 
-sendVarToJs('datas',energy::sanitizeForChart($energy));
+sendVarToJs('datas', energy::sanitizeForChart($energy));
 ?>
 
 <div class="row">
@@ -29,7 +29,7 @@ sendVarToJs('datas',energy::sanitizeForChart($energy));
                 } else {
                     echo '<li class="cursor li_object"><a href="index.php?v=d&m=energy&p=panel&object_id=global">Global</a></li>';
                 }
-                 $allObject = object::buildTree();
+                $allObject = object::buildTree();
                 foreach ($allObject as $object_li) {
                     $margin = 15 * $object_li->parentNumber();
                     if ($object_li->getId() == init('object_id')) {
@@ -44,50 +44,59 @@ sendVarToJs('datas',energy::sanitizeForChart($energy));
     </div>
 
     <div class="col-lg-10">
-        <legend><?php echo $object->getName() ?></legend>
         <div class="row">
             <div class="col-lg-6">
-                <legend>Actuellement</legend>
+                <legend>Actuellement sur <?php echo $object->getName() ?></legend>
                 <form class="form-horizontal">
                     <fieldset>
                         <div class="form-group">
-                            <label class="col-lg-3 control-label">Puissance</label>
+                            <label class="col-lg-3 control-label" style="font-size: 1.3em;">Puissance</label>
                             <div class="col-lg-3">
-                                <span class='label label-success' style="font-size: 1.5em;"><?php echo $energy['real']['power'] ?> W</span>
+                                <span class='label label-success' style="font-size: 1.3em;"><?php echo $energy['real']['power'] ?> W</span>
                             </div>
                         </div>
+
+                        <?php
+                        foreach ($energy['category'] as $category) {
+                            echo '<div class="form-group">';
+                            echo '<label class="col-lg-3 control-label">' . $category['name'] . '</label>';
+                            echo '<div class="col-lg-3">';
+                            echo '<span class="label label-success">' . $category['data']['real']['power'] . ' W</span>';
+                            echo '</div>';
+                            echo '</div>';
+                        }
+                        ?>
                         <div class="form-group">
-                            <label class="col-lg-3 control-label">Consommation</label>
+                            <label class="col-lg-3 control-label" style="font-size: 1.3em;">Consommation</label>
                             <div class="col-lg-3">
-                                <span class='label label-primary' style="font-size: 1.5em;"><?php echo $energy['real']['consumption'] ?> kWh</span>
+                                <span class='label label-primary' style="font-size: 1.3em;"><?php echo $energy['real']['consumption'] ?> kWh</span>
                             </div>
                         </div>
                     </fieldset>
                 </form>
             </div>
             <div class="col-lg-6">
-                <legend>Historique</legend>
+                <legend>Historique sur <?php echo $object->getName() ?></legend>
                 <div id='div_graphGlobalPower'></div>
             </div>
         </div>
-        <legend>Détails</legend>
         <div class="row">
             <div class="col-lg-6">
-                <legend>Consommation par objet</legend>
+                <legend>Consommation par objet sur <?php echo $object->getName() ?></legend>
                 <div id='div_graphDetailConsumptionByObject'></div>
             </div>
             <div class="col-lg-6">
-                <legend>Puissance par objet</legend>
+                <legend>Puissance par objet sur <?php echo $object->getName() ?></legend>
                 <div id='div_graphDetailPowerByObject'></div>
             </div>
         </div>
         <div class="row">
             <div class="col-lg-6">
-                <legend>Consommation par catégorie</legend>
+                <legend>Consommation par catégorie sur <?php echo $object->getName() ?></legend>
                 <div id='div_graphDetailConsumptionByCategorie'></div>
             </div>
             <div class="col-lg-6">
-                <legend>Puissance par catégorie</legend>
+                <legend>Puissance par catégorie sur <?php echo $object->getName() ?></legend>
                 <div id='div_graphDetailPowerByCategorie'></div>
             </div>
         </div>
