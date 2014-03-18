@@ -94,6 +94,8 @@ class energy {
                             'name' => $energy->getCategory(),
                         );
                     }
+                    $return['category'][$energy->getCategory()]['data']['real']['power'] += $datas['real']['power'];
+                    $return['category'][$energy->getCategory()]['data']['real']['consumption'] += $datas['real']['consumption'];
                 }
             }
             if (is_array($datas)) {
@@ -209,11 +211,6 @@ class energy {
                         $return['category'][$name]['data']['real']['power'] += $category['data']['real']['power'];
                         $return['category'][$name]['data']['real']['consumption'] += $category['data']['real']['consumption'];
                     }
-                }
-
-                if (is_object($energy)) {
-                    $return['category'][$energy->getCategory()]['data']['real']['power'] += $datas['real']['power'];
-                    $return['category'][$energy->getCategory()]['data']['real']['consumption'] += $datas['real']['consumption'];
                 }
             }
         }
@@ -365,20 +362,32 @@ class energy {
                 $cmd = cmd::byId($cmd_id);
                 if (is_object($cmd) && $cmd->getIsHistorized() == 1) {
                     $prevDatetime = null;
+                    $prevValue = 0;
                     foreach ($cmd->getHistory($_startDate, $_endDate) as $history) {
                         if (!isset($cmd_histories[$history->getDatetime()])) {
                             $cmd_histories[$history->getDatetime()] = array();
                         }
                         if (!isset($cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'])) {
                             if ($prevDatetime != null) {
-                                while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > 3600) {
-                                    $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + 3600);
-                                    $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
+                                if ((strtotime(date('Y-m-d H:i:s')) - strtotime($history->getDatetime())) < (config::byKey('historyArchiveTime') * 3600)) {
+                                    if ((strtotime(date('Y-m-d H:i:s')) - strtotime($prevDatetime)) > (config::byKey('historyArchiveTime') * 3600)) {
+                                        $prevDatetime = date('Y-m-d H:00:00', strtotime(date('Y-m-d H:i:s')) - (config::byKey('historyArchiveTime') * 3600));
+                                    }
+                                    while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > 300) {
+                                        $prevDatetime = date('Y-m-d H:i:00', strtotime($prevDatetime) + 300);
+                                        $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = $prevValue;
+                                    }
+                                } else {
+                                    while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > 3600) {
+                                        $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + 3600);
+                                        $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
+                                    }
                                 }
                             }
                             $cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'] = $history->getValue();
                         }
                         $prevDatetime = $history->getDatetime();
+                        $prevValue = $history->getValue();
                     }
                 }
             }

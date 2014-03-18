@@ -300,6 +300,7 @@ function drawSimpleGraph(_el, _data, _name) {
             format: '{value}',
             showEmpty: false,
             showLastLabel: true,
+            min: 0,
             labels: {
                 align: 'right',
                 x: -5
