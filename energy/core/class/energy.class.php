@@ -53,6 +53,7 @@ class energy {
 
     public static function getObjectData($_object_id, $_startDate = null, $_endDate = null) {
         $object = object::byId($_object_id);
+        $findTotal = false;
         if (!is_object($object)) {
             throw new Exception('Objet non trouvé vérifiez l\'id : ' . $_object_id);
         }
@@ -78,6 +79,10 @@ class energy {
             } else {
                 $energy = self::byEqLogic_id($child->getId());
                 if (is_object($energy)) {
+                    if ($energy->getConfiguration('positionRelative') == 'total') {
+                        $findTotal = true;
+                        $return['history']['power'] = array();
+                    }
                     $datas = $energy->getData($_startDate, $_endDate);
                     if (!isset($return['category'][$energy->getCategory()])) {
                         $return['category'][$energy->getCategory()] = array(
@@ -110,19 +115,21 @@ class energy {
                     ksort($datas['history']['power']);
                     $alreadyAdd = array();
                     foreach ($datas['history']['power'] as $datetime => $power) {
-                        if (!isset($return['history']['power'][$datetime])) {
-                            $prevValue = self::searchPrevisous($return['history']['power'], $datetime);
-                            if (count($prevValue) == 2) {
-                                if (isset($alreadyAdd[$prevValue[0] / 1000])) {
-                                    $return['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1] - $datas['history']['power'][$prevValue[0] / 1000][1]);
+                        if (!$findTotal || $energy->getConfiguration('positionRelative') == 'total') {
+                            if (!isset($return['history']['power'][$datetime])) {
+                                $prevValue = self::searchPrevisous($return['history']['power'], $datetime);
+                                if (count($prevValue) == 2) {
+                                    if (isset($alreadyAdd[$prevValue[0] / 1000])) {
+                                        $return['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1] - $datas['history']['power'][$prevValue[0] / 1000][1]);
+                                    } else {
+                                        $return['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1]);
+                                    }
                                 } else {
-                                    $return['history']['power'][$datetime] = array($datetime * 1000, $prevValue[1]);
+                                    $return['history']['power'][$datetime] = array($datetime * 1000, 0);
                                 }
-                            } else {
-                                $return['history']['power'][$datetime] = array($datetime * 1000, 0);
                             }
+                            $return['history']['power'][$datetime][1] += $power[1];
                         }
-                        $return['history']['power'][$datetime][1] += $power[1];
                         /*                         * **********************Ajout a la catégorie**************************** */
                         if (is_object($energy)) {
                             if (!isset($return['category'][$energy->getCategory()]['data']['history']['power'][$datetime])) {
@@ -461,8 +468,8 @@ class energy {
                                             $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = $prevValue;
                                         }
                                     } else {
-                                        while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > 3600) {
-                                            $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + 3600);
+                                        while ((strtotime($history->getDatetime()) - strtotime($prevDatetime)) > (config::byKey('historyArchivePackage') * 3600)) {
+                                            $prevDatetime = date('Y-m-d H:00:00', strtotime($prevDatetime) + (config::byKey('historyArchivePackage') * 3600));
                                             $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = 0;
                                         }
                                     }
