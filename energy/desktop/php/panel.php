@@ -52,7 +52,7 @@ sendVarToJs('datas', energy::sanitizeForChart($energy));
                         <div class="form-group">
                             <label class="col-lg-3 control-label" style="font-size: 1.3em;">Puissance</label>
                             <div class="col-lg-3">
-                                <span class='label label-success' style="font-size: 1.3em;"><?php echo $energy['real']['power'] ?> W</span>
+                                <span class='label label-success' style="font-size: 1.3em;"><?php echo round($energy['real']['power'], 2) ?> W</span>
                             </div>
                         </div>
 
@@ -61,7 +61,7 @@ sendVarToJs('datas', energy::sanitizeForChart($energy));
                             echo '<div class="form-group">';
                             echo '<label class="col-lg-3 control-label">' . $category['name'] . '</label>';
                             echo '<div class="col-lg-3">';
-                            echo '<span class="label label-success">' . $category['data']['real']['power'] . ' W</span>';
+                            echo '<span class="label label-success">' . round($category['data']['real']['power'], 2) . ' W</span>';
                             echo '</div>';
                             echo '</div>';
                         }
@@ -69,7 +69,7 @@ sendVarToJs('datas', energy::sanitizeForChart($energy));
                         <div class="form-group">
                             <label class="col-lg-3 control-label" style="font-size: 1.3em;">Consommation</label>
                             <div class="col-lg-3">
-                                <span class='label label-primary' style="font-size: 1.3em;"><?php echo $energy['real']['consumption'] ?> kWh</span>
+                                <span class='label label-primary' style="font-size: 1.3em;"><?php echo round($energy['real']['consumption'], 2) ?> kWh</span>
                             </div>
                         </div>
                     </fieldset>
