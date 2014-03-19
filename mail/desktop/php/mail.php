@@ -102,7 +102,7 @@ sendVarToJS('eqType', 'mail');
                             <div class="form-group">
                                 <label class="col-lg-4 control-label">Mot de passe SMTP</label>
                                 <div class="col-lg-6">
-                                    <input class="eqLogicAttr form-control" data-l1key='configuration' data-l2key='smtp::password' />
+                                    <input type="password" class="eqLogicAttr form-control" data-l1key='configuration' data-l2key='smtp::password' />
                                 </div>
                             </div>
                         </div>

@@ -64,17 +64,18 @@ class mailCmd extends cmd {
 
         $mail = new PHPMailer(true);  //PHPMailer instance with exceptions enabled
         $mail->CharSet = 'utf-8';
+        $mail->SMTPDebug = 0;
         switch ($eqLogic->getConfiguration('sendMode', 'mail')) {
             case 'smtp':
                 $mail->isSMTP();
                 $mail->Host = $eqLogic->getConfiguration('smtp::server');
                 $mail->Port = (integer) $eqLogic->getConfiguration('smtp::port');
                 $mail->SMTPSecure = $eqLogic->getConfiguration('smtp::security');
-                if ($this->getConfiguration('smtp::username') != '') {
+                if ($eqLogic->getConfiguration('smtp::username') != '') {
                     $mail->SMTPAuth = true;
                     $mail->Username = $eqLogic->getConfiguration('smtp::username'); // SMTP account username
                     $mail->Password = $eqLogic->getConfiguration('smtp::password'); // SMTP account password
-                }
+                }  
                 break;
             case 'mail':
                 $mail->isMail();
