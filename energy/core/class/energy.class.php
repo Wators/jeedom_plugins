@@ -453,7 +453,9 @@ class energy {
                                     $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = $prevValue;
                                 }
                             }
-                            $cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'] = $history->getValue();
+                            if (strtotime($history->getDatetime()) <= $now) {
+                                $cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'] = $history->getValue();
+                            }
                         }
                         $prevDatetime = $history->getDatetime();
                         $prevValue = $history->getValue();
@@ -466,22 +468,24 @@ class energy {
             $datetime = floatval(strtotime($datetime . " UTC"));
             $calcul = template_replace($cmd_history, $this->getPower());
             try {
-                $test = new evaluate();
-                $result = floatval($test->Evaluer($calcul));
-                if ($this->getConsumption() == '' && count($return['history']['power']) > 0) {
-                    $last_datetime = end(array_keys($return['history']['power']));
-                    if (($datetime - $last_datetime) > 0) {
-                        $last_value = end($return['history']['power']);
-                        $return['history']['consumption'][$datetime] = array($datetime, (($last_value[1] * (($datetime - $last_datetime) / 1000)) / 3600));
-                        $return['real']['consumption'] += $return['history']['consumption'][$datetime][1];
+                if ($datetime <= $nowtime) {
+                    $test = new evaluate();
+                    $result = floatval($test->Evaluer($calcul));
+                    if ($this->getConsumption() == '' && count($return['history']['power']) > 0) {
+                        $last_datetime = end(array_keys($return['history']['power']));
+                        if (($datetime - $last_datetime) > 0) {
+                            $last_value = end($return['history']['power']);
+                            $return['history']['consumption'][$datetime] = array($datetime, (($last_value[1] * (($datetime - $last_datetime) / 1000)) / 3600));
+                            $return['real']['consumption'] += $return['history']['consumption'][$datetime][1];
+                        }
                     }
-                }
-                $return['history']['power'][$datetime] = array($datetime * 1000, $result);
-                if ($return['stats']['minPower'] === null || $return['stats']['minPower'] > $result) {
-                    $return['stats']['minPower'] = $result;
-                }
-                if ($return['stats']['maxPower'] === null || $return['stats']['maxPower'] < $result) {
-                    $return['stats']['maxPower'] = $result;
+                    $return['history']['power'][$datetime] = array($datetime * 1000, $result);
+                    if ($return['stats']['minPower'] === null || $return['stats']['minPower'] > $result) {
+                        $return['stats']['minPower'] = $result;
+                    }
+                    if ($return['stats']['maxPower'] === null || $return['stats']['maxPower'] < $result) {
+                        $return['stats']['maxPower'] = $result;
+                    }
                 }
             } catch (Exception $e) {
                 
@@ -531,7 +535,9 @@ class energy {
                                         $cmd_histories[$prevDatetime]['#' . $cmd_id . '#'] = $prevValue;
                                     }
                                 }
-                                $cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'] = $history->getValue();
+                                if (strtotime($history->getDatetime()) <= $now) {
+                                    $cmd_histories[$history->getDatetime()]['#' . $cmd_id . '#'] = $history->getValue();
+                                }
                             }
                             $prevDatetime = $history->getDatetime();
                             $prevValue = $history->getValue();
@@ -544,9 +550,11 @@ class energy {
                 $datetime = floatval(strtotime($datetime . " UTC"));
                 $calcul = template_replace($cmd_history, $this->getConsumption());
                 try {
-                    $test = new evaluate();
-                    $result = floatval($test->Evaluer($calcul));
-                    $return['history']['consumption'][$datetime] = array($datetime * 1000, $result);
+                    if ($datetime <= $nowtime) {
+                        $test = new evaluate();
+                        $result = floatval($test->Evaluer($calcul));
+                        $return['history']['consumption'][$datetime] = array($datetime * 1000, $result);
+                    }
                 } catch (Exception $e) {
                     
                 }
