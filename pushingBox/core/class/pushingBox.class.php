@@ -19,7 +19,7 @@
 /* * ***************************Includes********************************* */
 require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 
-define('PUSHINGBOXADDR', 'http://api.pushingbox.com/pushingbox');
+define('PUSHINGBOXADDR', 'https://autoremotejoaomgcd.appspot.com/sendmessage');
 
 class pushingBox extends eqLogic {
     
@@ -34,7 +34,7 @@ class pushingBoxCmd extends cmd {
 
     /*     * *********************Methode d'instance************************* */
     public function preSave() {
-        if ($this->getConfiguration('devid') == '') {
+        if ($this->getConfiguration('key') == '') {
             throw new Exception('DevId ne peut etre vide');
         }
     }
@@ -44,14 +44,11 @@ class pushingBoxCmd extends cmd {
             throw new Exception('[PushingBox] Les options de la fonction ne peuvent etre null');
         }
 
-        if ($_options['message'] == '' && $_options['title'] == '') {
+        if ($_options['message'] == '') {
             throw new Exception('[PushingBox] Le message et le sujet ne peuvent être vide');
         }
 
-        if ($_options['title'] == '') {
-            $_options['title'] = '[Jeedom] - Notification';
-        }
-        $request = new com_http(PUSHINGBOXADDR . '?devid=' . $this->getConfiguration('devid') . '&title=' . urlencode($_options['title']) . '&message=' . urlencode($_options['message']));
+        $request = new com_http(PUSHINGBOXADDR . '?key=' . $this->getConfiguration('key') . '&message=' . urlencode($_options['message']));
         return $request->exec(6000, 0, false);
     }
 
